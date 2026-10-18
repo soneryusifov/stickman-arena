@@ -39,6 +39,7 @@ connectStore();
 
 const PORT = process.env.PORT || 3000;
 const ROOT = path.join(__dirname, 'public');
+let VERSION = 'dev'; try { VERSION = require('crypto').createHash('sha1').update(fs.readFileSync(path.join(ROOT, 'index.html'))).digest('hex').slice(0, 12); } catch (e) {}
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.png': 'image/png', '.webp': 'image/webp', '.mp3': 'audio/mpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
 
 /* ---------------- statik dosyalar ---------------- */
@@ -51,6 +52,7 @@ const server = http.createServer((req, res) => {
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (p === '/healthz') { res.writeHead(200, { 'content-type': 'text/plain' }); return res.end('ok'); }
+  if (p === '/version') { res.writeHead(200, { 'content-type': 'text/plain', 'cache-control': 'no-store' }); return res.end(VERSION); } // açık sekmeler yeni sürümü fark etsin
   if (p === '/') p = '/index.html';
   const file = path.normalize(path.join(ROOT, p));
   if (!file.startsWith(ROOT + path.sep)) { res.writeHead(403); return res.end(); }

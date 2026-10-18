@@ -422,8 +422,11 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
   .plate{font-size:clamp(6.5px,calc(var(--s,1) * 1.15cqw),12px)}
   #battleScreen .overlay .ocard{width:70%;min-height:60%;padding:12px}
 }
+.verbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6);font-weight:700}
+.verbar[hidden]{display:none} .verbar .btn{padding:.35em 1em;font-size:13px}
 </style>
 
+<div class="verbar" id="verBar" role="status" hidden><span>Oyunun yeni sürümü yayında.</span><button class="btn" id="verGo" type="button">Yenile</button></div>
 <div class="rotate" id="rotate" role="dialog" aria-labelledby="rotT">
   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
   <p id="rotT">Stickman Arena yatay oynanır. Telefonunu yan çevir.</p>
@@ -2753,6 +2756,19 @@ paintMk(); $('mkGo').textContent = mkMode + ' maç kur';
 $('mkGo').addEventListener('click', () => createMatch(mkMode));
 $('mToggle').addEventListener('click', () => { togglePanel('mToggle'); renderMatches(); });
 
+/* ---------- yeni sürüm uyarısı: açık sekme eski kodla kalmasın (yalnızca kendi sunucumuzda) ---------- */
+let pageVer = null, verNote = false;
+async function checkVersion() {
+  if (verNote || location.hostname.endsWith('claude.ai')) return;
+  try {
+    const r = await fetch('/version', { cache: 'no-store' }); if (!r.ok) return;
+    const v = (await r.text()).trim(); if (!v || v.length > 40) return;
+    if (!pageVer) pageVer = v; else if (v !== pageVer && screen !== 'battle') { verNote = true; $('verBar').hidden = false; }
+  } catch (e) {}
+}
+$('verGo').addEventListener('click', () => location.reload());
+checkVersion(); setInterval(checkVersion, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) checkVersion(); });
 pick(chosen); openLobby(); requestAnimationFrame(frame);
 cloudInit().finally(initRoom);
 try { if (!localStorage.getItem('sa.guide')) openGuide(); } catch (e) { openGuide(); }
