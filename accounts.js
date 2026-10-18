@@ -1,0 +1,125 @@
+// Hesaplar ve bulut kaydı: /api/register, /api/login, /api/logout, /api/me, /api/save
+// Şifreler scrypt ile tuzlanıp saklanır; oturum anahtarı (token) yalnızca SHA-256 özeti olarak tutulur.
+const crypto = require('crypto');
+
+const TOKEN_DAYS = 60, MAX_TOKENS = 5, MAX_BODY = 64 * 1024;
+const ADMINS = new Set(String(process.env.ADMIN_USERS || '').split(',').map(s => s.trim().toLocaleLowerCase('tr')).filter(Boolean));
+// oyundaki fiyatlar (stickman-arena.html ile aynı olmalı): harcanmadan seviye atlanamasın
+const UP_COST = [0, 60, 100, 150, 220, 300, 400, 520, 660, 820];
+const HALL_COST = [0, 400, 800, 1400, 2200, 3200, 4500, 6000];
+const MINE_COST = [0, 200, 400, 700, 1100, 1600, 2200, 3000];
+const ALCH_COST = [0, 250, 500, 850, 1300, 1900, 2600, 3500];
+const ITEMS = ['head', 'chest', 'sleeve', 'bracer', 'glove', 'knee', 'boot', 'main', 'off', 'cape'];
+
+const nameKey = n => n.toLocaleLowerCase('tr');
+const NAME_RE = /^[\p{L}\p{N}_]{3,16}$/u;
+const sha = s => crypto.createHash('sha256').update(s).digest('hex');
+const scrypt = (pass, salt) => new Promise((res, rej) => crypto.scrypt(pass, salt, 64, (e, k) => e ? rej(e) : res(k.toString('hex'))));
+const int = (v, lo, hi, d) => { v = Math.floor(Number(v)); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
+
+// gelen kaydı bilinen alanlarla ve sınırlarla yeniden kurar
+function cleanSave(s) {
+  if (!s || typeof s !== 'object') return null;
+  const gear = {};
+  for (const [cls, g] of Object.entries(s.gear || {}).slice(0, 30)) {
+    if (!/^[a-z]{2,16}$/.test(cls) || !g || typeof g !== 'object') continue;
+    gear[cls] = Object.fromEntries(ITEMS.map(k => [k, int(g[k], 1, 10, 1)]));
+  }
+  const t = s.town || {};
+  const out = {
+    gold: int(s.gold, 0, 1e9, 0), gear, league: int(s.league, 0, 10000, 0),
+    town: { hall: int(t.hall, 1, 8, 1), mine: int(t.mine, 1, 8, 1), alch: int(t.alch, 1, 8, 1), mineAt: int(t.mineAt, 0, 9e15, Date.now()) },
+    stats: s.stats && typeof s.stats === 'object' ? s.stats : {}, ach: s.ach && typeof s.ach === 'object' ? s.ach : {},
+    daily: s.daily && typeof s.daily === 'object' ? s.daily : null, _t: int(s._t, 0, 9e15, Date.now()),
+  };
+  return JSON.stringify(out).length > 32 * 1024 ? null : out;
+}
+// eskiden yeniye geçerken yükseltmelere harcanması gereken altın
+function spent(a, b) {
+  let sum = 0;
+  const up = (table, from, to) => { for (let n = from; n < to; n++) sum += table[n] || 0; };
+  for (const cls of Object.keys(b.gear)) for (const k of ITEMS) up(UP_COST, (a.gear[cls] || {})[k] || 1, b.gear[cls][k]);
+  up(HALL_COST, a.town.hall, b.town.hall); up(MINE_COST, a.town.mine, b.town.mine); up(ALCH_COST, a.town.alch, b.town.alch);
+  return sum;
+}
+
+function makeApi(store) {
+  const hits = new Map(); // ip -> [zamanlar]: giriş/kayıt denemesi sınırı
+  const limited = ip => { const now = Date.now(), a = (hits.get(ip) || []).filter(t => now - t < 60000); a.push(now); hits.set(ip, a); return a.length > 10; };
+  async function issue(u) {
+    const token = crypto.randomBytes(32).toString('hex');
+    u.tokens = [...(u.tokens || []).filter(x => x.exp > Date.now()), { hash: sha(token), exp: Date.now() + TOKEN_DAYS * 864e5 }].slice(-MAX_TOKENS);
+    await store.put(u);
+    return token;
+  }
+  async function auth(req) {
+    const m = /^Bearer ([a-f0-9]{64})$/.exec(req.headers.authorization || '');
+    if (!m) return null;
+    const u = await store.byToken(sha(m[1]));
+    return u && u.tokens.some(x => x.hash === sha(m[1]) && x.exp > Date.now()) ? u : null;
+  }
+  const view = u => ({ name: u.name, admin: ADMINS.has(u._id), save: u.save || null });
+
+  return async function handle(req, res, p) {
+    const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
+    let body = {};
+    if (req.method === 'POST' || req.method === 'PUT') {
+      let raw = '';
+      for await (const c of req) { raw += c; if (raw.length > MAX_BODY) return send(413, { error: 'Çok büyük' }); }
+      try { body = JSON.parse(raw || '{}'); } catch (e) { return send(400, { error: 'Bozuk istek' }); }
+    }
+    const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0];
+    try {
+      if (p === '/api/health') return send(200, { ok: true, db: store.kind.startsWith('MongoDB') ? 'kalıcı' : 'geçici' });
+
+      if (p === '/api/register' && req.method === 'POST') {
+        if (limited(ip)) return send(429, { error: 'Çok fazla deneme, bir dakika bekle.' });
+        const name = String(body.name || '').trim(), pass = String(body.pass || '');
+        if (!NAME_RE.test(name)) return send(400, { error: 'Kullanıcı adı 3-16 harf, rakam ya da _ olmalı.' });
+        if (pass.length < 6 || pass.length > 64) return send(400, { error: 'Şifre 6-64 karakter olmalı.' });
+        const salt = crypto.randomBytes(16).toString('hex');
+        const u = { _id: nameKey(name), name, pass: { salt, hash: await scrypt(pass, salt) }, tokens: [], save: cleanSave(body.save), savedAt: Date.now(), created: Date.now() };
+        if (!(await store.insert(u))) return send(409, { error: 'Bu kullanıcı adı alınmış.' });
+        return send(200, { token: await issue(u), ...view(u) });
+      }
+      if (p === '/api/login' && req.method === 'POST') {
+        if (limited(ip)) return send(429, { error: 'Çok fazla deneme, bir dakika bekle.' });
+        const u = await store.get(nameKey(String(body.name || '').trim()));
+        const ok = u && crypto.timingSafeEqual(Buffer.from(await scrypt(String(body.pass || ''), u.pass.salt), 'hex'), Buffer.from(u.pass.hash, 'hex'));
+        if (!ok) return send(401, { error: 'Kullanıcı adı ya da şifre yanlış.' });
+        return send(200, { token: await issue(u), ...view(u) });
+      }
+
+      const u = await auth(req);
+      if (!u) return send(401, { error: 'Oturum yok ya da süresi doldu.' });
+      if (p === '/api/me') return send(200, view(u));
+      if (p === '/api/logout' && req.method === 'POST') {
+        const h = sha((req.headers.authorization || '').slice(7)); u.tokens = u.tokens.filter(x => x.hash !== h); await store.put(u); return send(200, { ok: true });
+      }
+      if (p === '/api/save' && req.method === 'PUT') {
+        const next = cleanSave(body.save);
+        if (!next) return send(400, { error: 'Kayıt okunamadı.' });
+        const prev = u.save ? cleanSave(u.save) : null;
+        if (prev && !ADMINS.has(u._id)) {
+          // altın, geçen süreye göre makul olandan hızlı artamaz; seviyeler bedelsiz atlanamaz
+          const mins = (Date.now() - (u.savedAt || 0)) / 60000;
+          const allowed = Math.min(250000, 8000 + mins * 1500);
+          if (next.gold + spent(prev, next) - prev.gold > allowed) return send(422, { error: 'Kayıt sunucudakiyle uyuşmuyor.', save: u.save });
+        }
+        u.save = next; u.savedAt = Date.now(); await store.put(u);
+        return send(200, { ok: true, savedAt: u.savedAt });
+      }
+      return send(404, { error: 'Bulunamadı' });
+    } catch (e) {
+      console.error('api hatası:', e);
+      return send(500, { error: 'Sunucu hatası' });
+    }
+  };
+}
+// lobide adı hesaptan doğrulamak için
+async function userByToken(store, token) {
+  if (!/^[a-f0-9]{64}$/.test(token || '')) return null;
+  const u = await store.byToken(sha(token));
+  return u && u.tokens.some(x => x.hash === sha(token) && x.exp > Date.now()) ? u : null;
+}
+module.exports = { makeApi, userByToken };

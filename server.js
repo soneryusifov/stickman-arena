@@ -5,6 +5,13 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
+const { openStore } = require('./store');
+const { makeApi, userByToken } = require('./accounts');
+
+// hesap deposu (MongoDB ya da yerel dosya); açılana dek /api 503 döner
+let store = null, api = null;
+openStore().then(s => { store = s; api = makeApi(s); console.log('Kullanıcı deposu: ' + s.kind); })
+  .catch(e => console.error('Kullanıcı deposu açılamadı:', e.message));
 
 const PORT = process.env.PORT || 3000;
 const ROOT = path.join(__dirname, 'public');
@@ -12,9 +19,13 @@ const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; ch
 
 /* ---------------- statik dosyalar ---------------- */
 const server = http.createServer((req, res) => {
-  if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch (e) { res.writeHead(400); return res.end(); }
+  if (p.startsWith('/api/')) {
+    if (!api) { res.writeHead(503, { 'content-type': 'application/json' }); return res.end('{"error":"Sunucu hazırlanıyor"}'); }
+    return api(req, res, p);
+  }
+  if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
   if (p === '/healthz') { res.writeHead(200, { 'content-type': 'text/plain' }); return res.end('ok'); }
   if (p === '/') p = '/index.html';
   const file = path.normalize(path.join(ROOT, p));
@@ -99,12 +110,17 @@ wss.on('connection', ws => {
       send(c, { op: 'welcome', peer: c.peer });
       join(c, 'lobby');
       for (const r of c.rooms) markDirty(r);
+      // giriş yapmış oyuncunun adı hesaptan gelir, istemcinin yazdığı ad yok sayılır
+      if (m.token && store) {
+        const cc = c;
+        userByToken(store, m.token).then(u => { if (u && clients.get(cc.peer) === cc) { cc.name = u.name; cc.verified = true; for (const r of cc.rooms) markDirty(r); } }).catch(() => {});
+      }
       return;
     }
     if (!c) return;
     const r = m.room;
     if (m.op === 'bye') { clearTimeout(c.gone); drop(c); c = null; return ws.close(); } // sayfa kapandı: beklemeden çık
-    if (m.op === 'name') { c.name = cleanName(m.name); for (const x of c.rooms) markDirty(x); }
+    if (m.op === 'name') { if (c.verified) return; c.name = cleanName(m.name); for (const x of c.rooms) markDirty(x); }
     else if (m.op === 'join' && typeof r === 'string' && ROOM_RE.test(r) && r !== 'lobby') {
       if (!join(c, r)) send(c, { op: 'full', room: r });
     }

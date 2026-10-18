@@ -202,6 +202,19 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .guide ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px;color:#cfc8de;font-size:15px;line-height:1.4}
 .guide b{color:var(--text)}
 .guide .btn{align-self:center}
+/* hesap penceresi */
+.acc .gc{gap:10px}
+.atabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.atabs button{font:inherit;font-weight:700;padding:.55em;border-radius:4px;border:1px solid var(--line);background:#100d17;color:var(--muted);cursor:pointer}
+.atabs button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:#1c1626}
+.accf{display:flex;flex-direction:column;gap:10px}
+.accf label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+.accf input{font:inherit;font-size:16px;padding:.55em .7em;color:var(--text);background:#100d17;border:1px solid var(--line);border-radius:4px}
+.accf input:focus-visible,.atabs button:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.aerr{margin:0;min-height:1.2em;color:#ff8a7a;font-size:14px}
+.acc .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tbtn.acct{width:auto;font-size:13px;font-weight:700;padding:0 10px;gap:6px;display:inline-flex;align-items:center}
+.tbtn.acct.guest{border-color:var(--gold);color:var(--gold)}
 .overlay{position:absolute;inset:0;display:grid;place-items:center;background:rgba(6,5,10,.72);backdrop-filter:blur(3px)}
 .overlay .ocard{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center;padding:24px}
 .overlay h2{margin:0;font-family:var(--font-display);font-weight:800;font-size:clamp(40px,8vw,88px);letter-spacing:.1em;color:var(--gold);text-shadow:0 4px 0 #000,0 0 40px rgba(242,193,78,.5)}
@@ -301,6 +314,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
     <div class="plaque" id="plaque">KASABA</div>
     <div class="tright">
     <button class="tbtn" id="speedBtn" type="button" aria-pressed="false" aria-label="Savaş hızı" title="Savaş hızı" hidden>1×</button>
+    <button class="tbtn acct guest" id="accBtn" type="button" aria-haspopup="dialog" hidden>Giriş yap</button>
     <button class="tbtn" id="fsBtn" type="button" aria-label="Tam ekran" title="Tam ekran" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     <button class="tbtn" id="helpBtn" type="button" aria-label="Nasıl oynanır" title="Nasıl oynanır">?</button>
     <button class="tbtn snd" id="sfxBtn" type="button" aria-label="Ses efektleri" title="Ses efektleri"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg></button>
@@ -308,6 +322,27 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
     </div>
   </div>
 
+  <div class="guide acc" id="acc" role="dialog" aria-modal="true" aria-labelledby="accT" hidden>
+    <div class="gc">
+      <h2 id="accT">Hesap</h2>
+      <div id="accOut">
+        <div class="atabs"><button type="button" id="tabLogin" aria-pressed="true">Giriş yap</button><button type="button" id="tabReg" aria-pressed="false">Kayıt ol</button></div>
+        <form class="accf" id="accForm">
+          <label>Kullanıcı adı<input id="accName" autocomplete="username" maxlength="16" required spellcheck="false" autocapitalize="off"></label>
+          <label>Şifre<input id="accPass" type="password" autocomplete="current-password" minlength="6" maxlength="64" required></label>
+          <p class="aerr" id="accErr" role="alert"></p>
+          <button class="btn" type="submit" id="accGo">Giriş yap</button>
+        </form>
+        <p class="lnote" id="accHint">Hesapla ilerlemen sunucuda saklanır; başka cihazdan da kaldığın yerden devam edersin.</p>
+        <p class="aerr" id="accWarn" hidden>Deneme sürümü: veritabanı henüz bağlı değil, hesaplar sunucu yeniden başlayınca silinebilir.</p>
+        <div class="row"><button class="btn ghost" id="accSkip" type="button">Misafir olarak oyna</button></div>
+      </div>
+      <div id="accIn" hidden>
+        <p class="lnote" style="text-align:center">Giriş yapıldı: <b id="accWho"></b><br>İlerlemen sunucuya kaydediliyor.</p>
+        <div class="row"><button class="btn ghost" id="accLogout" type="button">Çıkış yap</button><button class="btn" id="accClose" type="button">Kapat</button></div>
+      </div>
+    </div>
+  </div>
   <div class="guide" id="guide" role="dialog" aria-modal="true" aria-labelledby="guideT" hidden>
     <div class="gc">
       <h2 id="guideT">Hoş geldin, kahraman</h2>
@@ -683,7 +718,86 @@ const potionCount = a => 2 + Math.floor((a - 1) / 3);   // 1: 2 iksir, 4: 3, 7: 
 const potionHeal = a => 130 + 20 * (a - 1);             // 1: 130, 8: 270
 const gearCap = () => Math.min(10, T.hall + 2);
 const mineStored = () => Math.min(mineCap(T.mine), Math.floor(mineRate(T.mine) * Math.max(0, Date.now() - T.mineAt) / 3600000));
-const persist = () => { try { localStorage.setItem('sa.save', JSON.stringify(SAVE)); } catch (e) {} };
+/* Hesap ve bulut kaydı: yalnızca kendi sunucumuzda (/api) çalışır; claude.ai'de ve misafirken kayıt tarayıcıda kalır.
+   Yerel kayıt bir önbellektir: her değişiklikten kısa süre sonra sunucuya da yazılır; sunucudaki daha yeniyse o alınır. */
+const ACC = { on: false, token: null, name: null, admin: false, after: false };
+try { ACC.token = localStorage.getItem('sa.token'); } catch (e) {}
+const persist = () => { SAVE._t = Date.now(); try { localStorage.setItem('sa.save', JSON.stringify(SAVE)); } catch (e) {} cloudPush(); };
+async function api(method, url, body) {
+  try {
+    const r = await fetch(url, { method, headers: { 'content-type': 'application/json', ...(ACC.token ? { authorization: 'Bearer ' + ACC.token } : {}) }, body: body ? JSON.stringify(body) : undefined });
+    return { ok: r.ok, status: r.status, body: await r.json().catch(() => ({})) };
+  } catch (e) { return { ok: false, status: 0, body: { error: 'Sunucuya ulaşılamadı.' } }; }
+}
+// sunucudaki kaydı al ve oyunu onunla yeniden aç
+function adoptSave(s) {
+  try { localStorage.setItem('sa.save', JSON.stringify(s)); sessionStorage.setItem('sa.adopted', '1'); } catch (e) {}
+  location.reload();
+}
+let pushT = null;
+function cloudPush(now) {
+  if (!ACC.on || !ACC.token) return;
+  clearTimeout(pushT);
+  pushT = setTimeout(async () => {
+    const r = await api('PUT', '/api/save', { save: SAVE });
+    if (r.status === 422 && r.body.save) adoptSave(r.body.save);
+    else if (r.status === 401) logoutLocal();
+  }, now ? 0 : 1500);
+}
+function logoutLocal() { ACC.token = ACC.name = null; ACC.admin = false; try { localStorage.removeItem('sa.token'); } catch (e) {} renderAcc(); }
+function renderAcc() {
+  const b = $('accBtn'); if (!b) return;
+  b.hidden = !ACC.on; b.textContent = ACC.name || 'Giriş yap'; b.classList.toggle('guest', !ACC.name);
+  b.setAttribute('aria-label', ACC.name ? 'Hesap: ' + ACC.name : 'Giriş yap ya da kayıt ol');
+  $('accOut').hidden = !!ACC.name; $('accIn').hidden = !ACC.name; $('accWho').textContent = ACC.name || '';
+}
+let accMode = 'login';
+function setAccMode(m) {
+  accMode = m; $('tabLogin').setAttribute('aria-pressed', m === 'login'); $('tabReg').setAttribute('aria-pressed', m === 'register');
+  $('accGo').textContent = m === 'login' ? 'Giriş yap' : 'Kayıt ol'; $('accErr').textContent = '';
+  $('accPass').setAttribute('autocomplete', m === 'login' ? 'current-password' : 'new-password');
+  $('accHint').textContent = m === 'login' ? 'Hesapla ilerlemen sunucuda saklanır; başka cihazdan da kaldığın yerden devam edersin.' : 'Kayıt olunca şu anki ilerlemen (altın, ekipman, binalar) hesabına taşınır.';
+}
+function openAcc() { renderAcc(); $('acc').hidden = false; (ACC.name ? $('accClose') : $('accName')).focus(); }
+function closeAcc() { $('acc').hidden = true; $('accBtn').focus(); }
+async function cloudInit() {
+  if (window.claude || !/^https?:$/.test(location.protocol)) return;
+  const hl = await api('GET', '/api/health'); if (!hl.ok) return;
+  ACC.on = true; $('accWarn').hidden = hl.body.db === 'kalıcı';
+  if (ACC.token) {
+    const r = await api('GET', '/api/me');
+    if (r.ok) {
+      ACC.name = r.body.name; ACC.admin = r.body.admin;
+      try { localStorage.setItem(NICK_KEY, ACC.name); } catch (e) {}
+      const srv = r.body.save;
+      if (srv && (srv._t || 0) > (SAVE._t || 0) && !sessionStorage.getItem('sa.adopted')) return adoptSave(srv);
+      if (!srv || (SAVE._t || 0) > (srv._t || 0)) cloudPush(true);
+    } else if (r.status === 401) logoutLocal();
+  }
+  try { sessionStorage.removeItem('sa.adopted'); } catch (e) {}
+  renderAcc();
+  let skip = false; try { skip = !!localStorage.getItem('sa.accSkip'); } catch (e) {}
+  if (!ACC.token && !skip) { if ($('guide').hidden) openAcc(); else ACC.after = true; }
+}
+$('accBtn').addEventListener('click', openAcc);
+$('tabLogin').addEventListener('click', () => setAccMode('login'));
+$('tabReg').addEventListener('click', () => setAccMode('register'));
+$('accSkip').addEventListener('click', () => { try { localStorage.setItem('sa.accSkip', '1'); } catch (e) {} closeAcc(); });
+$('accClose').addEventListener('click', closeAcc);
+$('acc').addEventListener('keydown', e => { if (e.key === 'Escape') closeAcc(); });
+$('accLogout').addEventListener('click', async () => { await api('POST', '/api/logout'); logoutLocal(); closeAcc(); });
+$('accForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('accName').value.trim(), pass = $('accPass').value;
+  $('accGo').disabled = true; $('accErr').textContent = '';
+  const r = await api('POST', accMode === 'login' ? '/api/login' : '/api/register', { name, pass, save: accMode === 'register' ? SAVE : undefined });
+  $('accGo').disabled = false;
+  if (!r.ok) { $('accErr').textContent = r.body.error || 'Olmadı, tekrar dene.'; return; }
+  ACC.token = r.body.token; ACC.name = r.body.name;
+  try { localStorage.setItem('sa.token', ACC.token); localStorage.setItem(NICK_KEY, ACC.name); } catch (e) {}
+  // girişte hesabın kaydı esas alınır (hesap yeniyse buradaki ilerleme hesaba yüklenir)
+  if (r.body.save) adoptSave(r.body.save); else { cloudPush(true); setTimeout(() => location.reload(), 400); }
+});
 const gearOf = id => { const g = SAVE.gear[id] = SAVE.gear[id] || {}; ITEMS.forEach(k => { if (!(g[k] >= 1 && g[k] <= 10)) g[k] = 1; }); return g; };
 const gearLevel = g => Math.round(ITEMS.reduce((s, k) => s + g[k], 0) / ITEMS.length);
 function gearStats(c, g) {
@@ -1352,7 +1466,7 @@ function showSpeed() { $('speedBtn').textContent = SPD + '×'; $('speedBtn').set
 $('speedBtn').addEventListener('click', () => { SPD = SPD === 2 ? 1 : 2; showSpeed(); try { localStorage.setItem('sa.speed', SPD); } catch (e) {} });
 showSpeed();
 function openGuide() { $('guide').hidden = false; $('guideOk').focus(); }
-function closeGuide() { $('guide').hidden = true; try { localStorage.setItem('sa.guide', '1'); } catch (e) {} $('helpBtn').focus(); }
+function closeGuide() { $('guide').hidden = true; try { localStorage.setItem('sa.guide', '1'); } catch (e) {} $('helpBtn').focus(); if (ACC.after) { ACC.after = false; openAcc(); } }
 $('helpBtn').addEventListener('click', openGuide);
 $('guideOk').addEventListener('click', closeGuide);
 $('guide').addEventListener('keydown', e => { if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); if (e.key === 'Escape') closeGuide(); else $('guideOk').focus(); } });
@@ -1789,7 +1903,7 @@ function wsRoom() {
     function connect() {
       try { ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'); } catch (e) { return finish(null); }
       const t = setTimeout(() => { if (!welcomed) { try { ws.close(); } catch (e) {} finish(null); } }, 5000);
-      ws.onopen = () => send({ op: 'hello', peer: myId, key, name: myNick() });
+      ws.onopen = () => send({ op: 'hello', peer: myId, key, name: myNick(), token: ACC.token || undefined });
       ws.onmessage = e => {
         let m; try { m = JSON.parse(e.data); } catch (x) { return; }
         if (m.op === 'welcome') {
@@ -1837,7 +1951,7 @@ async function initRoom() {
     else { const w = await wsRoom(); if (w) ({ room, user } = w); else { const m = mockRoom(); if (m) ({ room, user } = m); } }
   } catch (e) { room = null; }
   if (!room) { $('lobbyNote').textContent = 'Lobi sunucusuna bağlanılamadı. Sayfayı yenileyip tekrar dene.'; $('chatSend').disabled = true; $('chatIn').disabled = true; return; }
-  if (user && user.setName) {
+  if (user && user.setName && !ACC.name) {
     $('nickf').hidden = false; $('nickIn').value = user.nick();
     $('nickf').addEventListener('submit', e => { e.preventDefault(); const n = $('nickIn').value.trim().slice(0, 20); if (n) { user.setName(n); addChat(null, 'Adın artık ' + n + '.', null, true); } });
   }
@@ -2020,7 +2134,7 @@ function reset(foe) {
 $('again').addEventListener('click', () => { if (lastDuel) { lastDuel = false; openLobby(); } else reset(); });
 
 pick(chosen); openLobby(); requestAnimationFrame(frame);
-initRoom();
+cloudInit().finally(initRoom);
 try { if (!localStorage.getItem('sa.guide')) openGuide(); } catch (e) { openGuide(); }
 window.__game = { street: () => me, track, daily, renderQuests, F: () => F, S: () => S2, act: playerAct, pick, start: () => $('choose').click(), CLASSES, save: () => SAVE, open: openSelect, town: () => showScreen('town'), skillHeal, mkFighter, leagueOf, reward };
 })();
