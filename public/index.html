@@ -382,7 +382,9 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
 /* ===== savaş: tam ekran arena, her şey içinde ===== */
 html:has(#battleScreen:not([hidden])) .topbar{display:none}
 html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
-#battleScreen:not([hidden]){position:fixed;inset:0;z-index:20;display:grid;place-items:center;width:100vw;height:100dvh;margin:0;padding:0;background:#07060b}
+#battleScreen:not([hidden]){position:fixed;inset:0;z-index:20;display:grid;place-items:center;width:100vw;height:100dvh;margin:0;padding:0;background:#07060b;overflow:hidden}
+#battleScreen::before{content:'';position:absolute;inset:-40px;background:var(--bbg) center/cover no-repeat;filter:blur(22px) brightness(.45);z-index:-1}
+#battleScreen{isolation:isolate}
 #battleScreen .arena{width:min(100vw,calc(100dvh * 16 / 9));border:0;border-radius:0;box-shadow:none;container-type:inline-size}
 #battleScreen .lower,#battleScreen .hint,#teamL,#teamR{display:none}
 #battleScreen .hud{position:absolute;inset:0 0 auto 0;justify-content:center;padding:.8% 0;background:none;border:0;font-size:clamp(9px,1.05cqw,16px)}
@@ -398,7 +400,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 #battleScreen .log li{text-shadow:0 1px 2px #000} #battleScreen .log li:nth-child(2){opacity:.75} #battleScreen .log li:nth-child(3){opacity:.5}
 /* kahraman plakası */
 .plates{position:absolute;inset:0;pointer-events:none;z-index:2}
-.plate{--pc:var(--gold);position:absolute;transform:translate(-50%,-100%);font-size:clamp(9px,calc((.75 + .35 * var(--s,1)) * 1cqw),17px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
+.plate{--pc:var(--gold);position:absolute;transform:translate(0,-50%);font-size:clamp(9px,calc((.75 + .35 * var(--s,1)) * 1cqw),17px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
   background:rgba(8,6,12,.8);border:1px solid var(--pc);border-radius:.45em;pointer-events:auto;cursor:pointer;white-space:nowrap;transition:box-shadow .2s}
 .plate .portrait{width:2.9em;height:2.9em;border-width:1px;border-radius:.3em;box-shadow:none;flex:none}
 .plate .pb{display:flex;flex-direction:column;gap:.16em;width:6.6em;min-width:0}
@@ -411,7 +413,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .plate .st{font-style:normal;display:flex;gap:.3em;margin-left:.2em;font-size:.55em;font-weight:800;text-transform:uppercase} .plate .st i{font-style:normal}
 .plate.cur{box-shadow:0 0 0 1px var(--pc),0 0 1em var(--pc)}
 .plate.tgt{outline:2px solid #ff5a5a;outline-offset:1px} .plate.atgt{outline:2px solid #4be38a;outline-offset:1px}
-.plate.dead{display:none}
+.plate.dead{display:none} .plate.pl-l{transform:translate(-100%,-50%);flex-direction:row-reverse;padding:.22em .22em .22em .4em}
 .plates.tight .plate .pn{display:none} .plates.tight .plate .portrait{width:2.3em;height:2.3em} .plates.tight .plate .pb{width:4.8em} .plates.tight .plate{gap:.25em;padding:.18em .3em .18em .18em}
 /* savaşta açılan pencereler: ortada, ekranın yarısı */
 html:has(#battleScreen:not([hidden])) .guide.insp .gc.ic{width:max(50vw,min(720px,96vw));height:max(50vh,min(440px,94vh))}
@@ -423,7 +425,7 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
   .bctl .tbtn,.bctl .back{height:30px;min-width:30px;width:auto} .bctl .back{width:30px}
   .bset{min-width:120px;padding:6px;gap:4px} .bset .tbtn{min-height:28px;padding:2px 8px} .bset .tbtn::after{font-size:11px}
   #battleScreen .log{width:56%;font-size:9px} #battleScreen .log li:nth-child(n+3){display:none}
-  .plate{font-size:clamp(9.5px,calc((.95 + .4 * var(--s,1)) * 1cqw),13px)}
+  .plate{font-size:clamp(8px,calc((.95 + .4 * var(--s,1)) * 1cqw),13px)}
   #battleScreen .overlay .ocard{width:70%;min-height:60%;padding:12px}
 }
 .verbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6);font-weight:700}
@@ -802,11 +804,12 @@ const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
 })();
 // boyalı arena (assets/bg/battle_unlit.webp, 1672x941 ≈ 16:9, ateşler sönük): yüklenirse çizilen kalenin yerine geçer;
 // ateşleri oyun canlı yakar. Yerler, yanan ve sönük resim karşılaştırılarak bulundu: [orta x, alt y, genişlik, yükseklik] (resim pikseli)
+const ARENA_BG = 'assets/bg/arena3.png?v=1'; // içeride duran derin "C" hilalli arena (kullanıcının çizimi)
 let bgArt = false;
 (function () {
   const im = new Image();
   im.onload = () => { const c = bg.getContext('2d'); c.drawImage(im, 0, 0, W, H); bgArt = true; };
-  im.src = 'assets/bg/battle_unlit.webp?v=1';
+  im.src = ARENA_BG;
 })();
 const FIRES = [
   [47, 363, 70, 75], [1623, 364, 68, 81],                       // kenar mangalları
@@ -1064,8 +1067,8 @@ function frame(t) {
   ctx.save();
   const sk = Math.max(0, 1 - (t - shakeT) / 350) * shakeMag;
   if (sk > 0) ctx.translate(rnd(-sk, sk), rnd(-sk, sk));
-  ctx.drawImage(forestRun && fbgOk ? fbg : bg, 0, 0);
-  if (forestRun && fbgOk) {} else if (bgArt) drawFires(t); else for (const x of TORCH_X) drawTorch(x, t);
+  const sbg = stageBg(); ctx.drawImage(sbg || (forestRun && fbgOk ? fbg : bg), 0, 0);
+  if (sbg || (forestRun && fbgOk) || bgArt) {} else for (const x of TORCH_X) drawTorch(x, t); // yeni arenada yanan meşale yok
   if (F) {
     for (const f of F.list) Rig.update(f.A, dt * SPD);
     // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
@@ -1918,15 +1921,26 @@ try { if (MODES[localStorage.getItem('sa.mode')]) battleMode = localStorage.getI
 // 1 kişi önde, 2 kişi iki uçta, daha fazlası uçlar arasında eşit aralıkla.
 const CRESCENT_PATH = [[308, 593], [231, 566], [178, 532], [158, 490], [166, 448], [208, 406], [292, 375], [407, 353]];
 const CRESCENT_T = { 1: [.12], 2: [.06, .8], 3: [.04, .44, .84], 4: [.03, .31, .59, .87], 5: [.02, .24, .46, .68, .9] }; // üst uç biraz içeride: plakası ekranın tepesine çarpmasın
-function pathPoint(t) { // t: 0 alttaki uç, 1 üstteki uç (yol boyu)
-  const P = CRESCENT_PATH, seg = []; let tot = 0;
+function pathPoint(t, P = CRESCENT_PATH) { // t: 0 alttaki uç, 1 üstteki uç (yol boyu)
+  const seg = []; let tot = 0;
   for (let i = 1; i < P.length; i++) { const d = Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); seg.push(d); tot += d; }
   let r = t * tot;
   for (let i = 0; i < seg.length; i++) { if (r <= seg[i] || i === seg.length - 1) { const k = Math.min(1, r / seg[i]); return [P[i][0] + (P[i + 1][0] - P[i][0]) * k, P[i][1] + (P[i + 1][1] - P[i][1]) * k]; } r -= seg[i]; }
 }
+// uzun hilal (arena2): sol hilalin orta çizgisi, alttaki uçtan (önde) üstteki uca (arkada). Kahramanlar yolun alt %62'sine dizilir;
+// daha yukarısı ekranın tepesine çok yakın (baş ve plaka taşar). Zemin derin olduğu için arkadakiler belirgin biçimde küçülür.
+const LAYOUTS = {
+  classic: { path: CRESCENT_PATH, T: CRESCENT_T, depth: y => .9 + .1 * Math.max(0, Math.min(1, (y - 353) / (593 - 353))) },
+  // arena3: sol hilalin orta çizgisi, alttaki uç (önde) → kenara doğru şişen kavis → üstteki uç (arkada)
+  tall: { path: [[295, 548], [240, 535], [185, 512], [145, 480], [122, 440], [115, 395], [125, 350], [150, 305], [190, 262], [245, 228], [300, 205], [355, 192]],
+    T: { 1: [.02], 2: [0, 1], 3: [0, .5, 1], 4: [0, .33, .67, 1], 5: [0, .25, .5, .75, 1] }, // uçtan uca eşit aralık // küçük takımda üstteki daha aşağıda: büyük olduğu için başı taşmasın
+    depth: y => .68 + .32 * Math.max(0, Math.min(1, (y - 192) / (548 - 192))) },
+};
+let LAYOUT = LAYOUTS.tall;
+const layoutFor = () => { const st = forestRun && STAGES[forestRun.k - 1]; return st && st.bg && STAGE_BG[st.bg] ? LAYOUTS.classic : LAYOUTS.tall; }; // kurt ini eski düzende
 function arcSpot(n, slot, N) {
-  const [x, y] = pathPoint(CRESCENT_T[n][slot]), lo = 353, hi = 593;
-  return { x, y, s: SIZE[N] * (.9 + .1 * (y - lo) / (hi - lo)) }; // en arkadaki %10 küçük
+  const [x, y] = pathPoint(LAYOUT.T[n][slot], LAYOUT.path);
+  return { x, y, s: SIZE[N] * LAYOUT.depth(y) };
 }
 const SIZE = { 1: .95, 2: .84, 3: .74, 4: .66, 5: .6 };
 // kalabalık takıma güç azaltma: (az / çok)^0.55 oranında can ve hasar (1v2: %68, 1v5: %41, 4v5: %88)
@@ -1947,6 +1961,9 @@ function targetFor(f, sk, t) {
 }
 // savaşı kur: cfg = { A: [üye], B: [üye] }, üye = { id, gear, alch, ctrl: 'me'|'ai'|'remote', name }
 function newBattle(cfg) {
+  LAYOUT = layoutFor();
+  const st = forestRun && STAGES[forestRun.k - 1], bsrc = st && st.bg && STAGE_BG[st.bg] ? STAGE_BG_SRC[st.bg] : (forestRun && fbgOk ? 'assets/bg/forest_battle.webp?v=1' : ARENA_BG);
+  $('battleScreen').style.setProperty('--bbg', `url("${bsrc}")`); // telefonda yanlardaki boşluk bu resmin bulanığıyla dolar
   const list = [];
   for (const team of ['A', 'B']) cfg[team].forEach((m, slot) => { const f = m.mon ? mkMonster(m, team) : mkFighter(m.id, team, m.gear, m.alch, m); f.slot = slot; f.idx = list.length; f.peer = m.peer || null; list.push(f); });
   F = { list, A: list.filter(f => f.team === 'A'), B: list.filter(f => f.team === 'B') };
@@ -2036,8 +2053,10 @@ function buildHUD() {
 function placePlates() {
   for (const f of F.list) {
     const u = f.ui; if (!u) continue;
-    u.style.left = ((f.A.x + f.A.off * f.A.face) / W * 100) + '%';
-    u.style.top = ((footY(f) - (f.topH || 362) * f.sc) / H * 100) + '%';
+    // plaka başın yanında, ortadaki boş zemine doğru (hilalde arkadaki kahramanın üstüne binmesin)
+    const side = f.A.face, x = f.A.x + f.A.off * f.A.face + side * 62 * f.sc, y = footY(f) - (f.topH || 362) * f.sc * .8;
+    u.style.left = (x / W * 100) + '%'; u.style.top = Math.max(4, y / H * 100) + '%';
+    u.classList.toggle('pl-l', side < 0);
   }
 }
 const statusChips = f => (f.shield ? `<i style="color:${f.shieldColor}">${f.shield >= 1 ? 'Kaçış' : 'Kalkan'}</i>` : '') + (f.rage ? '<i style="color:#ff5a3a">Öfke</i>' : '')
@@ -2145,6 +2164,7 @@ function hit(a, d, sk) {
   if (sk.drain) { const h = heal(a, Math.round(dmg * sk.drain), '#ff4a6a'); if (h) extra += `, ${h} can emdi`; }
   log(`${nm}: ${d.name} ${dmg} hasar aldı${furyHit ? ' (ÖFKE!)' : ''}${crit ? ' (kritik!)' : ''}${blocked ? ', kalkan hasarı azalttı' : ''}${extra}.`, a.side);
   if (d.hp <= 0) Rig.play(d.A, 'death'); else Rig.play(d.A, 'hit');
+  if (d.mon) setTimeout(() => Sfx.voice(d.id, d.hp <= 0 ? 'death' : 'hurt', .75), 120); // canavarın kendi sesi
 }
 // menzilli görsel: yerinden çıkıp hedefe gider; bitiş süresini döner
 function launch(f, o, sk) {
@@ -2170,6 +2190,7 @@ async function act(f, idx, tgt) {
   const live = () => g === S2.gid;
   const anim = sk.anim === undefined ? 'attack' : sk.anim;
   if (sk.kind === 'melee') {
+    if (f.mon) Sfx.voice(f.id, 'growl', .6); // canavar hırlayarak atılır
     const reach = Math.abs(o.A.x - A.x) - 230 * Math.min(f.sc || 1, o.sc || 1), ms = Math.max(380, reach * 1.3); // yürüyüş süresi mesafeyle orantılı
     Rig.play(A, 'walk'); await tweenOff(A, reach, ms, o.gy - f.gy); if (!live()) return; // hedefin derinliğine de yürür
     const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
@@ -2656,6 +2677,7 @@ $('invYes').addEventListener('click', () => {
 const gearArr = g => ITEMS.map(k => g[k]);
 const gearObj = a => cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(a) ? a[i] : 1])));
 async function startMatch(o) { // o = { id, room, kind: 'duel'|'team', mode, seed, roster }
+  forestRun = null;
   let dr; try { dr = await room.join(o.room); } catch (e) { addChat(null, 'Maç odası açılamadı.', null, true); return; }
   const ids = [...new Set(o.roster.map(r => r.id))], mine = myPeer();
   try { await Promise.all(ids.flatMap(k => [Rig.load(k), Rig.loadTiers(k)])); } catch (e) {}
@@ -2903,7 +2925,7 @@ SAVE.forest = { best: 0, ...(SAVE.forest || {}) };
 SAVE.forest.mats = { pelt: 0, silk: 0, ess: 0, relic: 0, ...(SAVE.forest.mats || {}) };
 // her canavarın tam 4 yeteneği var (botların karar kodu 0-3 sırasını bekler); h: kahramana göre boy
 const MONSTERS = {
-  wolf:    { name: 'Kurt', desc: 'Sürü halinde avlanır, ısırığı kanatır.', hp: 300, mp: 100, regen: 14, crit: .14, dodge: .12, armor: 0, h: .55, color: '#9aa6b8', mat: 'pelt',
+  wolf:    { name: 'Kurt', desc: 'Sürü halinde avlanır, ısırığı kanatır.', hp: 300, mp: 100, regen: 14, crit: .14, dodge: .12, armor: 0, h: .64, color: '#9aa6b8', mat: 'pelt',
     skills: [M('Isırık', 0, [26, 34], 'fang'), M('Parçalama', 25, [30, 40], 'fang', { dot: BLEED }), M('Atılma', 20, [32, 42], 'fang'), M('Boğaz Isırığı', 50, [60, 76], 'fang', { big: true })] },
   spider:  { name: 'Dev Örümcek', desc: 'Ağıyla avını sabitler, zehirli ısırır.', hp: 260, mp: 120, regen: 14, crit: .12, dodge: .14, armor: .04, h: .45, color: '#8a5cc8', mat: 'silk',
     skills: [M('Zehirli Isırık', 0, [22, 30], 'fang', { dot: POISON }), Rg('Ağ Fırlat', 25, [16, 22], 'trap', 'trap', { stun: true }), M('Sokma', 15, [28, 36], 'dagger'), M('Ölümcül Isırık', 55, [58, 74], 'fang', { big: true, dot: POISON })] },
@@ -2923,11 +2945,11 @@ const MONSTERS = {
     skills: [Rg('Diken Büyüsü', 0, [34, 44], 'vines', 'vines', { color: '#7dff6b' }), HL('Orman Şifası', 40, 180, 'heart'), Rg('Zehir Bulutu', 30, [30, 40], 'drop', 'bolt', { dot: POISON, color: '#9dff6b' }), Rg('Doğanın Gazabı', 70, [100, 126], 'meteor', 'meteor', { big: true, color: '#7dff6b' })] },
 };
 const STAGES = [
-  { n: 'Kurt İzleri', pack: ['wolf', 'wolf'] },
+  { n: 'Kurt İzleri', pack: ['wolf', 'wolf'], bg: 'wolfden' },
   { n: 'Goblin Pususu', pack: ['goblin', 'wolf', 'goblin'] },
   { n: 'Örümcek Yuvası', pack: ['spider', 'goblin', 'spider'] },
   { n: 'Mantar Korusu', pack: ['mushroom', 'boar', 'mushroom'] },
-  { n: 'Alfa\'nın İni', pack: ['alpha', 'wolf', 'wolf'], boss: true },
+  { n: 'Alfa\'nın İni', pack: ['alpha', 'wolf', 'wolf'], boss: true, bg: 'wolfden' },
   { n: 'Yaban Patikası', pack: ['boar', 'wolf', 'wisp', 'boar'] },
   { n: 'Ruhlar Vadisi', pack: ['wisp', 'spider', 'mushroom', 'wisp'] },
   { n: 'Ent Geçidi', pack: ['treant', 'goblin', 'spider', 'goblin'] },
@@ -2938,6 +2960,119 @@ const stagePow = k => 1 + .17 * (k - 1); // aşama güçlendikçe can ve hasar a
 // canavar resimleri: assets/mon/<id>.webp (sola bakar); yoksa geçici siluet
 const MON_IMG = {};
 for (const id of Object.keys(MONSTERS)) { const im = new Image(); im.onload = () => { MON_IMG[id] = im; }; im.src = 'assets/mon/' + id + '.webp?v=1'; }
+/* ---------- canavar iskeletleri: her türün kendi parçaları ve eklemleri ----------
+   Parça sayfası (beyaz zemin, sola bakar) yüklenince her parça kendi pikselleriyle kesilir.
+   Açılar: pozitif = saat yönü (sola bakan çizimde: kafa/kuyruk ucu yukarı-aşağı, bacak ileri). */
+function cutPart(im, [x0, y0, x1, y1]) {
+  const pad = 4, w = x1 - x0 + 1 + pad * 2, h = y1 - y0 + 1 + pad * 2, c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'); x.drawImage(im, x0 - pad, y0 - pad, w, h, 0, 0, w, h);
+  const id = x.getImageData(0, 0, w, h), d = id.data, N = w * h, m = new Uint8Array(N), lab = new Int32Array(N);
+  for (let i = 0; i < N; i++) if (Math.min(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) < 225) m[i] = 1;
+  let best = 0, bestN = 0, n = 0; // yalnızca en büyük bileşen (komşu parçalardan taşan kırıntılar atılır)
+  for (let i = 0; i < N; i++) {
+    if (!m[i] || lab[i]) continue; n++; let cnt = 0; const st = [i]; lab[i] = n;
+    while (st.length) { const p = st.pop(), X = p % w, Y = (p - X) / w; cnt++;
+      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const a = X + dx, b = Y + dy; if (a < 0 || b < 0 || a >= w || b >= h) continue; const q = b * w + a; if (m[q] && !lab[q]) { lab[q] = n; st.push(q); } } }
+    if (cnt > bestN) { bestN = cnt; best = n; }
+  }
+  for (let i = 0; i < N; i++) {
+    const mn = Math.min(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); let keep = lab[i] === best;
+    if (!keep && !m[i]) { const X = i % w, Y = (i - X) / w; for (let dy = -2; dy <= 2 && !keep; dy++) for (let dx = -2; dx <= 2; dx++) { const a = X + dx, b = Y + dy; if (a >= 0 && b >= 0 && a < w && b < h && lab[b * w + a] === best) { keep = true; break; } } }
+    d[i * 4 + 3] = keep ? (mn > 222 ? Math.max(0, Math.min(255, (252 - mn) * 9)) : 255) : 0;
+  }
+  x.putImageData(id, 0, 0); return { c, ox: x0 - pad, oy: y0 - pad };
+}
+// dört ayaklı iskelet (kurt; ileride yaban domuzu): gövde, kafa + ayrı alt çene, kuyruk, üç parçalı 4 bacak
+// (üst, alt, pençe; uzak taraf koyu). Parça sayfasında birleşmiş kurt rehberi var; ölçekler ona göre ayarlandı:
+// s = parçanın ölçeği (bacakta kalınlık), sl = bacak boyu. Bacak parçaları yüklenirken eklem ekseni dikey olacak şekilde döndürülür.
+const MRIG = {
+  wolf: {
+    src: 'assets/mon/wolf_parts2.webp?v=1',
+    R: { head: [38, 412, 401, 690], torso: [483, 436, 1029, 723], tail: [1110, 482, 1465, 762], jaw: [77, 661, 218, 743],
+      fu: [111, 738, 303, 989], fl: [340, 761, 511, 986], fp: [501, 829, 674, 988], hu: [836, 729, 1056, 974], hl: [1078, 768, 1252, 988], hp: [1298, 832, 1466, 991] },
+    // bacak eksenleri: [üst yuva, alt yuva] (sayfa pikseli)
+    LIMB: { fu: [[283, 780], [133, 963]], fl: [[484, 783], [367, 963]], hu: [[862, 781], [1032, 939]], hl: [[1097, 801], [1199, 964]] },
+    J: { torso: { s: .8, pv: [502, 570], neck: [512, 560], shoulder: [722, 668], hip: [966, 662], tailBase: [1000, 560] },
+      head: { s: .68, pv: [330, 600], hinge: [160, 630] }, jaw: { s: .68, pv: [205, 680] }, tail: { s: .75, pv: [1128, 540] },
+      fu: { s: .52, sl: .37 }, fl: { s: .52, sl: .37 }, hu: { s: .52, sl: .37 }, hl: { s: .52, sl: .37 },
+      fp: { s: .44, pv: [643, 842], sole: 988 }, hp: { s: .44, pv: [1430, 842], sole: 991 } },
+    // duruş açıları (yakın / uzak bacak ayrı ki dört pençe görünsün)
+    REST: { fn1: .42, fn2: -.42, fn3: 0, ff1: .22, ff2: -.3, ff3: .05, hn1: -.35, hn2: .45, hn3: -.08, hf1: -.18, hf2: .4, hf3: -.1 },
+  },
+};
+const RIGP = {}; // yüklenmiş parçalar (+ hesaplanan zemin ve boy)
+function straightenPart(p, pv, end) { // eklem ekseni dikey: pv üstte, end tam altında
+  const dx = end[0] - pv[0], dy = end[1] - pv[1], L = Math.hypot(dx, dy), a = Math.atan2(dx, dy), D = Math.ceil(Math.hypot(p.c.width, p.c.height)) * 2;
+  const c = document.createElement('canvas'); c.width = c.height = D; const x = c.getContext('2d');
+  x.translate(D / 2, D / 2); x.rotate(a); x.drawImage(p.c, p.ox - pv[0], p.oy - pv[1]);
+  return { part: { c, ox: 0, oy: 0 }, pv: [D / 2, D / 2], end: [D / 2, D / 2 + L] };
+}
+for (const [id, rig] of Object.entries(MRIG)) {
+  const im = new Image();
+  im.onload = () => {
+    const P = {}; for (const [k, b] of Object.entries(rig.R)) P[k] = cutPart(im, b);
+    for (const [k, [pv, end]] of Object.entries(rig.LIMB)) { const r = straightenPart(P[k], pv, end); P[k] = r.part; Object.assign(rig.J[k], { pv: r.pv, end: r.end }); }
+    // zemin: duruşta en alttaki pençe tabanı; boy: zeminden kafa tepesine
+    const Q = { ...rig.REST }, pts = quadJoints(rig, Q), J = rig.J;
+    rig.ground = Math.max(...['fn', 'ff', 'hn', 'hf'].map(k => pts[k][1] + (J[k[0] + 'p'].sole - J[k[0] + 'p'].pv[1]) * J[k[0] + 'p'].s));
+    rig.cx = (pts.fn[0] + pts.hn[0]) / 2; rig.tall = rig.ground - (pts.headTop);
+    RIGP[id] = P;
+  };
+  im.src = rig.src;
+}
+const rot2 = (p, a) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a)];
+function jointAt(J, k, at, a, jt) { const j = J[k], pv = j.pv, r = rot2([(jt[0] - pv[0]) * j.s, (jt[1] - pv[1]) * (j.sl || j.s)], a); return [at[0] + r[0], at[1] + r[1]]; }
+// duruşta pençe yuvalarının ve kafa tepesinin yeri (zemin hesabı için); kök: gövde pv = (0,0)
+function quadJoints(rig, q) {
+  const J = rig.J, out = {}, tj = k => jointAt(J, 'torso', [0, 0], 0, J.torso[k]);
+  for (const [k, att, u, l] of [['fn', 'shoulder', 'fu', 'fl'], ['ff', 'shoulder', 'fu', 'fl'], ['hn', 'hip', 'hu', 'hl'], ['hf', 'hip', 'hu', 'hl']]) {
+    const a1 = q[k + '1'], a2 = q[k + '2'], at = tj(att), e1 = jointAt(J, u, at, a1, J[u].end); out[k] = jointAt(J, l, e1, a1 + a2, J[l].end);
+  }
+  out.headTop = tj('neck')[1] + (rig.R.head[1] - J.head.pv[1]) * J.head.s;
+  return out;
+}
+// dört ayaklı çizim: kök = ayak noktası (gövdenin altında, zeminde), sola bakar
+function drawQuad(x, rig, P, q) {
+  const J = rig.J;
+  const put = (k, at, a, dark) => { const p = P[k], j = J[k], pv = j.pv; x.save(); x.translate(at[0], at[1]); x.rotate(a); x.scale(j.s, j.sl || j.s); if (dark) x.filter = 'brightness(.6)'; x.drawImage(p.c, p.ox - pv[0], p.oy - pv[1]); x.restore(); };
+  const ta = q.body || 0, tp = [-rig.cx + (q.bx || 0), -rig.ground + (q.by || 0)], tj = k => jointAt(J, 'torso', tp, ta, J.torso[k]);
+  const leg = (u, l, p, att, a1, a2, a3, dark) => { const at = tj(att), e1 = jointAt(J, u, at, ta + a1, J[u].end), e2 = jointAt(J, l, e1, ta + a1 + a2, J[l].end); put(p, e2, ta + a1 + a2 + a3, dark); put(l, e1, ta + a1 + a2, dark); put(u, at, ta + a1, dark); };
+  leg('hu', 'hl', 'hp', 'hip', q.hf1, q.hf2, q.hf3, true); leg('fu', 'fl', 'fp', 'shoulder', q.ff1, q.ff2, q.ff3, true);
+  put('tail', tj('tailBase'), ta + (q.tail || 0));
+  put('torso', tp, ta);
+  leg('hu', 'hl', 'hp', 'hip', q.hn1, q.hn2, q.hn3); leg('fu', 'fl', 'fp', 'shoulder', q.fn1, q.fn2, q.fn3);
+  const hp = tj('neck'), ha = ta + (q.head || 0); put('jaw', jointAt(J, 'head', hp, ha, J.head.hinge), ha + (q.jaw || 0)); put('head', hp, ha);
+}
+// kurt hareketleri: duruş açılarına eklenen salınımlar (birim: rehber kurt pikseli; kurt ~770 uzun, ~400 yüksek)
+function wolfPose(A, t) {
+  const an = A.ANIMS[A.cur] || {}, p = Math.max(0, Math.min(1, A.at / (an.dur || 1))), S = Math.sin, br = S(t / 380);
+  const q = { ...MRIG.wolf.REST, by: br * 3, tail: .1 * S(t / 420), head: .03 * br, jaw: -.03 - .03 * S(t / 300) };
+  const add = o => { for (const k in o) q[k] = (q[k] || 0) + o[k]; };
+  if (A.cur === 'walk') {
+    const ph = t / 85; // tırıs: çaprazdaki bacaklar birlikte; kalkan pençe bükülür
+    const sw = o => S(ph + o) * .32, lift = o => Math.max(0, -Math.cos(ph + o));
+    add({ by: -Math.abs(S(ph)) * 8, head: .05 * S(ph * 2), tail: .18 * S(ph),
+      fn1: sw(0), fn2: -lift(0) * .5, fn3: lift(0) * .5, hf1: sw(0), hf2: lift(0) * .45, hf3: -lift(0) * .3,
+      ff1: sw(Math.PI), ff2: -lift(Math.PI) * .5, ff3: lift(Math.PI) * .5, hn1: sw(Math.PI), hn2: lift(Math.PI) * .45, hn3: -lift(Math.PI) * .3 });
+  } else if (A.cur === 'attack') {
+    // geri çekil + ağzı aç, atıl ve ısır (hitAt .55'te çene kapanır), sonra toparlan
+    const wind = p < .4 ? p / .4 : 1, strike = p < .4 ? 0 : p < .55 ? (p - .4) / .15 : 1 - (p - .55) / .45, w2 = wind * (1 - strike);
+    add({ bx: 40 * w2 - 120 * strike, by: 14 * w2 - 6 * strike, body: -.08 * strike + .06 * w2, head: -.22 * strike + .12 * w2,
+      jaw: p < .52 ? -.6 * Math.min(1, p / .3) : -.6 * Math.max(0, 1 - (p - .52) / .08),
+      fn1: .35 * strike - .15 * w2, fn2: -.2 * strike, ff1: .3 * strike, hn1: -.3 * strike + .1 * w2, hf1: -.2 * strike, tail: -.25 * strike });
+  } else if (A.cur === 'block') { // uluma / sinme: kafa yukarı, ağız açık, kuyruk havada
+    const k = S(p * Math.PI); add({ head: .5 * k, jaw: -.5 * k, body: .06 * k, by: 6 * k, tail: -.35 * k });
+  } else if (A.cur === 'hit') {
+    const k = 1 - p; add({ bx: 34 * k, body: .1 * k, head: .25 * k, jaw: -.3 * k });
+  } else if (A.cur === 'death') { // bacaklar çözülür, gövde yere yığılır
+    const k = Math.min(1, p * 1.4);
+    add({ by: 120 * k, body: -.15 * k, head: -.35 * k, jaw: -.3 * k, tail: .4 * k, fn1: .8 * k, fn2: -.9 * k, fn3: .6 * k, ff1: .6 * k, ff2: -.8 * k, hn1: -.9 * k, hn2: 1.1 * k, hf1: -.7 * k, hf2: 1 * k });
+  } else if (A.cur === 'win') { // zafer uluması: başı göğe
+    const k = .7 + .3 * S(t / 260); add({ head: .55 * k, jaw: -.55 * k, tail: -.3 + .15 * S(t / 120), body: .05 });
+  }
+  return q;
+}
+const RIG_POSE = { wolf: wolfPose };
 const MON_ANIMS = { idle: { loop: true, dur: 1000 }, walk: { loop: true, dur: 500 }, attack: { dur: 620, hitAt: .55 }, block: { dur: 600, cast: .5 },
   hit: { dur: 320, flash: true }, death: { dur: 900, hold: true }, win: { loop: true, dur: 700 } };
 const monActor = (id, topH) => ({ mon: MONSTERS[id], id, cur: 'idle', at: 0, fired: false, waits: [], ended: false, endCb: null, hitT: -9999, x: 0, face: -1, off: 0, offY: 0, wp: {}, ANIMS: MON_ANIMS, topH });
@@ -2945,7 +3080,7 @@ function mkMonster(m, team) {
   const d = MONSTERS[m.id], k = m.stage || 1, pw = stagePow(k), hp = Math.round(d.hp * pw), topH = Math.round(d.h * 300 + 50);
   return { team, side: 'enemy', ctrl: 'ai', id: m.id, mon: d, stage: k, cls: { name: d.name, hp: d.hp }, gear: null, lvl: m.lvl || k * 2, name: d.name,
     hp, maxHp: hp, mp: d.mp, maxMp: d.mp, regen: d.regen, crit: d.crit, dodge: d.dodge, dmgMul: pw * .95, armor: d.armor,
-    skills: [...d.skills.map(s => ({ ...s, color: s.color || d.color })), { ...POTION, heal: 0 }], healMul: 1, heals: 0,
+    skills: [...d.skills.map((s, i) => ({ ...s, color: s.color || d.color, snd: m.id + '_' + i })), { ...POTION, heal: 0 }], healMul: 1, heals: 0, // ses: assets/sfx/skills/<canavar>_<0-3>.mp3 (yoksa genel vuruş sesi)
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: 0, topH, A: monActor(m.id, topH) };
 }
 // canavar çizimi: nefes alma, yürüme sekmesi, atılma, darbe, devrilme; resim sola bakar
@@ -2959,7 +3094,14 @@ function drawMonster(c, A, t, gx, gy, s) {
   else if (A.cur === 'hit') dx = -16 * s * (1 - p);
   else if (A.cur === 'death') { rot = -1.25 * Math.min(1, p * 1.6); alpha = 1 - .55 * p; dy = d.float ? dy + h * .18 * p : 0; }
   else if (A.cur === 'win') dy -= Math.abs(Math.sin(t / 150)) * 12 * s;
-  const x = gx + A.off * A.face;
+  const x = gx + A.off * A.face, P = RIGP[A.id];
+  if (P) {
+    const rig = MRIG[A.id], k = h / rig.tall;
+    c.save(); c.globalAlpha *= A.cur === 'death' ? 1 - .45 * p : 1;
+    c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(x, gy + 2, h * .45, h * .06, 0, 0, 7); c.fill();
+    c.translate(x, gy); c.scale(-A.face * k, k); drawQuad(c, rig, P, RIG_POSE[A.id](A, t)); // çizim sola bakar
+    c.restore(); return;
+  }
   c.save(); c.globalAlpha *= alpha;
   // ayak gölgesi
   c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(x, gy + 2, h * .32, h * .06, 0, 0, 7); c.fill();
@@ -2983,6 +3125,8 @@ function monPortrait(cv, id) {
   const x = cv.getContext('2d'), S = cv.width, d = MONSTERS[id];
   const g = x.createRadialGradient(S / 2, S * .6, 4, S / 2, S * .6, S * .65); g.addColorStop(0, d.color + '66'); g.addColorStop(1, '#0c0a12');
   x.fillStyle = g; x.fillRect(0, 0, S, S);
+  const P = RIGP[id];
+  if (P) { const hd = P.head.c, k = S * .92 / Math.max(hd.width, hd.height); x.save(); x.translate(S / 2, S / 2); x.scale(-k, k); x.drawImage(hd, -hd.width / 2, -hd.height / 2); x.restore(); return true; } // portrede sağa (rakibe) bakar
   const A = monActor(id, 0); A.face = -1; drawMonster(x, A, 0, S / 2, S * (d.h > 1 ? 1.25 : .95), S / 227 / Math.max(.5, d.h) * .95);
   return true;
 }
@@ -2995,6 +3139,10 @@ function monPortrait(cv, id) {
 const fbg = document.createElement('canvas'); fbg.width = W; fbg.height = H; let fbgOk = false;
 (function () { const im = new Image(); im.onload = () => { fbg.getContext('2d').drawImage(im, 0, 0, W, H); fbgOk = true; }; im.src = 'assets/bg/forest_battle.webp?v=1'; })();
 
+// aşamaya özel arka plan (assets/bg/<ad>.png, 1280x720, arenayla aynı hilal düzeni); yüklenene kadar orman/arena resmi
+const STAGE_BG = {}, STAGE_BG_SRC = { wolfden: 'assets/bg/wolfden.png?v=1' };
+for (const [k, src] of Object.entries(STAGE_BG_SRC)) { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(im, 0, 0, W, H); STAGE_BG[k] = c; }; im.src = src; }
+const stageBg = () => forestRun && STAGES[forestRun.k - 1] && STAGE_BG[STAGES[forestRun.k - 1].bg];
 let forestRun = null; // { k, size } orman savaşındayken
 let forestSize = 1; try { forestSize = Math.max(1, Math.min(5, +localStorage.getItem('sa.fsize') || 1)); } catch (e) {}
 const matTxt = o => Object.entries(o).filter(([, n]) => n > 0).map(([m, n]) => `${MATS[m][0]} ×${n}`).join(', ');
@@ -3022,7 +3170,8 @@ async function startForest(k) {
   const st = STAGES[k - 1]; if (!st || k > SAVE.forest.best + 1) return;
   const pool = ORDER.filter(x => x !== chosen).sort(() => Math.random() - .5), allies = pool.slice(0, forestSize - 1), L = leagueOf(SAVE.league);
   try { await Promise.all([chosen, ...allies].flatMap(x => [Rig.load(x), Rig.loadTiers(x)])); } catch (e) { return; }
-  for (const x of [chosen, ...allies]) Sfx.loadSkills(x);
+  for (const x of [chosen, ...allies, ...new Set(st.pack)]) Sfx.loadSkills(x);
+  for (const x of new Set(st.pack)) Sfx.loadVoices(x);
   forestRun = { k, size: forestSize }; pvp = null; crng = Math.random; lastDuel = false;
   $('again').textContent = 'Tekrar Savaş'; $('change').hidden = false; $('change').textContent = 'Orman Haritası';
   showScreen('battle');
@@ -3031,10 +3180,12 @@ async function startForest(k) {
     B: st.pack.map(id => ({ id, mon: true, stage: k, lvl: k * 2 })),
   });
   log(`Orman · ${k}. aşama: ${st.n}${st.boss ? ' (BOSS)' : ''}. Hedefini seçmek için bir canavara dokun. İlk hamle senin.`);
+  setTimeout(() => { if (forestRun && forestRun.k === k) for (const id of new Set(st.pack)) if (Sfx.voice(id, 'howl', .7)) break; }, 700); // sürü ulur
   beginTurn(nextUp('B'), true);
 }
 async function forestEnd(winTeam) {
   const won = winTeam === F.me.team, { k } = forestRun, st = STAGES[k - 1], F0 = SAVE.forest;
+  if (!won) { const w = F.B.find(f => isAlive(f)); if (w) setTimeout(() => Sfx.voice(w.id, 'howl', .8), 600); } // canavarlar kazanınca uluma
   for (const f of F[winTeam]) if (isAlive(f)) Rig.play(f.A, 'win');
   log(won ? 'Sürü dağıldı. Aşama geçildi!' : 'Orman seni geri püskürttü. Tekrar dene!', won ? 'player' : 'enemy');
   const lv0 = xpLevel(SAVE.xp), gain = won ? 50 + 35 * k : 10 + 4 * k, xp = won ? 25 + 12 * k : 8;
@@ -3086,7 +3237,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 pick(chosen); openLobby(); requestAnimationFrame(frame);
 cloudInit().finally(initRoom);
 try { if (!localStorage.getItem('sa.guide')) openGuide(); } catch (e) { openGuide(); }
-window.__game = { openForest, startForest, forest: () => SAVE.forest, street: () => me, track, daily, renderQuests, F: () => F, S: () => S2, act: playerAct, pick, start: () => $('choose').click(), CLASSES, save: () => SAVE, open: openSelect, town: () => showScreen('town'), skillHeal, mkFighter, leagueOf, reward };
+window.__game = { rigReady: () => Object.keys(RIGP), monDbg: { drawMonster, monActor }, openForest, startForest, forest: () => SAVE.forest, street: () => me, track, daily, renderQuests, F: () => F, S: () => S2, act: playerAct, pick, start: () => $('choose').click(), CLASSES, save: () => SAVE, open: openSelect, town: () => showScreen('town'), skillHeal, mkFighter, leagueOf, reward };
 })();
 </script>
 

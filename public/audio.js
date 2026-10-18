@@ -190,6 +190,7 @@ async function loadFiles() {
   if (filesLoading) return; filesLoading = true;
   await Promise.all(Object.keys(FILES).map(async n => { try { const F = await decodeFile(`assets/sfx/${n}.mp3?v=2`); if (F) BUFS[n] = F; } catch (e) {} }));
   for (const c of pendingSkills) loadSkills(c);
+  for (const v of pendingVoices) loadVoices(v);
 }
 /* ---------- sınıfa özgü yetenek sesleri: assets/sfx/skills/{sınıf}_{0-3}.mp3, savaşa girerken yüklenir ---------- */
 const SKILL_MAX = [1.4, 1.6, 1.6, 2];  // yetenek sırasına göre en uzun süre (4. yetenek büyük vuruş)
@@ -198,6 +199,20 @@ function loadSkills(cls) {
   if (!ctx) { pendingSkills.add(cls); return; }
   if (skillLoading[cls]) return; skillLoading[cls] = true;
   [0, 1, 2, 3].forEach(async i => { try { const F = await decodeFile(`assets/sfx/skills/${cls}_${i}.mp3?v=1`); if (F) SKILLS[cls + '_' + i] = { ...F, max: SKILL_MAX[i] }; } catch (e) {} });
+}
+/* ---------- canavar sesleri: assets/sfx/mon/{tür}_{growl|howl|hurt|death}.mp3, orman savaşına girerken yüklenir ---------- */
+const VOICE_KINDS = { growl: 2.2, howl: 3, hurt: 1.2, death: 2.2 }, VOICES = {}, voiceLoading = {}, pendingVoices = new Set();
+const VOICE_OF = { alpha: 'wolf' }; // kurtadam kurdun seslerini kullanır
+function loadVoices(id) {
+  id = VOICE_OF[id] || id;
+  if (!ctx) { pendingVoices.add(id); return; }
+  if (voiceLoading[id]) return; voiceLoading[id] = true;
+  for (const k of Object.keys(VOICE_KINDS)) (async () => { try { const F = await decodeFile(`assets/sfx/mon/${id}_${k}.mp3?v=1`); if (F) VOICES[id + '_' + k] = F; } catch (e) {} })();
+}
+function voice(id, kind, g = .85) {
+  const F = VOICES[(VOICE_OF[id] || id) + '_' + kind]; if (!F || !st.sfx || !ctx || ctx.state !== 'running') return !!F;
+  try { playBuf(F, VOICE_KINDS[kind], g); } catch (e) {}
+  return true;
 }
 function playBuf(F, max, g = 1) {
   const t = now(), src = ctx.createBufferSource(), gn = ctx.createGain(), dur = Math.min(max, F.b.duration - F.off), v = F.gain * g;
@@ -308,5 +323,5 @@ function setMusic(on) {
   st.music = on; try { localStorage.setItem('sa.music', on ? '1' : '0'); } catch (e) {}
   if (musBus) musBus.gain.setTargetAtTime(on ? MUS_VOL : 0, now(), .15);
 }
-window.Sfx = { play, skill, loadSkills, music, setSfx, setMusic, unlock, get sfx() { return st.sfx; }, get musicOn() { return st.music; }, get running() { return !!ctx && ctx.state === 'running'; }, get files() { return Object.keys(BUFS); } };
+window.Sfx = { play, skill, loadSkills, loadVoices, voice, music, setSfx, setMusic, unlock, get sfx() { return st.sfx; }, get musicOn() { return st.music; }, get running() { return !!ctx && ctx.state === 'running'; }, get files() { return Object.keys(BUFS); } };
 })();
