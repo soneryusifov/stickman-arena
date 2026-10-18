@@ -809,8 +809,96 @@ async function streetActor() {
   me.A = Rig.actor(chosen, me.x, me.face, g); me.A.stride = STRIDE;
 }
 // sahne karakterleri: sahneye girilince yüklenir
+/* Sahne karakterleri tek bir resimde: assets/npc/npcs.webp (1536x1024, yeşil #00FF00 perde, soldan sağa
+   Kâhya, Demirci, Simyacı, Madenci, Arena Görevlisi). Açılışta yeşil silinir, her karakter kendi bağlı
+   pikselleriyle ayrılır (karakterler sütun sütun ayrılmayacak kadar yakın). Resim yüklenemezse iskelet çizilir. */
+const NPC_ORDER = ['hall', 'smith', 'alch', 'mine', 'arena'], NPC_BODY = 555, NPC_HEAD = 640; // resimde ayak→baş ve ayak→şapka
+let npcSprites = null, npcSheetFailed = false;
+(function () {
+  const im = new Image();
+  im.onload = () => { try { npcSprites = cutNpcSheet(im); } catch (e) { npcSheetFailed = true; } };
+  im.onerror = () => { npcSheetFailed = true; };
+  im.src = 'assets/npc/npcs.webp?v=1';
+})();
+function cutNpcSheet(im) {
+  const W = im.naturalWidth, H = im.naturalHeight, N = W * H, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0);
+  const d = x.getImageData(0, 0, W, H), p = d.data, key = new Uint8Array(N);
+  for (let n = 0, i = 0; n < N; n++, i += 4) { const r = p[i], g = p[i + 1], b = p[i + 2]; if (g > 140 && g > r + 80 && g > b + 80) { key[n] = 1; p[i + 3] = 0; } }
+  // perdeye değen kenar piksellerinin yeşil yansımasını sil (şişedeki iksire dokunmaz: o perdeye değmez)
+  for (let y = 1; y < H - 1; y++) for (let X = 1; X < W - 1; X++) {
+    const n = y * W + X; if (key[n] || !(key[n - 1] || key[n + 1] || key[n - W] || key[n + W])) continue;
+    const i = n * 4, m = Math.max(p[i], p[i + 2]); if (p[i + 1] > m + 10) { p[i + 1] = m + 10; p[i + 3] = 190; }
+  }
+  // bağlı parçalar
+  const lab = new Int32Array(N), st = new Int32Array(N), comps = [];
+  for (let n0 = 0; n0 < N; n0++) {
+    if (key[n0] || lab[n0]) continue;
+    const id = comps.length + 1, cp = { id, area: 0, x0: W, x1: 0, y0: H, y1: 0, sx: 0 }; let sp = 0; st[sp++] = n0; lab[n0] = id;
+    while (sp) {
+      const n = st[--sp], X = n % W, Y = (n / W) | 0; cp.area++; cp.sx += X;
+      if (X < cp.x0) cp.x0 = X; if (X > cp.x1) cp.x1 = X; if (Y < cp.y0) cp.y0 = Y; if (Y > cp.y1) cp.y1 = Y;
+      if (X > 0 && !key[n - 1] && !lab[n - 1]) { lab[n - 1] = id; st[sp++] = n - 1; }
+      if (X < W - 1 && !key[n + 1] && !lab[n + 1]) { lab[n + 1] = id; st[sp++] = n + 1; }
+      if (Y > 0 && !key[n - W] && !lab[n - W]) { lab[n - W] = id; st[sp++] = n - W; }
+      if (Y < H - 1 && !key[n + W] && !lab[n + W]) { lab[n + W] = id; st[sp++] = n + W; }
+    }
+    comps.push(cp);
+  }
+  // iki karakter birbirine değiyorsa (ör. kazma şişeye) tek parça olur: en geniş büyük parçayı,
+  // ortasındaki en az pikselli sütundan ikiye böl; 5 gövde çıkana dek
+  const big = () => comps.filter(cp => cp.area > 20000);
+  for (let guard = 0; big().length < 5 && guard < 4; guard++) {
+    const m = big().sort((a, b) => (b.x1 - b.x0) - (a.x1 - a.x0))[0], cw = m.x1 - m.x0 + 1, hist = new Int32Array(cw);
+    for (let y = m.y0; y <= m.y1; y++) for (let X = m.x0; X <= m.x1; X++) if (lab[y * W + X] === m.id) hist[X - m.x0]++;
+    let cut = -1, best = Infinity;
+    for (let i = Math.floor(cw * .3); i < Math.ceil(cw * .7); i++) if (hist[i] < best) { best = hist[i]; cut = m.x0 + i; }
+    const nc = { id: comps.length + 1, area: 0, x0: W, x1: 0, y0: H, y1: 0, sx: 0 };
+    Object.assign(m, { area: 0, x0: W, x1: 0, y0: H, y1: 0, sx: 0 });
+    for (let y = 0; y < H; y++) for (let X = 0; X < W; X++) {
+      const n = y * W + X; if (lab[n] !== m.id) continue;
+      const cp = X >= cut ? nc : m; if (cp === nc) lab[n] = nc.id;
+      cp.area++; cp.sx += X; if (X < cp.x0) cp.x0 = X; if (X > cp.x1) cp.x1 = X; if (y < cp.y0) cp.y0 = y; if (y > cp.y1) cp.y1 = y;
+    }
+    comps.push(nc);
+  }
+  // en büyük 5 parça karakterlerin gövdesi; küçük parçalar (tüy, fener...) en yakın gövdeye katılır, uzaktaki kırıntı atılır
+  const bodies = [...comps].sort((a, b) => b.area - a.area).slice(0, 5).sort((a, b) => a.sx / a.area - b.sx / b.area);
+  if (bodies.length < 5) throw new Error('karakter sayısı tutmadı');
+  const owner = new Int32Array(comps.length + 1).fill(-1);
+  bodies.forEach((b, i) => owner[b.id] = i);
+  const gap = (a, b) => Math.max(0, a.x0 - b.x1, b.x0 - a.x1, a.y0 - b.y1, b.y0 - a.y1);
+  for (const cp of comps) {
+    if (owner[cp.id] >= 0 || cp.area < 30) continue;
+    let best = -1, bd = 60; bodies.forEach((b, i) => { const g = gap(cp, b); if (g < bd) { bd = g; best = i; } });
+    owner[cp.id] = best;
+  }
+  const out = {};
+  bodies.forEach((b, i) => {
+    const parts = comps.filter(cp => owner[cp.id] === i), x0 = Math.min(...parts.map(q => q.x0)), x1 = Math.max(...parts.map(q => q.x1)),
+      y0 = Math.min(...parts.map(q => q.y0)), y1 = Math.max(...parts.map(q => q.y1)), w = x1 - x0 + 1, h = y1 - y0 + 1;
+    const cc = document.createElement('canvas'); cc.width = w; cc.height = h;
+    const cx = cc.getContext('2d'), od = cx.createImageData(w, h), q = od.data;
+    let fs = 0, fn = 0;
+    for (let y = y0; y <= y1; y++) for (let X = x0; X <= x1; X++) {
+      const n = y * W + X; if (!lab[n] || owner[lab[n]] !== i) continue;
+      const s = n * 4, t = ((y - y0) * w + (X - x0)) * 4; q[t] = p[s]; q[t + 1] = p[s + 1]; q[t + 2] = p[s + 2]; q[t + 3] = p[s + 3];
+      if (y > b.y1 - 30) { fs += X - x0; fn++; } // ayakların ortası: duruş noktası
+    }
+    cx.putImageData(od, 0, 0);
+    out[NPC_ORDER[i]] = { c: cc, fx: fn ? fs / fn : w / 2, foot: b.y1 - y0 };
+  });
+  return out;
+}
+function drawNpc(n, t, x, y, s) {
+  const sp = npcSprites[n.k], k = 182 * s / HS * 1.05 / NPC_BODY, br = 1 + .012 * Math.sin(t / 650 + n.x), face = me.x < n.x ? -1 : 1;
+  sctx.fillStyle = 'rgba(0,0,0,.45)'; sctx.beginPath(); sctx.ellipse(x, y, 46 * s / HS, 8 * s / HS, 0, 0, 7); sctx.fill();
+  sctx.save(); sctx.translate(x, y); sctx.scale(face * k, k * br);
+  sctx.drawImage(sp.c, -sp.fx, -sp.foot); sctx.restore();
+  n.top = y - NPC_HEAD * k * br;
+}
 function npcActor(n) {
-  if (n.A || n.loading) return;
+  if (n.A || n.loading || !npcSheetFailed) return; // resim varken iskelet yüklenmez
   n.loading = true;
   Promise.all([Rig.load(n.cls), Rig.loadTiers(n.cls)]).then(() => { n.A = Rig.actor(n.cls, n.x, n.face, 7); }).catch(() => { n.loading = false; });
 }
@@ -990,11 +1078,11 @@ function drawStreet(t, dt) {
   }
   drawn.push({ y: me.y, A: me.A, x: me.x, me: true });
   drawn.sort((a, b) => a.y - b.y);
-  for (const d of drawn) if (d.A) drawHero(d.A, t, dt, d.x - camX, d.y, scaleAt(d.y));
+  for (const d of drawn) { if (d.n && npcSprites && npcSprites[d.n.k]) drawNpc(d.n, t, d.x - camX, d.y, scaleAt(d.y)); else if (d.A) drawHero(d.A, t, dt, d.x - camX, d.y, scaleAt(d.y)); }
   // etiketler ve balonlar hepsinin üstünde
   for (const d of drawn) {
     const sx = d.x - camX, s = scaleAt(d.y), hy = headY(d.y, s);
-    if (d.n) { const hot = near && near.n === d.n; drawLabel(sx, hy - 22, npcSign(d.n.k), hot ? '#1a1205' : '#f2c14e', hot ? '#f2c14e' : null); drawLabel(sx, hy, d.n.name, '#e9e4f5', null, 13); }
+    if (d.n) { const hot = near && near.n === d.n, ny = npcSprites && npcSprites[d.n.k] ? d.n.top - 4 : hy; drawLabel(sx, ny - 22, npcSign(d.n.k), hot ? '#1a1205' : '#f2c14e', hot ? '#f2c14e' : null); drawLabel(sx, ny, d.n.name, '#e9e4f5', null, 13); }
     else if (d.o) {
       const pr = d.o.p.presence || {};
       drawLabel(sx, hy, nameOfPeer(d.o.p) + ' · Lv ' + (+pr.lv || 1), sel === d.k ? '#1a1205' : '#e9e4f5', sel === d.k ? '#7db4ff' : null);
