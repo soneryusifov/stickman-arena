@@ -18,6 +18,19 @@ function dbReason(e) {
   if (/Server selection timed out|ECONNREFUSED|ETIMEDOUT|whitelist|IP/i.test(m)) return 'ağ hatası: Atlas IP izni (0.0.0.0/0) eksik olabilir';
   return 'bilinmeyen hata: ' + (e && e.name || 'Error');
 }
+// bağlantı adresinin biçim kontrolü: şifreyi asla göstermez, yalnızca sık yapılan yazım hatalarını söyler
+const STARTED = new Date().toISOString();
+function uriCheck() {
+  const u = process.env.MONGODB_URI || '';
+  const m = /^mongodb(\+srv)?:\/\/([^:@/]*)(?::([^@]*))?@([^/?]+)/.exec(u.trim());
+  const issues = [];
+  if (u !== u.trim()) issues.push('başta ya da sonda boşluk var');
+  if (/["'`]/.test(u)) issues.push('tırnak işareti var');
+  if (/[<>]/.test(u)) issues.push('< > işaretleri kalmış (db_username / db_password yer tutucusu)');
+  if (!m) issues.push('mongodb+srv://kullanıcı:şifre@sunucu biçiminde değil');
+  else if (!m[3]) issues.push('şifre kısmı boş');
+  return { user: m ? m[2] : null, host: m ? m[4] : null, issues, started: STARTED };
+}
 function connectStore() {
   openStore().then(s => { store = s; api = makeApi(s); dbError = null; console.log('Kullanıcı deposu: ' + s.kind); })
     .catch(e => { dbError = dbReason(e); console.error('Kullanıcı deposu açılamadı:', dbError); setTimeout(connectStore, 30000); });
@@ -33,7 +46,7 @@ const server = http.createServer((req, res) => {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch (e) { res.writeHead(400); return res.end(); }
   if (p.startsWith('/api/')) {
-    if (!api) { res.writeHead(503, { 'content-type': 'application/json; charset=utf-8' }); return res.end(JSON.stringify({ error: 'Sunucu hazırlanıyor', db: dbError || 'bağlanıyor' })); }
+    if (!api) { res.writeHead(503, { 'content-type': 'application/json; charset=utf-8' }); return res.end(JSON.stringify({ error: 'Sunucu hazırlanıyor', db: dbError || 'bağlanıyor', check: process.env.MONGODB_URI ? uriCheck() : null })); }
     return api(req, res, p);
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }
