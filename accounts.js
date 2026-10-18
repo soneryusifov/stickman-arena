@@ -32,8 +32,12 @@ function cleanSave(s) {
     stats: s.stats && typeof s.stats === 'object' ? s.stats : {}, ach: s.ach && typeof s.ach === 'object' ? s.ach : {},
     daily: s.daily && typeof s.daily === 'object' ? s.daily : null, _t: int(s._t, 0, 9e15, Date.now()),
   };
+  if (out.stats) for (const k of ['wins', 'battles', 'duelWins']) if (k in out.stats) out.stats[k] = int(out.stats[k], 0, 1e7, 0);
   return JSON.stringify(out).length > 32 * 1024 ? null : out;
 }
+// sıralama değerleri (her kayıtta belgeye yazılır, sıralama bunlardan yapılır)
+const RANKS = ['league', 'wins', 'duels'];
+const rankOf = s => ({ league: (s && s.league) || 0, wins: (s && s.stats && s.stats.wins) || 0, duels: (s && s.stats && s.stats.duelWins) || 0 });
 // eskiden yeniye geçerken yükseltmelere harcanması gereken altın
 function spent(a, b) {
   let sum = 0;
@@ -59,6 +63,7 @@ function makeApi(store) {
     return u && u.tokens.some(x => x.hash === sha(m[1]) && x.exp > Date.now()) ? u : null;
   }
   const view = u => ({ name: u.name, admin: ADMINS.has(u._id), save: u.save || null });
+  const board = {}; // sıralama önbelleği
 
   return async function handle(req, res, p) {
     const send = (code, obj) => { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(obj)); };
@@ -78,7 +83,15 @@ function makeApi(store) {
         if (!NAME_RE.test(name)) return send(400, { error: 'Kullanıcı adı 3-16 harf, rakam ya da _ olmalı.' });
         if (pass.length < 6 || pass.length > 64) return send(400, { error: 'Şifre 6-64 karakter olmalı.' });
         const salt = crypto.randomBytes(16).toString('hex');
-        const u = { _id: nameKey(name), name, pass: { salt, hash: await scrypt(pass, salt) }, tokens: [], save: cleanSave(body.save), savedAt: Date.now(), created: Date.now() };
+        // misafirken yapılan ilerleme doğrulanamaz: hesaba aktarılırken makul sınırlara çekilir
+        const save = cleanSave(body.save);
+        if (save) {
+          save.gold = Math.min(save.gold, 20000); save.league = Math.min(save.league, 27);
+          save.town.hall = Math.min(save.town.hall, 4); save.town.mine = Math.min(save.town.mine, save.town.hall); save.town.alch = Math.min(save.town.alch, save.town.hall);
+          for (const g of Object.values(save.gear)) for (const k of ITEMS) g[k] = Math.min(g[k], save.town.hall + 2);
+          if (save.stats) { save.stats.wins = Math.min(save.stats.wins || 0, 300); save.stats.duelWins = 0; }
+        }
+        const u = { _id: nameKey(name), name, pass: { salt, hash: await scrypt(pass, salt) }, tokens: [], save, rank: rankOf(save), savedAt: Date.now(), created: Date.now() };
         if (!(await store.insert(u))) return send(409, { error: 'Bu kullanıcı adı alınmış.' });
         return send(200, { token: await issue(u), ...view(u) });
       }
@@ -88,6 +101,16 @@ function makeApi(store) {
         const ok = u && crypto.timingSafeEqual(Buffer.from(await scrypt(String(body.pass || ''), u.pass.salt), 'hex'), Buffer.from(u.pass.hash, 'hex'));
         if (!ok) return send(401, { error: 'Kullanıcı adı ya da şifre yanlış.' });
         return send(200, { token: await issue(u), ...view(u) });
+      }
+
+      // sıralama herkese açık; giriş yapan kendi sırasını da görür. İlk 20 kısa süre önbellekte tutulur.
+      if (p === '/api/leaderboard') {
+        const q = new URL(req.url, 'http://x').searchParams.get('by'), by = RANKS.includes(q) ? q : 'league';
+        const c = board[by];
+        if (!c || Date.now() - c.t > 15000) board[by] = { t: Date.now(), top: (await store.top(by, 20)).map(x => ({ name: x.name, v: x.rank[by] })) };
+        const me = await auth(req), out = { by, top: board[by].top };
+        if (me) { const v = (me.rank || rankOf(me.save))[by]; out.me = { name: me.name, v, pos: v > 0 ? (await store.above(by, v)) + 1 : null }; }
+        return send(200, out);
       }
 
       const u = await auth(req);
@@ -104,9 +127,12 @@ function makeApi(store) {
           // altın, geçen süreye göre makul olandan hızlı artamaz; seviyeler bedelsiz atlanamaz
           const mins = (Date.now() - (u.savedAt || 0)) / 60000;
           const allowed = Math.min(250000, 8000 + mins * 1500);
-          if (next.gold + spent(prev, next) - prev.gold > allowed) return send(422, { error: 'Kayıt sunucudakiyle uyuşmuyor.', save: u.save });
+          // sıralama değerleri de oynanan süreyle sınırlı: bir savaş en az ~15 sn sürer
+          const a = rankOf(prev), b = rankOf(next);
+          const badRank = b.wins - a.wins > 5 + mins * 4 || b.duels - a.duels > 2 + mins * 2 || b.league - a.league > b.wins - a.wins + 1;
+          if (next.gold + spent(prev, next) - prev.gold > allowed || badRank) return send(422, { error: 'Kayıt sunucudakiyle uyuşmuyor.', save: u.save });
         }
-        u.save = next; u.savedAt = Date.now(); await store.put(u);
+        u.save = next; u.rank = rankOf(next); u.savedAt = Date.now(); await store.put(u);
         return send(200, { ok: true, savedAt: u.savedAt });
       }
       return send(404, { error: 'Bulunamadı' });

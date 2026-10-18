@@ -10,7 +10,11 @@ async function mongoStore(uri) {
   await client.connect();
   const users = client.db(process.env.MONGODB_DB || 'stickman').collection('users');
   await users.createIndex({ 'tokens.hash': 1 });
+  for (const f of ['league', 'wins', 'duels']) await users.createIndex({ ['rank.' + f]: -1 });
   return {
+    // sıralama: değeri 0'dan büyük olanlar, büyükten küçüğe; eşitlikte önce ulaşan önde
+    top: (f, n) => users.find({ ['rank.' + f]: { $gt: 0 } }, { projection: { name: 1, rank: 1 } }).sort({ ['rank.' + f]: -1, savedAt: 1 }).limit(n).toArray(),
+    above: (f, v) => users.countDocuments({ ['rank.' + f]: { $gt: v } }),
     kind: 'MongoDB',
     get: id => users.findOne({ _id: id }),
     byToken: h => users.findOne({ 'tokens.hash': h }),
@@ -33,6 +37,8 @@ function fileStore(file) {
     byToken: async h => clone([...map.values()].find(u => (u.tokens || []).some(x => x.hash === h))),
     insert: async u => { if (map.has(u._id)) return false; map.set(u._id, clone(u)); later(); return true; },
     put: async u => { map.set(u._id, clone(u)); later(); },
+    top: async (f, n) => [...map.values()].filter(u => (u.rank || {})[f] > 0).sort((a, b) => b.rank[f] - a.rank[f] || a.savedAt - b.savedAt).slice(0, n).map(u => ({ name: u.name, rank: u.rank })),
+    above: async (f, v) => [...map.values()].filter(u => (u.rank || {})[f] > v).length,
   };
 }
 

@@ -275,6 +275,12 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .chatbox .chat{min-height:0;max-height:max(70px,14cqw);font-size:13px;padding:6px;background:rgba(8,6,12,.7)}
 .chatbox .chatf input{font-size:14px;padding:.4em .6em} .chatbox .chatf button{padding:0 10px;font-size:13px}
 .chatbox.min{width:auto} .chatbox.min .chat,.chatbox.min .chatf{display:none}
+.atabs.three{grid-template-columns:repeat(3,1fr)} .atabs.three button{padding:.4em;font-size:13px}
+.lb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;counter-reset:lb}
+.lb li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 8px;border-radius:4px;background:#100d17;font-size:14px}
+.lb li .n{color:var(--muted);font-weight:700;text-align:right} .lb li .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .lb li .v{font-weight:700;color:var(--gold)}
+.lb li:nth-child(1) .n{color:#ffd56a} .lb li:nth-child(2) .n{color:#d9dee8} .lb li:nth-child(3) .n{color:#e0a46a}
+.lb li.me{outline:1px solid var(--gold)}
 .unread{min-width:20px;padding:0 6px;border-radius:10px;background:var(--blood);color:#fff;font:700 12px/20px var(--font-body);text-align:center} .unread:empty{display:none}
 #battleScreen{--aw:min(100%,calc((100dvh - 250px) * 16 / 9));align-items:center}
 #battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{display:none}
@@ -379,6 +385,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         <div class="ohud">
           <button class="btn ghost" id="openTown" type="button">Kasaba ve görevler</button>
           <button class="btn ghost" id="plToggle" type="button" aria-expanded="false" aria-controls="plPanel">Oyuncular <b id="plCount"></b></button>
+          <button class="btn ghost" id="lbToggle" type="button" aria-expanded="false" aria-controls="lbPanel" hidden>Sıralama</button>
         </div>
         <section class="opanel players" id="plPanel" aria-labelledby="plT" hidden>
           <h3 id="plT">Lobidekiler <small id="lobbyCount"></small></h3>
@@ -386,6 +393,16 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
           <form class="chatf" id="nickf" hidden><input id="nickIn" maxlength="20" autocomplete="nickname" placeholder="Takma adın" aria-label="Takma adın"><button type="submit">Adı kaydet</button></form>
           <div class="plist" id="plist"></div>
           <p class="lnote">Düelloda <b id="lobbyCls"></b> sınıfınla ve onun ekipmanıyla savaşırsın. Galibiyet +200, yenilgi +50 altın; lig değişmez.</p>
+        </section>
+        <section class="opanel players board" id="lbPanel" aria-labelledby="lbT" hidden>
+          <h3 id="lbT">Sıralama <small id="lbSub"></small></h3>
+          <div class="atabs three" role="tablist">
+            <button type="button" role="tab" data-by="league" aria-pressed="true">Lig</button>
+            <button type="button" role="tab" data-by="wins" aria-pressed="false">Galibiyet</button>
+            <button type="button" role="tab" data-by="duels" aria-pressed="false">Düello</button>
+          </div>
+          <ol class="lb" id="lbList"></ol>
+          <p class="lnote" id="lbMe"></p>
         </section>
         <section class="opanel chatbox" id="chatBox" aria-labelledby="chT">
           <h3><button id="chToggle" type="button" aria-expanded="true" aria-controls="chat"><span id="chT">Sohbet</span> <b class="unread" id="chNew"></b></button></h3>
@@ -747,7 +764,7 @@ function cloudPush(now) {
 function logoutLocal() { ACC.token = ACC.name = null; ACC.admin = false; try { localStorage.removeItem('sa.token'); } catch (e) {} renderAcc(); }
 function renderAcc() {
   const b = $('accBtn'); if (!b) return;
-  b.hidden = !ACC.on; b.textContent = ACC.name || 'Giriş yap'; b.classList.toggle('guest', !ACC.name);
+  b.hidden = !ACC.on; b.textContent = ACC.name || 'Giriş yap'; $('lbToggle').hidden = !ACC.on; b.classList.toggle('guest', !ACC.name);
   b.setAttribute('aria-label', ACC.name ? 'Hesap: ' + ACC.name : 'Giriş yap ya da kayıt ol');
   $('accOut').hidden = !!ACC.name; $('accIn').hidden = !ACC.name; $('accWho').textContent = ACC.name || '';
 }
@@ -1812,7 +1829,7 @@ async function end(winner) {
   SAVE.gold += gain; if (!duel) SAVE.league = Math.max(0, SAVE.league + (won ? 1 : -1)); // ödül hemen yazılır
   if (duel) pvpFinish();
   const St = SAVE.stats; St.battles++; track('play');
-  if (won) { St.wins++; St.won[chosen] = 1; track('win'); track('class', 1, chosen); }
+  if (won) { St.wins++; St.won[chosen] = 1; if (duel) St.duelWins = (St.duelWins || 0) + 1; track('win'); track('class', 1, chosen); }
   St.bestLeague = Math.max(St.bestLeague, leagueOf(SAVE.league)); persist();
   const L1 = leagueOf(SAVE.league), ye = n => ['', "'e", "'ye", "'e", "'e", "'e", "'ya", "'ye", "'e", "'a", "'a"][n]; // 1'e, 2'ye, 6'ya, 9'a, 10'a
   const lg = duel ? ' · Düello' : L1 > L0 ? ` · Lig ${L1}${ye(L1)} yükseldin!` : L1 < L0 ? ` · Lig ${L1}${ye(L1)} düştün` : ` · Lig ${L1}`;
@@ -2013,9 +2030,38 @@ function setChatMin(m) {
 }
 setChatMin(matchMedia('(hover:none) and (pointer:coarse)').matches);
 $('chToggle').addEventListener('click', () => setChatMin(!$('chatBox').classList.contains('min')));
+// sıralama paneli: yalnızca kendi sunucumuzda (hesaplar oradayken) görünür
+let lbBy = 'league';
+const LB_TXT = { league: 'lig puanı', wins: 'toplam galibiyet', duels: 'düello galibiyeti' };
+const lbVal = (by, v) => by === 'league' ? `Lig ${leagueOf(v)} · ${v} p` : v;
+async function renderBoard() {
+  const list = $('lbList'); $('lbSub').textContent = LB_TXT[lbBy];
+  document.querySelectorAll('#lbPanel [data-by]').forEach(b => b.setAttribute('aria-pressed', b.dataset.by === lbBy));
+  const r = await api('GET', '/api/leaderboard?by=' + lbBy);
+  list.innerHTML = '';
+  if (!r.ok) { $('lbMe').textContent = 'Sıralama şu an alınamadı.'; return; }
+  for (const [i, x] of r.body.top.entries()) {
+    const li = document.createElement('li'); if (ACC.name && x.name === ACC.name) li.className = 'me';
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = i + 1;
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = x.name;
+    const v = document.createElement('span'); v.className = 'v'; v.textContent = lbVal(lbBy, x.v);
+    li.append(n, nm, v); list.appendChild(li);
+  }
+  if (!r.body.top.length) list.innerHTML = '<li><span class="n"></span><span class="nm">Henüz kimse yok, ilk sen ol!</span><span></span></li>';
+  const me = r.body.me;
+  $('lbMe').textContent = !ACC.name ? 'Sıralamaya girmek için giriş yap ya da kayıt ol.'
+    : me && me.pos ? `Senin sıran: ${me.pos}. (${lbVal(lbBy, me.v)})` : 'Henüz sıralamada değilsin; savaş kazanınca girersin.';
+}
+document.querySelectorAll('#lbPanel [data-by]').forEach(b => b.addEventListener('click', () => { lbBy = b.dataset.by; renderBoard(); }));
+function togglePanel(which) {
+  for (const [btn, pan] of [['plToggle', 'plPanel'], ['lbToggle', 'lbPanel']]) {
+    const open = btn === which && $(pan).hidden;
+    $(pan).hidden = !open; $(btn).setAttribute('aria-expanded', open);
+  }
+}
+$('lbToggle').addEventListener('click', () => { togglePanel('lbToggle'); if (!$('lbPanel').hidden) renderBoard(); });
 $('plToggle').addEventListener('click', () => {
-  const p = $('plPanel'); p.hidden = !p.hidden; $('plToggle').setAttribute('aria-expanded', !p.hidden);
-  if (!p.hidden) renderLobby();
+  togglePanel('plToggle'); if (!$('plPanel').hidden) renderLobby();
 });
 async function renderChat() {
   const box = $('chat'); if (!box || screen !== 'lobby') return;
