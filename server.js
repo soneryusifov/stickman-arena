@@ -12,7 +12,7 @@ const { makeApi, userByToken } = require('./accounts');
 let store = null, api = null, dbError = null;
 // bağlanamazsa 30 sn'de bir yeniden dener; hatanın türü (şifre/adres içermeden) /api/health'te görünür
 function dbReason(e) {
-  const m = String(e && (e.codeName || e.message) || '');
+  const m = String(e && ((e.codeName || '') + ' ' + (e.message || '')) || '');
   if (/auth|Authentication/i.test(m)) return 'kimlik doğrulama hatası: kullanıcı adı ya da şifre yanlış';
   if (/querySrv|ENOTFOUND|Invalid scheme|URI|mongodb\+srv/i.test(m)) return 'adres hatalı: MONGODB_URI biçimi bozuk';
   if (/Server selection timed out|ECONNREFUSED|ETIMEDOUT|whitelist|IP/i.test(m)) return 'ağ hatası: Atlas IP izni (0.0.0.0/0) eksik olabilir';
