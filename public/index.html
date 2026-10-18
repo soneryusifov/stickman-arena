@@ -245,9 +245,27 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 @media (prefers-reduced-motion:reduce){ .bar i{transition:none} .skill,.card{transition:none} }
 /* tam pencere: oyun alanı (meydan ve savaş) pencereyi doldurur; diğer bölümler aşağıda kaydırılır */
 #lobbyScreen .street{order:-1;display:flex;justify-content:center;background:#0b0918;margin-bottom:0}
-#sv{width:min(100%,calc((100dvh - 74px) * 1280 / 520));height:auto;max-width:100%}
-#battleScreen{--aw:min(100%,calc((100dvh - 228px) * 16 / 9));align-items:center}
-#battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{max-width:var(--aw)}
+.stage{position:relative;width:min(100%,calc((100dvh - 74px) * 1280 / 520));container-type:inline-size}
+.stage #sv{width:100%;height:auto}
+/* sahnenin üstündeki paneller: oyuncular (sol üst, açılır) ve sohbet (sağ alt, küçültülür) */
+.ohud{position:absolute;top:10px;left:10px;z-index:6;display:flex;gap:8px;flex-wrap:wrap}
+.ohud .btn{padding:.35em .9em;font-size:13px;background:rgba(14,11,20,.82)}
+.ohud .btn[aria-expanded="true"]{border-color:var(--gold);color:var(--gold)}
+.opanel{position:absolute;z-index:7;background:rgba(14,11,20,.88);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;gap:8px;padding:10px 12px;min-width:0}
+.opanel h3{margin:0;font-family:var(--font-display);font-weight:800;font-size:15px;letter-spacing:.06em;color:var(--gold);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.opanel h3 small{font-family:var(--font-body);font-weight:600;font-size:12px;letter-spacing:0;color:var(--muted)}
+.players{top:54px;left:10px;width:min(340px,46%);max-height:calc(100% - 64px);overflow-y:auto}
+.players .pl{padding:6px 8px;grid-template-columns:36px minmax(0,1fr) auto} .players .pl img{width:36px;height:36px}
+.chatbox{right:10px;bottom:10px;width:min(340px,36%);padding:8px 10px;gap:6px}
+.chatbox h3 button{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;width:100%}
+.chatbox h3 button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.chatbox .chat{min-height:0;max-height:max(70px,14cqw);font-size:13px;padding:6px;background:rgba(8,6,12,.7)}
+.chatbox .chatf input{font-size:14px;padding:.4em .6em} .chatbox .chatf button{padding:0 10px;font-size:13px}
+.chatbox.min{width:auto} .chatbox.min .chat,.chatbox.min .chatf{display:none}
+.unread{min-width:20px;padding:0 6px;border-radius:10px;background:var(--blood);color:#fff;font:700 12px/20px var(--font-body);text-align:center} .unread:empty{display:none}
+#battleScreen{--aw:min(100%,calc((100dvh - 250px) * 16 / 9));align-items:center}
+#battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{display:none}
+#battleScreen .lower{align-items:stretch} #battleScreen .log{max-height:132px;overflow-y:auto}
 .select,.townbar,.town,.quests,.lobby{width:100%;max-width:1400px;margin-inline:auto}
 /* telefon yatay: ekranı doldur, savaşta yetenekler sağda */
 @media (pointer:coarse) and (orientation:landscape) and (max-height:520px){
@@ -257,7 +275,10 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   .screen{gap:8px} .hint,.shead p{display:none}
   #lobbyScreen{position:relative} .shead{position:absolute;top:8px;left:8px;z-index:5;margin:0} .shead .btn{padding:.3em .8em;font-size:12px;opacity:.92}
   .street{display:flex;justify-content:center;background:#0b0918;margin-bottom:8px}
-  #sv{width:min(100%,calc((100dvh - 50px) * 1280 / 520))}
+  .stage{width:min(100%,calc((100dvh - 50px) * 1280 / 520))}
+  .ohud{top:6px;left:6px;gap:6px} .ohud .btn{font-size:12px;padding:.3em .7em}
+  .players{top:44px;left:6px;width:min(300px,52%);max-height:calc(100% - 52px);padding:8px}
+  .chatbox{right:6px;bottom:6px;width:min(280px,40%)}
   .sbox{bottom:8px;padding:6px 8px 6px 12px} .sbox span{font-size:13px} .sbox .btn{font-size:13px}
   .joy{width:92px;height:92px;left:10px;bottom:10px}
   #battleScreen{display:grid;grid-template-columns:auto 150px;gap:8px;align-items:start;justify-content:center}
@@ -317,25 +338,28 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   </section>
 
   <section class="screen" id="lobbyScreen" hidden>
-    <div class="shead"><p>Yürü: ok tuşları ya da W A S D, telefonda joystick, ya da yere dokun · Kenara yürü: yan bölüme geç · Karakterle konuş ya da kapıdan geç: E · Bir oyuncuya tıkla: meydan oku</p><button class="btn ghost" id="openTown" type="button">Kasaba yönetimi ve görevler</button></div>
     <div class="street">
-      <canvas id="sv" width="1280" height="520" tabindex="0" aria-label="Kasaba meydanı. Kahramanını ok tuşlarıyla yürüt, bir binanın önünde E tuşuyla içeri gir."></canvas>
-      <div class="sbox" id="sbox" hidden><span id="sboxT"></span><button class="btn" id="sboxB" type="button"></button></div>
-      <div class="joy" id="joy" role="application" aria-label="Yürüme joysticki: sürükleyerek yürü"><div class="knob" id="knob"></div></div>
-    </div>
-    <div class="lobby">
-      <section class="lpanel" aria-labelledby="plT">
-        <h3 id="plT">Lobidekiler <small id="lobbyCount"></small></h3>
-        <p class="lnote" id="lobbyNote">Bağlanıyor…</p>
-        <form class="chatf" id="nickf" hidden><input id="nickIn" maxlength="20" autocomplete="nickname" placeholder="Takma adın" aria-label="Takma adın"><button type="submit">Adı kaydet</button></form>
-        <div class="plist" id="plist"></div>
-        <p class="lnote">Düelloda <b id="lobbyCls"></b> sınıfınla ve onun ekipmanıyla savaşırsın. Sınıfı Arena'da seçtiğin karakter belirler. Galibiyet +200, yenilgi +50 altın; lig değişmez.</p>
-      </section>
-      <section class="lpanel" aria-labelledby="chT">
-        <h3 id="chT">Sohbet</h3>
-        <div class="chat" id="chat" role="log" aria-live="polite"></div>
-        <form class="chatf" id="chatf"><input id="chatIn" maxlength="200" autocomplete="off" placeholder="Bir şey yaz…" aria-label="Sohbet mesajı"><button type="submit" id="chatSend">Gönder</button></form>
-      </section>
+      <div class="stage" id="stage">
+        <canvas id="sv" width="1280" height="520" tabindex="0" aria-label="Kasaba meydanı. Kahramanını ok tuşlarıyla ya da W A S D ile yürüt, kenara yürüyünce yan bölüme geçersin, bir karakterin ya da kapının önünde E tuşuna bas."></canvas>
+        <div class="ohud">
+          <button class="btn ghost" id="openTown" type="button">Kasaba ve görevler</button>
+          <button class="btn ghost" id="plToggle" type="button" aria-expanded="false" aria-controls="plPanel">Oyuncular <b id="plCount"></b></button>
+        </div>
+        <section class="opanel players" id="plPanel" aria-labelledby="plT" hidden>
+          <h3 id="plT">Lobidekiler <small id="lobbyCount"></small></h3>
+          <p class="lnote" id="lobbyNote">Bağlanıyor…</p>
+          <form class="chatf" id="nickf" hidden><input id="nickIn" maxlength="20" autocomplete="nickname" placeholder="Takma adın" aria-label="Takma adın"><button type="submit">Adı kaydet</button></form>
+          <div class="plist" id="plist"></div>
+          <p class="lnote">Düelloda <b id="lobbyCls"></b> sınıfınla ve onun ekipmanıyla savaşırsın. Galibiyet +200, yenilgi +50 altın; lig değişmez.</p>
+        </section>
+        <section class="opanel chatbox" id="chatBox" aria-labelledby="chT">
+          <h3><button id="chToggle" type="button" aria-expanded="true" aria-controls="chat"><span id="chT">Sohbet</span> <b class="unread" id="chNew"></b></button></h3>
+          <div class="chat" id="chat" role="log" aria-live="polite"></div>
+          <form class="chatf" id="chatf"><input id="chatIn" maxlength="200" autocomplete="off" placeholder="Bir şey yaz…" aria-label="Sohbet mesajı"><button type="submit" id="chatSend">Gönder</button></form>
+        </section>
+        <div class="sbox" id="sbox" hidden><span id="sboxT"></span><button class="btn" id="sboxB" type="button"></button></div>
+        <div class="joy" id="joy" role="application" aria-label="Yürüme joysticki: sürükleyerek yürü"><div class="knob" id="knob"></div></div>
+      </div>
     </div>
   </section>
   <div class="invite" id="invite" role="alertdialog" aria-labelledby="invT" hidden>
@@ -676,7 +700,7 @@ const mkFighter = (id, side, gear, alch = T.alch) => {
     regen: st.regen, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, armor: st.armor, skills: [...c.skills.map((s, i) => ({ ...s, color: s.color || glowOf(id), snd: id + '_' + i })), { ...POTION, heal: potionHeal(alch) }],
     healMul: 1 + (st.hp / c.hp - 1) * .5, heals: 0,
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, potions: potionCount(alch),
-    A: Rig.actor(id, side === 'player' ? 430 : 850, side === 'player' ? 1 : -1, gear) };
+    A: Rig.actor(id, side === 'player' ? 260 : 1020, side === 'player' ? 1 : -1, gear) }; // savaşçılar sahnenin iki ucunda
 };
 
 /* ---------- Ana döngü ---------- */
@@ -1579,11 +1603,11 @@ async function act(who, idx) {
   const anim = sk.anim === undefined ? 'attack' : sk.anim;
   if (sk.kind === 'melee') {
     const reach = Math.abs(o.A.x - A.x) - 230;
-    Rig.play(A, 'walk'); await tweenOff(A, reach, 380); if (!alive()) return;
+    Rig.play(A, 'walk'); await tweenOff(A, reach, Math.max(380, reach * 1.3)); // yürüyüş süresi mesafeyle orantılı if (!alive()) return;
     const end = Rig.play(A, anim); await Rig.waitAct(A); if (!alive()) return;
     hit(f, o, sk);
     await end; if (!alive()) return;
-    Rig.play(A, 'walk'); await tweenOff(A, 0, 380); if (!alive()) return;
+    Rig.play(A, 'walk'); await tweenOff(A, 0, Math.max(380, reach * 1.3)); if (!alive()) return;
     Rig.play(A, 'idle');
   } else if (sk.kind === 'ranged') {
     const end = Rig.play(A, anim); await Rig.waitAct(A); if (!alive()) return;
@@ -1834,7 +1858,7 @@ async function renderLobby() {
   const ps = room.peers().filter(p => p.kind === 'viewer'), ids = [...new Set(ps.map(p => p.by).filter(Boolean))];
   const prof = ids.length && user ? await user.profiles(ids) : {};
   const nameOf = p => (p.by && prof[p.by] && prof[p.by].name) || (p.isMe ? 'Sen' : 'Oyuncu');
-  $('lobbyCount').textContent = ps.length + ' kişi';
+  $('lobbyCount').textContent = ps.length + ' kişi'; $('plCount').textContent = ps.length;
   const list = $('plist'); list.innerHTML = '';
   // aynı kişinin ikinci sekmesini tek göster; önce sen
   const seen = new Set(), rows = ps.filter(p => p.sameTab || !p.isMe).sort((a, b) => b.sameTab - a.sameTab);
@@ -1861,7 +1885,22 @@ async function renderLobby() {
   if (rows.length <= 1) { const e = document.createElement('p'); e.className = 'lnote'; e.textContent = 'Lobide şimdilik yalnızsın. Oyunu paylaştığın biri açınca burada görünür.'; list.appendChild(e); }
 }
 /* ---------- sohbet ---------- */
-function addChat(by, text, peer, sys) { chatLog.push({ by, text, peer, sys }); if (chatLog.length > 60) chatLog.shift(); renderChat(); }
+let unread = 0;
+function addChat(by, text, peer, sys) {
+  chatLog.push({ by, text, peer, sys }); if (chatLog.length > 60) chatLog.shift(); renderChat();
+  if (!sys && $('chatBox').classList.contains('min')) { unread++; $('chNew').textContent = unread; }
+}
+// sohbet kutusu küçültülür/açılır (dokunmatikte küçük başlar); oyuncular paneli düğmeyle açılır
+function setChatMin(m) {
+  $('chatBox').classList.toggle('min', m); $('chToggle').setAttribute('aria-expanded', !m);
+  if (!m) { unread = 0; $('chNew').textContent = ''; renderChat(); }
+}
+setChatMin(matchMedia('(hover:none) and (pointer:coarse)').matches);
+$('chToggle').addEventListener('click', () => setChatMin(!$('chatBox').classList.contains('min')));
+$('plToggle').addEventListener('click', () => {
+  const p = $('plPanel'); p.hidden = !p.hidden; $('plToggle').setAttribute('aria-expanded', !p.hidden);
+  if (!p.hidden) renderLobby();
+});
 async function renderChat() {
   const box = $('chat'); if (!box || screen !== 'lobby') return;
   const ids = [...new Set(chatLog.map(c => c.by).filter(Boolean))], prof = ids.length && user ? await user.profiles(ids) : {};
