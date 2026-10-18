@@ -9,9 +9,20 @@ const { openStore } = require('./store');
 const { makeApi, userByToken } = require('./accounts');
 
 // hesap deposu (MongoDB ya da yerel dosya); açılana dek /api 503 döner
-let store = null, api = null;
-openStore().then(s => { store = s; api = makeApi(s); console.log('Kullanıcı deposu: ' + s.kind); })
-  .catch(e => console.error('Kullanıcı deposu açılamadı:', e.message));
+let store = null, api = null, dbError = null;
+// bağlanamazsa 30 sn'de bir yeniden dener; hatanın türü (şifre/adres içermeden) /api/health'te görünür
+function dbReason(e) {
+  const m = String(e && (e.codeName || e.message) || '');
+  if (/auth|Authentication/i.test(m)) return 'kimlik doğrulama hatası: kullanıcı adı ya da şifre yanlış';
+  if (/querySrv|ENOTFOUND|Invalid scheme|URI|mongodb\+srv/i.test(m)) return 'adres hatalı: MONGODB_URI biçimi bozuk';
+  if (/Server selection timed out|ECONNREFUSED|ETIMEDOUT|whitelist|IP/i.test(m)) return 'ağ hatası: Atlas IP izni (0.0.0.0/0) eksik olabilir';
+  return 'bilinmeyen hata: ' + (e && e.name || 'Error');
+}
+function connectStore() {
+  openStore().then(s => { store = s; api = makeApi(s); dbError = null; console.log('Kullanıcı deposu: ' + s.kind); })
+    .catch(e => { dbError = dbReason(e); console.error('Kullanıcı deposu açılamadı:', dbError); setTimeout(connectStore, 30000); });
+}
+connectStore();
 
 const PORT = process.env.PORT || 3000;
 const ROOT = path.join(__dirname, 'public');
@@ -22,7 +33,7 @@ const server = http.createServer((req, res) => {
   let p;
   try { p = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch (e) { res.writeHead(400); return res.end(); }
   if (p.startsWith('/api/')) {
-    if (!api) { res.writeHead(503, { 'content-type': 'application/json' }); return res.end('{"error":"Sunucu hazırlanıyor"}'); }
+    if (!api) { res.writeHead(503, { 'content-type': 'application/json; charset=utf-8' }); return res.end(JSON.stringify({ error: 'Sunucu hazırlanıyor', db: dbError || 'bağlanıyor' })); }
     return api(req, res, p);
   }
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405); return res.end(); }

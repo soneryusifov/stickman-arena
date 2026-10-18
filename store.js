@@ -6,7 +6,7 @@ const path = require('path');
 
 async function mongoStore(uri) {
   const { MongoClient } = require('mongodb');
-  const client = new MongoClient(uri);
+  const client = new MongoClient(uri, { serverSelectionTimeoutMS: 10000 });
   await client.connect();
   const users = client.db(process.env.MONGODB_DB || 'stickman').collection('users');
   await users.createIndex({ 'tokens.hash': 1 });
