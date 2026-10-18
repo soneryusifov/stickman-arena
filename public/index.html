@@ -341,6 +341,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .lb li .n{color:var(--muted);font-weight:700;text-align:right} .lb li .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .lb li .v{font-weight:700;color:var(--gold)}
 .lb li:nth-child(1) .n{color:#ffd56a} .lb li:nth-child(2) .n{color:#d9dee8} .lb li:nth-child(3) .n{color:#e0a46a}
 .lb li.me{outline:1px solid var(--gold)}
+.chip.fury{color:#fff;background:#c22a10;border-color:#ff7a3a;animation:furyp .8s ease-in-out infinite alternate} @keyframes furyp{to{box-shadow:0 0 10px #ff4a1a}}
 .unread{min-width:20px;padding:0 6px;border-radius:10px;background:var(--blood);color:#fff;font:700 12px/20px var(--font-body);text-align:center} .unread:empty{display:none}
 #battleScreen{--aw:min(100%,calc((100dvh - 215px) * 16 / 9));align-items:center}
 #battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{display:none}
@@ -367,9 +368,14 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
   .sbox{bottom:8px;padding:6px 8px 6px 12px} .sbox span{font-size:13px} .sbox .btn{font-size:13px}
   .joy{width:92px;height:92px;left:10px;bottom:10px}
   #battleScreen{display:flex;justify-content:center}
-  #battleScreen .arena{width:min(calc((100dvh - 64px) * 16 / 9),calc(100vw - 20px))} #battleScreen .lower{display:none}
+  #battleScreen .lower{display:none}
   .hud{font-size:10px;padding:1% 1.4%} .hud .portrait{width:34px;height:34px}
   .lower{display:block} .log{display:none}
+  html:has(#battleScreen:not([hidden])) .wrap{padding:0}
+  html:has(#battleScreen:not([hidden])) .topbar{position:fixed;left:0;top:0;bottom:0;width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;z-index:30;min-height:0}
+  html:has(#battleScreen:not([hidden])) .topbar .plaque,html:has(#battleScreen:not([hidden])) #accBtn,html:has(#battleScreen:not([hidden])) #helpBtn{display:none}
+  html:has(#battleScreen:not([hidden])) .tright{flex-direction:column}
+  #battleScreen{height:100dvh;align-items:center;padding-left:44px} #battleScreen .arena{width:min(calc(100dvh * 16 / 9),calc(100vw - 52px));border-radius:0;border:0}
   #battleScreen .skills,#battleScreen .skills.low{top:91%;width:62%;gap:3px;padding:3px;font-size:9px}
   #battleScreen .skill{flex-direction:row;justify-content:center;gap:3px;padding:3px 2px} #battleScreen .skill svg{width:16px;height:16px;flex:none}
   #battleScreen .skill .nm{font-size:9px;text-align:left} #battleScreen .skill .cost,#battleScreen .skill .key{display:none}
@@ -913,7 +919,7 @@ const mkFighter = (id, team, gear, alch = T.alch, o = {}) => {
   return { team, side: 'enemy', ctrl: o.ctrl || 'ai', id, cls: c, gear, lvl, name: o.name || c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
     regen: st.regen, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, armor: st.armor, skills: [...c.skills.map((s, i) => ({ ...s, color: s.color || glowOf(id), snd: id + '_' + i })), { ...POTION, heal: potionHeal(alch) }],
     healMul: 1 + (st.hp / c.hp - 1) * .5, heals: 0,
-    shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, potions: potionCount(alch || 1),
+    shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: potionCount(alch || 1),
     A: Rig.actor(id, 260, 1, gear) }; // konum ve yön newBattle'da dizilime göre verilir
 };
 
@@ -955,6 +961,13 @@ function frame(t) {
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = f.shieldColor;
         ctx.beginPath(); ctx.ellipse(fx0, gy - 170 * f.sc, 120 * f.sc, 200 * f.sc, 0, 0, 7);
         ctx.globalAlpha = a * .3; ctx.lineWidth = 16; ctx.stroke(); ctx.globalAlpha = a; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+      }
+      if (f.furyReady && isAlive(f)) { // öfke modu: titreyen kırmızı hale
+        const a = .5 + Math.sin(t / 90) * .2;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter';
+        const g = ctx.createRadialGradient(fx0, gy - 150 * f.sc, 10, fx0, gy - 150 * f.sc, 190 * f.sc);
+        g.addColorStop(0, 'rgba(255,60,20,0)'); g.addColorStop(.6, `rgba(255,60,20,${a * .35})`); g.addColorStop(1, 'rgba(255,60,20,0)');
+        ctx.fillStyle = g; ctx.fillRect(fx0 - 200 * f.sc, gy - 360 * f.sc, 400 * f.sc, 380 * f.sc); ctx.restore();
       }
       const fl = Math.max(0, 1 - (t - f.A.hitT) / 220);
       if (fl > 0) { // darbe parlaması: karakter ayrı katmana çizilir, üstüne tek seferde beyaz basılır
@@ -1476,9 +1489,11 @@ const joy = { x: 0, y: 0 };
 const canFs = !!(document.documentElement.requestFullscreen && document.fullscreenEnabled);
 async function goLandscape() {
   try { if (canFs && !document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
-  try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {}
+  const so = window.screen.orientation; try { if (so && so.lock) await so.lock('landscape'); } catch (e) {} // oyunun 'screen' değişkeni window.screen'i gölgeler
 }
 $('rotBtn').addEventListener('click', goLandscape);
+const coarse = matchMedia('(pointer:coarse)');
+addEventListener('pointerdown', () => { if (coarse.matches && canFs && !document.fullscreenElement && (screen === 'battle' || !goLandscape.once)) { goLandscape.once = true; goLandscape(); } }, true);
 if (!canFs) $('rotBtn').hidden = true;
 if (canFs) $('fsBtn').hidden = false; // tam ekran düğmesi PC'de de var
 document.addEventListener('fullscreenchange', () => $('fsBtn').setAttribute('aria-pressed', !!document.fullscreenElement));
@@ -1853,6 +1868,7 @@ function chips(f) {
   let h = '';
   if (f.shield) h += `<span class="chip" style="color:${f.shieldColor}">${f.shield >= 1 ? 'Kaçış' : 'Kalkan'}</span>`;
   if (f.rage) h += `<span class="chip" style="color:#ff5a3a">Öfke</span>`;
+  h += f.furyReady ? `<span class="chip fury">ÖFKE MODU</span>` : `<span class="chip" style="color:#c9603f" title="5 darbe yiyince öfke modu">Öfke ${f.fury}/${FURY_HITS}</span>`;
   if (f.dot) h += `<span class="chip" style="color:${f.dot.color}">${f.dot.label} ${f.dot.turns}</span>`;
   if (f.stunned) h += `<span class="chip" style="color:#ffd27a">Sersem</span>`;
   return h + `<span class="chip" style="color:var(--heal)">İksir ${f.potions}</span>`;
@@ -1904,29 +1920,37 @@ const sfxSkill = (sk, fallback) => { if (!(sk.snd && Sfx.skill(sk.snd))) Sfx.pla
 // savaş zarları: çok oyunculu savaşta tüm ekranlar aynı sonucu bulsun diye ortak tohumlu üreteç (botların kararları da)
 let crng = Math.random;
 const seeded = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const FURY_HITS = 5, FURY_MUL = 2;
 function hit(a, d, sk) {
   const [hx, hy] = body(d), nm = sk.name;
   if (d.shield >= 1) { d.shield = 0; Sfx.play('miss'); floatText(d.A, 'KAÇTI', '#cfd6ff'); burst(hx, hy, d.shieldColor, 18, 200); log(`${nm}: ${d.name} saldırıdan tamamen kaçtı!`, d.side); return; }
   if (crng() < d.dodge) { Sfx.play('miss'); floatText(d.A, 'ISKA', '#cfd6ff'); log(`${nm}: ${d.name} saldırıdan kaçtı!`, d.side); return; }
   let dmg = Math.round(Math.round(sk.dmg[0] + crng() * (sk.dmg[1] - sk.dmg[0])) * (a.dmgMul || 1)); const crit = crng() < a.crit; if (crit) dmg = Math.round(dmg * 1.6);
   if (a.rage) { dmg = Math.round(dmg * a.rage); a.rage = 0; }
+  const furyHit = a.furyReady; if (furyHit) { dmg = Math.round(dmg * FURY_MUL); a.furyReady = false; } // öfke modu: tek seferlik büyük vuruş
   let blocked = false;
   if (d.shield) { dmg = Math.round(dmg * (1 - d.shield)); d.shield = 0; blocked = true; }
   if (d.armor) dmg = Math.max(1, Math.round(dmg * (1 - d.armor))); // kol kılıfı ve kolluk zırhı
   d.hp = Math.max(0, d.hp - dmg);
+  if (d.hp > 0 && !d.furyReady && ++d.fury >= FURY_HITS) { // 5 darbe yiyen öfkelenir
+    d.fury = 0; d.furyReady = true;
+    setTimeout(() => { floatText(d.A, 'ÖFKE MODU!', '#ff3a1a', 40); burst(hx, hy, '#ff3a1a', 36, 260); Sfx.play('big'); }, 380);
+    log(`${d.name} ${FURY_HITS} darbe yedi ve ÖFKE MODUNA girdi: sonraki saldırısı ${FURY_MUL} kat hasar verir!`, d.side);
+  }
   // yakın dövüşte yeteneğin kendi sesi darbe anında çalar; menzillilerde atış anında çaldığı için burada genel vuruş sesi
   if (blocked) Sfx.play('block');
   else if (sk.kind === 'melee') sfxSkill(sk, sk.big ? 'big' : crit ? 'crit' : 'hit');
   else Sfx.play(sk.big ? 'big' : crit ? 'crit' : 'hit');
   burst(hx, hy, sk.color, crit || sk.big ? 44 : 26, crit || sk.big ? 380 : 280);
   shake(sk.big || crit ? 16 : 8); if (sk.big) flash = { t0: now(), color: sk.color };
-  floatText(d.A, (crit ? 'KRİTİK -' : '-') + dmg, crit ? '#ffd34a' : '#ff5a5a', crit ? 46 : 38);
+  floatText(d.A, (furyHit ? 'ÖFKE -' : crit ? 'KRİTİK -' : '-') + dmg, furyHit ? '#ff3a1a' : crit ? '#ffd34a' : '#ff5a5a', furyHit ? 52 : crit ? 46 : 38);
+  if (furyHit) { shake(20); flash = { t0: now(), color: '#ff3a1a' }; }
   if (a.ctrl === 'me') { SAVE.stats.dmg += dmg; track('dmg', dmg); if (crit) { SAVE.stats.crits++; track('crit'); } }
   let extra = '';
   if (sk.stun && d.hp > 0) { d.stunned = true; extra += ', sersemledi'; setTimeout(() => { Sfx.play('stun'); floatText(d.A, 'SERSEM', '#ffd27a', 30); }, 250); }
   if (sk.dot && d.hp > 0) { d.dot = { ...sk.dot, dmg: Math.round(sk.dot.dmg * (a.dmgMul || 1)) }; extra += ', ' + sk.dot.label.toLowerCase() + ' etkisi'; }
   if (sk.drain) { const h = heal(a, Math.round(dmg * sk.drain), '#ff4a6a'); if (h) extra += `, ${h} can emdi`; }
-  log(`${nm}: ${d.name} ${dmg} hasar aldı${crit ? ' (kritik!)' : ''}${blocked ? ', kalkan hasarı azalttı' : ''}${extra}.`, a.side);
+  log(`${nm}: ${d.name} ${dmg} hasar aldı${furyHit ? ' (ÖFKE!)' : ''}${crit ? ' (kritik!)' : ''}${blocked ? ', kalkan hasarı azalttı' : ''}${extra}.`, a.side);
   if (d.hp <= 0) Rig.play(d.A, 'death'); else Rig.play(d.A, 'hit');
 }
 // menzilli görsel: yerinden çıkıp hedefe gider; bitiş süresini döner
