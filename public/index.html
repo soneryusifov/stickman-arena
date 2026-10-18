@@ -837,17 +837,24 @@ $('accForm').addEventListener('submit', async e => {
 });
 const gearOf = id => { const g = SAVE.gear[id] = SAVE.gear[id] || {}; ITEMS.forEach(k => { if (!(g[k] >= 1 && g[k] <= 10)) g[k] = 1; }); return g; };
 const gearLevel = g => Math.round(ITEMS.reduce((s, k) => s + g[k], 0) / ITEMS.length);
-function gearStats(c, g) {
-  const b = { hp: 0, armor: 0, crit: 0, dodge: 0, dmg: 0, mp: 0, regen: 0 };
+// tecrübe: seviye n'den n+1'e 100 + 50(n-1) EXP
+const xpLevel = x => { let l = 1, need = 100; x = x || 0; while (x >= need) { x -= need; l++; need = 100 + 50 * (l - 1); } return l; };
+const xpProgress = x => { let l = 1, need = 100; x = x || 0; while (x >= need) { x -= need; l++; need = 100 + 50 * (l - 1); } return { lvl: l, cur: x, need }; };
+const myLevel = () => xpLevel(SAVE.xp);
+// oyuncu seviyesi temel değerleri büyütür (seviye başına); ekipman bonusları bu büyümüş temelin üzerine eklenir
+const LV_BONUS = { hp: .03, mp: .02, dmg: .015, crit: .003, dodge: .002 };
+function gearStats(c, g, lvl = 1) {
+  const b = { hp: 0, armor: 0, crit: 0, dodge: 0, dmg: 0, mp: 0, regen: 0 }, L = Math.max(0, (lvl | 0) - 1);
   for (const k of ITEMS) for (const [s, v] of Object.entries(PERK[k])) b[s] += v * (g[k] - 1);
-  return { hp: Math.round(c.hp * (1 + b.hp)), mp: Math.round(c.mp * (1 + b.mp)), regen: c.regen + Math.floor(b.regen),
-    crit: c.crit + b.crit, dodge: c.dodge + b.dodge, dmgMul: 1 + b.dmg, armor: b.armor };
+  const hp0 = c.hp * (1 + LV_BONUS.hp * L), mp0 = c.mp * (1 + LV_BONUS.mp * L);
+  return { hp: Math.round(hp0 * (1 + b.hp)), mp: Math.round(mp0 * (1 + b.mp)), regen: c.regen + Math.floor(b.regen),
+    crit: c.crit + LV_BONUS.crit * L + b.crit, dodge: c.dodge + LV_BONUS.dodge * L + b.dodge, dmgMul: (1 + LV_BONUS.dmg * L) * (1 + b.dmg), armor: b.armor };
 }
 // rakip, oyuncunun ortalama seviyesinde gelir; her eşya ±1 oynar
 function foeGear(L) { const out = {}; ITEMS.forEach(k => out[k] = Math.max(1, Math.min(10, L + Math.round(Math.random() * 2 - 1)))); return out; }
 const mkFighter = (id, team, gear, alch = T.alch, o = {}) => {
-  const c = CLASSES[id], st = gearStats(c, gear);
-  return { team, side: 'enemy', ctrl: o.ctrl || 'ai', id, cls: c, gear, name: o.name || c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
+  const c = CLASSES[id], lvl = Math.max(1, Math.min(99, o.lvl | 0 || 1)), st = gearStats(c, gear, lvl);
+  return { team, side: 'enemy', ctrl: o.ctrl || 'ai', id, cls: c, gear, lvl, name: o.name || c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
     regen: st.regen, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, armor: st.armor, skills: [...c.skills.map((s, i) => ({ ...s, color: s.color || glowOf(id), snd: id + '_' + i })), { ...POTION, heal: potionHeal(alch) }],
     healMul: 1 + (st.hp / c.hp - 1) * .5, heals: 0,
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, potions: potionCount(alch || 1),
@@ -1342,7 +1349,7 @@ let boxKey = '';
 function streetBox() {
   let key = '', txt = '', btn = '';
   const o = sel && others.get(sel);
-  if (o) { const pr = o.p.presence || {}; key = 'p' + sel + o.busy + !!pvp + !!invite; txt = `${nameOfPeer(o.p)} · ${CLASSES[pr.cls].name} · Lv ${+pr.lv || 1} · Lig ${+pr.lg || 1}`; btn = o.busy ? 'Meşgul' : 'Meydan oku'; }
+  if (o) { const pr = o.p.presence || {}; key = 'p' + sel + o.busy + !!pvp + !!invite; txt = `${nameOfPeer(o.p)} · ${CLASSES[pr.cls].name} · Sv ${+pr.pl || 1} · Lig ${+pr.lg || 1}`; btn = o.busy ? 'Meşgul' : 'Meydan oku'; }
   else if (near && near.type === 'npc') { key = 'n' + near.n.k; txt = `${near.n.name} · ${BNAME[near.n.k]}`; btn = near.n.k === 'arena' ? 'Arenaya gir (E)' : 'Konuş (E)'; }
   else if (near && near.type === 'door') { key = 'd' + near.d.to; txt = near.d.name; btn = 'Kapıdan geç (E)'; }
   if (key === boxKey) return; boxKey = key;
@@ -1455,9 +1462,9 @@ function renderGear() {
   }
 }
 function renderStats() {
-  const c = CLASSES[chosen], st = gearStats(c, gearOf(chosen));
+  const c = CLASSES[chosen], xp = xpProgress(SAVE.xp), st = gearStats(c, gearOf(chosen), xp.lvl);
   const row = (l, v, m, t) => `<dt>${l}</dt><dd><div class="sb"><i style="width:${Math.min(100, Math.round(v / m * 100))}%"></i></div></dd><dd class="sv">${t}</dd>`;
-  $('dStats').innerHTML = row('Can', st.hp, MAXS.hp, st.hp) + row('Mana', st.mp, MAXS.mp, st.mp) + row('Kritik', st.crit, MAXS.crit, Math.round(st.crit * 100) + '%')
+  $('dStats').innerHTML = row('Seviye', xp.cur, xp.need, `${xp.lvl} · ${xp.cur}/${xp.need} EXP`) + row('Can', st.hp, MAXS.hp, st.hp) + row('Mana', st.mp, MAXS.mp, st.mp) + row('Kritik', st.crit, MAXS.crit, Math.round(st.crit * 100) + '%')
     + row('Kaçınma', st.dodge, MAXS.dodge, Math.round(st.dodge * 100) + '%') + row('Hasar', st.dmgMul - 1, .63, '+' + Math.round((st.dmgMul - 1) * 100) + '%')
     + row('Zırh', st.armor, .22, Math.round(st.armor * 100) + '%');
 }
@@ -1730,7 +1737,7 @@ function buildHUD() {
     el.innerHTML = ''; el.classList.toggle('many', F[team].length > 1);
     for (const f of F[team]) {
       const u = document.createElement('div'); u.className = 'unit' + (el.id === 'teamR' ? ' right' : ''); f.ui = u;
-      u.innerHTML = `<canvas class="portrait" width="96" height="96"></canvas><div class="info"><div class="name"><span class="lv">Lv ${gearLevel(f.gear)}</span><span class="nm"></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="chips"></div></div>`;
+      u.innerHTML = `<canvas class="portrait" width="96" height="96"></canvas><div class="info"><div class="name"><span class="lv" title="Oyuncu seviyesi ${f.lvl}, ekipman ortalaması ${gearLevel(f.gear)}">Sv ${f.lvl}</span><span class="nm"></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="chips"></div></div>`;
       u.querySelector('.nm').textContent = f.name;
       u.setAttribute('role', 'button'); u.tabIndex = 0; u.setAttribute('aria-label', (f.side === 'player' ? 'Takım arkadaşı: ' : 'Rakip: ') + f.name + ' (hedef seç)');
       const col = f.side === 'player' ? glowOf(f.id) : '#c41a30', pc = u.querySelector('canvas'); pc.style.setProperty('--c', col);
@@ -1948,8 +1955,6 @@ function playerAct(i) {
   if (pvp) pvpAct({ t: 'act', f: F.me.idx, i, tg: t ? t.idx : -1, mv: S2.mv });
   act(F.me, i, t);
 }
-// tecrübe: seviye n'den n+1'e 100 + 50(n-1) EXP
-const xpLevel = x => { let l = 1, need = 100; x = x || 0; while (x >= need) { x -= need; l++; need = 100 + 50 * (l - 1); } return l; };
 async function end(winTeam) {
   S2.over = true; S2.waiting = false; updateHUD();
   for (const f of F[winTeam]) if (isAlive(f)) Rig.play(f.A, 'win');
@@ -2003,8 +2008,8 @@ async function startArena() {
   const foeL = nb > na ? Math.max(1, L - 1) : L; // 1v2'de rakipler bir kademe zayıf gelir
   showScreen('battle');
   newBattle({
-    A: [{ id: chosen, gear: gearOf(chosen), ctrl: 'me', name: 'Sen · ' + CLASSES[chosen].name }, ...allies.map(id => ({ id, gear: foeGear(L), name: 'Müttefik ' + CLASSES[id].name }))],
-    B: foes.map(id => ({ id, gear: foeGear(foeL), name: 'Rakip ' + CLASSES[id].name })),
+    A: [{ id: chosen, gear: gearOf(chosen), ctrl: 'me', lvl: myLevel(), name: 'Sen · ' + CLASSES[chosen].name }, ...allies.map(id => ({ id, gear: foeGear(L), lvl: myLevel(), name: 'Müttefik ' + CLASSES[id].name }))],
+    B: foes.map(id => ({ id, gear: foeGear(foeL), lvl: nb > na ? Math.max(1, myLevel() - 1) : myLevel(), name: 'Rakip ' + CLASSES[id].name })),
   });
   log(battleMode === '1v1' ? `${CLASSES[chosen].name}, ${F.B[0].name} karşısında! İlk hamle senin.` : `${battleMode} takım savaşı başladı! Hedefini seçmek için bir rakibe ya da arkadaşına dokun. İlk hamle senin.`);
   beginTurn(nextUp('B'), true);
@@ -2144,7 +2149,7 @@ async function initRoom() {
 function lobbyPresence() {
   if (!room) return;
   const g = gearOf(chosen);
-  room.presence({ cls: chosen, lv: gearLevel(g), lg: leagueOf(SAVE.league), st: pvp ? 'duel' : screen === 'battle' ? 'battle' : 'lobby',
+  room.presence({ cls: chosen, lv: gearLevel(g), pl: myLevel(), lg: leagueOf(SAVE.league), st: pvp ? 'duel' : screen === 'battle' ? 'battle' : 'lobby',
     sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, g: ITEMS.map(k => g[k]), m: typeof matchPub === 'function' ? matchPub() : undefined }).catch(() => {});
 }
 const lobbyOthers = () => room ? room.peers().filter(p => !p.isMe && p.kind === 'viewer').length : 0;
@@ -2167,7 +2172,7 @@ async function renderLobby() {
     const n = document.createElement('div'); n.className = 'pn'; n.textContent = nameOf(p) + (p.sameTab ? ' (sen)' : '') + (p.guest ? ' · misafir' : '');
     const d = document.createElement('div'); d.className = 'pd';
     const busy = pr.st === 'duel' || pr.st === 'battle';
-    d.innerHTML = cls ? `${CLASSES[cls].name} · Lv ${+pr.lv || 1} · Lig ${+pr.lg || 1} · <span class="${busy ? 'busy' : ''}">${pr.st === 'duel' ? 'düelloda' : pr.st === 'battle' ? 'savaşta' : (SCENES[pr.sc] || SCENES.square).name}</span>` : 'katılıyor…';
+    d.innerHTML = cls ? `${CLASSES[cls].name} · Sv ${+pr.pl || 1} · Ekp ${+pr.lv || 1} · Lig ${+pr.lg || 1} · <span class="${busy ? 'busy' : ''}">${pr.st === 'duel' ? 'düelloda' : pr.st === 'battle' ? 'savaşta' : (SCENES[pr.sc] || SCENES.square).name}</span>` : 'katılıyor…';
     info.append(n, d); el.append(img, info);
     if (!p.sameTab) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Meydan oku';
@@ -2249,7 +2254,7 @@ function challenge(p, name) {
   if (!room || pvp || invite) return;
   const id = Math.random().toString(36).slice(2, 10);
   invite = { mine: true, id, to: p.peer, name };
-  room.emit('duel', { t: 'ask', id, to: p.peer, cls: chosen, gear: gearOf(chosen), alch: T.alch }).catch(() => { invite = null; addChat(null, 'Meydan okuma gönderilemedi.', null, true); });
+  room.emit('duel', { t: 'ask', id, to: p.peer, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel() }).catch(() => { invite = null; addChat(null, 'Meydan okuma gönderilemedi.', null, true); });
   addChat(null, name + ' oyuncusuna meydan okundu, cevap bekleniyor…', null, true);
   setTimeout(() => { if (invite && invite.id === id && invite.mine) { invite = null; addChat(null, name + ' cevap vermedi.', null, true); renderLobby(); } }, 25000);
   renderLobby();
@@ -2263,13 +2268,13 @@ async function onDuelMsg(m) {
   if (d.t === 'ask' && d.to === myPeer()) {
     if (pvp || invite || myMatch || !CLASSES[d.cls]) { room.emit('duel', { t: 'no', id: d.id, to: m.peer, busy: true }).catch(() => {}); return; }
     const prof = m.by && user ? await user.profiles([m.by]) : {}, name = (m.by && prof[m.by] && prof[m.by].name) || 'Bir oyuncu';
-    invite = { mine: false, id: d.id, from: m.peer, by: m.by, name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)) };
+    invite = { mine: false, id: d.id, from: m.peer, by: m.by, name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)) };
     $('invT').textContent = `${name} seni ${CLASSES[d.cls].name} ile düelloya çağırıyor. Sen ${CLASSES[chosen].name} ile savaşacaksın.`;
     $('invite').hidden = false; $('invYes').focus(); Sfx.play('stun');
     setTimeout(() => { if (invite && invite.id === d.id && !invite.mine) declineInvite(); }, 20000);
   } else if (d.t === 'yes' && invite && invite.mine && d.id === invite.id && m.peer === invite.to && CLASSES[d.cls]) {
     const inv = invite; invite = null;
-    startDuel({ id: inv.id, opp: m.peer, oppBy: m.by, oppName: inv.name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), seed: d.seed >>> 0, first: true });
+    startDuel({ id: inv.id, opp: m.peer, oppBy: m.by, oppName: inv.name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), seed: d.seed >>> 0, first: true });
   } else if (d.t === 'no' && invite && invite.mine && d.id === invite.id) {
     addChat(null, invite.name + (d.busy ? ' şu an meşgul.' : ' meydan okumayı reddetti.'), null, true); invite = null; renderLobby();
   }
@@ -2279,8 +2284,8 @@ $('invNo').addEventListener('click', declineInvite);
 $('invYes').addEventListener('click', () => {
   if (!invite || invite.mine) return; const inv = invite; invite = null; $('invite').hidden = true;
   const seed = (Math.random() * 4294967296) >>> 0;
-  room.emit('duel', { t: 'yes', id: inv.id, to: inv.from, cls: chosen, gear: gearOf(chosen), alch: T.alch, seed }).catch(() => {});
-  startDuel({ id: inv.id, opp: inv.from, oppBy: inv.by, oppName: inv.name, cls: inv.cls, gear: inv.gear, alch: inv.alch, seed, first: false });
+  room.emit('duel', { t: 'yes', id: inv.id, to: inv.from, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), seed }).catch(() => {});
+  startDuel({ id: inv.id, opp: inv.from, oppBy: inv.by, oppName: inv.name, cls: inv.cls, gear: inv.gear, alch: inv.alch, lv: inv.lv, seed, first: false });
 });
 /* ---------- çok oyunculu maç (düello = 1v1 maç) ----------
    Kadro (roster) her ekranda aynı sırayla kurulur: [{ team, slot, peer|null, id, g: [10 eşya], a, name }].
@@ -2306,7 +2311,7 @@ async function startMatch(o) { // o = { id, room, kind: 'duel'|'team', mode, see
   crng = seeded(pvp.seed);
   for (const k of ids) Sfx.loadSkills(k);
   const cfg = { A: [], B: [] };
-  for (const r of o.roster) cfg[r.team][r.slot] = { id: r.id, gear: gearObj(r.g), alch: Math.max(1, Math.min(8, r.a | 0 || 1)), peer: r.peer || null,
+  for (const r of o.roster) cfg[r.team][r.slot] = { id: r.id, gear: gearObj(r.g), alch: Math.max(1, Math.min(8, r.a | 0 || 1)), peer: r.peer || null, lvl: Math.max(1, Math.min(99, r.lv | 0 || 1)),
     ctrl: r.peer === mine ? 'me' : r.peer ? 'remote' : 'ai', name: r.peer === mine ? 'Sen · ' + CLASSES[r.id].name : (r.peer ? r.name : 'Bot') + ' · ' + CLASSES[r.id].name };
   showScreen('battle');
   newBattle(cfg);
@@ -2372,8 +2377,8 @@ setInterval(() => {
 }, 1000);
 // düello: meydan okuyan A, kabul eden B
 function startDuel(o) {
-  const me = { peer: myPeer(), id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, name: 'Sen' };
-  const them = { peer: o.opp, id: o.cls, g: gearArr(o.gear), a: o.alch, name: o.oppName };
+  const me = { peer: myPeer(), id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, lv: myLevel(), name: 'Sen' };
+  const them = { peer: o.opp, id: o.cls, g: gearArr(o.gear), a: o.alch, lv: o.lv, name: o.oppName };
   const [A, B] = o.first ? [me, them] : [them, me];
   startMatch({ id: o.id, room: 'duel-' + o.id, kind: 'duel', mode: '1v1', seed: o.seed, roster: [{ team: 'A', slot: 0, ...A }, { team: 'B', slot: 0, ...B }] });
 }
@@ -2388,20 +2393,20 @@ const myName = () => ACC.name || (user && user.nick ? user.nick() : '') || myLob
 let myLobbyName = '';
 function matchPub() {
   if (!myMatch || !myMatch.host) return undefined;
-  const pub = s => s ? { p: s.p, n: s.n, c: s.c, l: s.l } : 0;
+  const pub = s => s ? { p: s.p, n: s.n, c: s.c, l: s.l, v: s.v } : 0;
   return { id: myMatch.id, md: myMatch.mode, A: myMatch.A.map(pub), B: myMatch.B.map(pub) };
 }
 function createMatch(mode) {
   if (!room || pvp || myMatch) return;
   const [na, nb] = MODES[mode], id = Math.random().toString(36).slice(2, 10), g = gearOf(chosen), p = myPeer();
   myMatch = { host: true, id, mode, A: Array(na).fill(0), B: Array(nb).fill(0), info: {} };
-  myMatch.A[0] = { p, n: myName(), c: chosen, l: gearLevel(g) }; myMatch.info[p] = { g: gearArr(g), a: T.alch, id: chosen };
+  myMatch.A[0] = { p, n: myName(), c: chosen, l: gearLevel(g), v: myLevel() }; myMatch.info[p] = { g: gearArr(g), a: T.alch, id: chosen, lv: myLevel() };
   lobbyPresence(); renderMatches();
 }
 function joinMatch(hostPeer, mid, team) {
   if (!room || pvp || myMatch) return;
   myMatch = { host: false, id: mid, hostPeer, team, t0: Date.now() };
-  room.emit('duel', { t: 'mjoin', mid, team, to: hostPeer, id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, l: gearLevel(gearOf(chosen)), n: myName() }).catch(() => {});
+  room.emit('duel', { t: 'mjoin', mid, team, to: hostPeer, id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, l: gearLevel(gearOf(chosen)), lv: myLevel(), n: myName() }).catch(() => {});
   lobbyPresence(); renderMatches();
 }
 function leaveMatch() {
@@ -2412,13 +2417,22 @@ function leaveMatch() {
 function startTeamMatch() {
   if (!myMatch || !myMatch.host) return;
   const M = myMatch, used = new Set([...M.A, ...M.B].filter(Boolean).map(s => s.c));
-  const humans = [...M.A, ...M.B].filter(Boolean), avgLv = Math.round(humans.reduce((s, h) => s + h.l, 0) / humans.length) || 1;
+  const humans = [...M.A, ...M.B].filter(Boolean), avg = k => humans.reduce((s, h) => s + (h[k] || 1), 0) / humans.length;
+  const tgtGear = avg('l'), tgtLv = avg('v'), maxGear = Math.max(...humans.map(h => h.l || 1)), maxLv = Math.max(...humans.map(h => h.v || 1));
+  const fill = (team, key, tgt, hi, cap) => { // bu takımdaki her bot için değer
+    const hs = M[team].filter(Boolean), bots = M[team].length - hs.length; if (!bots) return 0;
+    const need = (tgt * M[team].length - hs.reduce((s, h) => s + (h[key] || 1), 0)) / bots;
+    return Math.max(1, Math.min(Math.min(cap, hi + 2), Math.round(need)));
+  };
   const pool = ORDER.filter(k => !used.has(k)).sort(() => Math.random() - .5);
   const roster = [], seed = (Math.random() * 4294967296) >>> 0;
-  for (const team of ['A', 'B']) M[team].forEach((s, slot) => {
-    if (s) { const inf = M.info[s.p] || {}; roster.push({ team, slot, peer: s.p, id: inf.id || s.c, g: inf.g, a: inf.a, name: s.n }); }
-    else { const id = pool.pop() || ORDER[0]; roster.push({ team, slot, peer: null, id, g: gearArr(foeGear(avgLv)), a: T.alch, name: 'Bot' }); }
-  });
+  for (const team of ['A', 'B']) {
+    const bg = fill(team, 'l', tgtGear, maxGear, 10), bl = fill(team, 'v', tgtLv, maxLv, 99);
+    M[team].forEach((s, slot) => {
+      if (s) { const inf = M.info[s.p] || {}; roster.push({ team, slot, peer: s.p, id: inf.id || s.c, g: inf.g, a: inf.a, lv: inf.lv || s.v || 1, name: s.n }); }
+      else { const id = pool.pop() || ORDER[0]; roster.push({ team, slot, peer: null, id, g: gearArr(foeGear(bg)), a: T.alch, lv: bl, name: 'Bot' }); }
+    });
+  }
   const msg = { t: 'mstart', mid: M.id, mode: M.mode, seed, roster };
   room.emit('duel', msg).catch(() => {});
   startMatch({ id: M.id, room: 'match-' + M.id, kind: 'team', mode: M.mode, seed, roster });
@@ -2429,8 +2443,9 @@ function onMatchLobby(m, d) {
   if (d.t === 'mjoin' && M && M.host && d.to === myPeer() && d.mid === M.id && CLASSES[d.id]) {
     if ([...M.A, ...M.B].some(s => s && s.p === m.peer)) return;
     const arr = M[d.team === 'B' ? 'B' : 'A'], k = arr.findIndex(s => !s); if (k < 0) return;
-    arr[k] = { p: m.peer, n: String(d.n || 'Oyuncu').slice(0, 20), c: d.id, l: Math.max(1, Math.min(10, d.l | 0)) };
-    M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id };
+    const lv = Math.max(1, Math.min(99, d.lv | 0 || 1));
+    arr[k] = { p: m.peer, n: String(d.n || 'Oyuncu').slice(0, 20), c: d.id, l: Math.max(1, Math.min(10, d.l | 0)), v: lv };
+    M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id, lv };
     lobbyPresence(); renderMatches();
   } else if (d.t === 'mleave' && M && M.host && d.to === myPeer() && d.mid === M.id) {
     for (const t of ['A', 'B']) M[t] = M[t].map(s => s && s.p === m.peer ? 0 : s);
@@ -2476,7 +2491,7 @@ function renderMatches() {
       const h = document.createElement('b'); h.textContent = t === 'A' ? 'A takımı' : 'B takımı'; col.appendChild(h);
       mt[t].forEach(s => {
         const row = document.createElement('div'); row.className = 'mslot' + (s && s.p === myPeer() ? ' me' : '');
-        row.textContent = s ? `${s.n} · ${CLASSES[s.c] ? CLASSES[s.c].name : ''} Lv ${s.l}` : 'boş (bot)';
+        row.textContent = s ? `${s.n} · ${CLASSES[s.c] ? CLASSES[s.c].name : ''} · Sv ${s.v || 1}` : 'boş (bot)';
         col.appendChild(row);
       });
       const free = mt[t].some(s => !s);
