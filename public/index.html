@@ -814,8 +814,10 @@ const SCENES = {
   market: { name: 'Çarşı', w: 1280, map: [-1, 0], left: 'mineroad', right: 'square', lamps: [],
     img: { src: 'assets/bg/market.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .58,
     doors: [], npcs: [{ k: 'smith', x: 400, y: 452, cls: 'tank', face: 1, name: 'Demirci Usta' }, { k: 'alch', x: 905, y: 452, cls: 'mage', face: -1, name: 'Simyacı' }] },
-  mineroad: { name: 'Maden Yolu', w: 1900, map: [-2, 0], right: 'market', lamps: [400, 1500],
-    doors: [], npcs: [{ k: 'mine', x: 760, y: 440, cls: 'berserker', face: 1, name: 'Madenci' }] },
+  // maden yolu: kaya sırası 610-650. satır, toprak 655'ten; maden girişi x 620-1240, aletler x 480-600
+  mineroad: { name: 'Maden Yolu', w: 1280, map: [-2, 0], right: 'market', lamps: [],
+    img: { src: 'assets/bg/mineroad.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
+    doors: [], npcs: [{ k: 'mine', x: 470, y: 452, cls: 'berserker', face: 1, name: 'Madenci' }] },
   // arena kapısı: kaldırım 631. satır, zemin 668'den; demir kapı x 800-1120, sol direk x 760
   arenagate: { name: 'Arena Kapısı', w: 1280, map: [1, 0], left: 'square', lamps: [],
     img: { src: 'assets/bg/arenagate.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .6,
