@@ -451,6 +451,8 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
 .ge.mat{color:#9fe6a8} .ge.mat.no{color:#ff8a7a}
 .imon{grid-column:1/-1;grid-row:1/-1;display:flex;align-items:center;gap:16px;min-height:0} .imon canvas{height:100%;max-height:240px;aspect-ratio:1;border-radius:8px} .imon p{color:#cfc8de;font-size:15px;line-height:1.45}
 @media (max-height:520px){.guide.forest .gc.fc{padding:10px 12px;gap:6px} .fst{padding:5px;gap:2px} .fst small{display:none} .fst .fn{font-size:12px} .guide.forest .ihead p{display:none}}
+.tbtn.lang{width:auto;padding:0 6px;font:700 13px var(--font-body);cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center}
+.tbtn.lang option{color:#111}
 </style>
 
 <div class="verbar" id="verBar" role="status" hidden><span>Oyunun yeni sürümü yayında.</span><button class="btn" id="verGo" type="button">Yenile</button></div>
@@ -467,6 +469,7 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
     <button class="tbtn" id="speedBtn" type="button" aria-pressed="false" aria-label="Savaş hızı" title="Savaş hızı" hidden>1×</button>
     <button class="tbtn acct guest" id="accBtn" type="button" aria-haspopup="dialog" hidden>Giriş yap</button>
     <button class="tbtn" id="fsBtn" type="button" aria-label="Tam ekran" title="Tam ekran" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+    <select class="tbtn lang" id="langSel" aria-label="Dil" title="Dil"><option value="tr">TR</option><option value="ru">RU</option><option value="hy">HY</option></select>
     <button class="tbtn" id="helpBtn" type="button" aria-label="Nasıl oynanır" title="Nasıl oynanır">?</button>
     <button class="tbtn snd" id="sfxBtn" type="button" aria-label="Ses efektleri" title="Ses efektleri"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg></button>
     <button class="tbtn snd" id="musBtn" type="button" aria-label="Müzik" title="Müzik"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path class="off" d="M3 3l18 18"/></svg></button>
@@ -518,11 +521,11 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
     <div class="gc">
       <h2 id="guideT">Hoş geldin, kahraman</h2>
       <ol>
-        <li><b>Arena</b>'da sınıfını seç ve teke tek savaş. Kazandıkça <b>altın</b> ve <b>lig</b> kazanırsın; üst ligde ödül büyür.</li>
-        <li><b>Demirci</b>'de her sınıfın 10 eşyasını tek tek yükselt. Eşya güçlendikçe karakterin görünüşü de değişir.</li>
-        <li><b>Belediye</b> yükseldikçe eşyalar ve diğer binalar daha yükseğe çıkabilir.</li>
-        <li><b>Altın Madeni</b> sen yokken de altın biriktirir; uğrayıp topla. <b>Simyacı</b> savaşa daha çok iksirle girmeni sağlar.</li>
-        <li>Savaşta yetenekleri <b>1–5</b> tuşlarıyla kullanabilir, sağ üstteki düğmeyle savaşı <b>2×</b> hızlandırabilirsin.</li>
+        <li data-i18n-html><b>Arena</b>'da sınıfını seç ve teke tek savaş. Kazandıkça <b>altın</b> ve <b>lig</b> kazanırsın; üst ligde ödül büyür.</li>
+        <li data-i18n-html><b>Demirci</b>'de her sınıfın 10 eşyasını tek tek yükselt. Eşya güçlendikçe karakterin görünüşü de değişir.</li>
+        <li data-i18n-html><b>Belediye</b> yükseldikçe eşyalar ve diğer binalar daha yükseğe çıkabilir.</li>
+        <li data-i18n-html><b>Altın Madeni</b> sen yokken de altın biriktirir; uğrayıp topla. <b>Simyacı</b> savaşa daha çok iksirle girmeni sağlar.</li>
+        <li data-i18n-html>Savaşta yetenekleri <b>1–5</b> tuşlarıyla kullanabilir, sağ üstteki düğmeyle savaşı <b>2×</b> hızlandırabilirsin.</li>
       </ol>
       <button class="btn" id="guideOk" type="button">Başla</button>
     </div>
@@ -642,7 +645,10 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
   </section>
 </div>
 
+<script src="i18n-dict.js?v=5"></script>
+<script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
+<script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
 <script src="tiers.js"></script>
 <script src="rig.js"></script>
 <script src="audio.js"></script>

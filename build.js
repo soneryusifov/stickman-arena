@@ -24,7 +24,7 @@ fs.writeFileSync(path.join(OUT, 'index.html'),
   + '<style>*,*::before,*::after{box-sizing:border-box}body{margin:0}</style></head><body>\n' + page + '\n</body></html>\n');
 count++;
 
-for (const f of ['audio.js', 'classes.js', 'rig.js', 'tiers.js']) copy(f);
+for (const f of ['audio.js', 'classes.js', 'rig.js', 'tiers.js', 'i18n.js', 'i18n-dict.js']) copy(f);
 for (const f of list('assets/atlas')) if (/\.(webp|json)$/.test(f)) copy('assets/atlas/' + f);
 // seviyeler atlas'tan gelir; baked içinden yalnızca temel parçalar, portreler ve kasaba binaları
 for (const f of list('assets/baked')) if (/\.png$/.test(f) && !/_t\d+\.png$/.test(f)) copy('assets/baked/' + f);
