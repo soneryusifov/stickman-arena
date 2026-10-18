@@ -428,6 +428,12 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
 }
 .verbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6);font-weight:700}
 .verbar[hidden]{display:none} .verbar .btn{padding:.35em 1em;font-size:13px}
+/* sıra şeridi: şimdiki büyük, sonrakiler küçük; takım rengi çerçeve */
+.tq{display:flex;align-items:center;gap:.3em;margin-top:.45em;pointer-events:none}
+.tq:empty{display:none}
+.tq canvas{width:1.9em;height:1.9em;border-radius:.3em;border:1px solid #b3202c;background:#0c0a12;opacity:.85}
+.tq canvas.ally{border-color:#f2c14e} .tq canvas.now{width:2.6em;height:2.6em;opacity:1;border-width:2px;box-shadow:0 0 .7em currentColor}
+.tq canvas.now.ally{color:#f2c14e} .tq canvas.now.foe{color:#ff5a5a}
 </style>
 
 <div class="verbar" id="verBar" role="status" hidden><span>Oyunun yeni sürümü yayında.</span><button class="btn" id="verGo" type="button">Yenile</button></div>
@@ -585,7 +591,7 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
     <div class="arena">
       <div class="hud">
         <div class="team left" id="teamL"></div>
-        <div class="turnbox"><small id="turnLbl">TUR 1</small><b id="timer">15</b><em id="whose" class="you">Senin sıran</em></div>
+        <div class="turnbox"><small id="turnLbl">TUR 1</small><b id="timer">15</b><em id="whose" class="you">Senin sıran</em><div class="tq" id="tq" aria-label="Sıradakiler"></div></div>
         <div class="team right" id="teamR"></div>
       </div>
       <canvas id="cv"></canvas>
@@ -1933,6 +1939,31 @@ function nextUp(fromTeam) {
   }
   return null;
 }
+// sıradakiler: nextUp'ın kuralını durumu bozmadan taklit eder (şimdiki + sonraki k-1)
+function turnQueue(k) {
+  const out = []; let c = S2.cur; if (!c || S2.over) return out;
+  const ptr = { ...S2.ptr }; out.push(c);
+  while (out.length < k) {
+    let nx = null;
+    for (const team of [otherTeam(c.team), c.team]) {
+      const arr = F[team];
+      for (let s = 1; s <= arr.length && !nx; s++) { const j = (ptr[team] + s) % arr.length; if (isAlive(arr[j])) { ptr[team] = j; nx = arr[j]; } }
+      if (nx) break;
+    }
+    if (!nx) break; out.push(nx); c = nx;
+  }
+  return out;
+}
+function renderQueue() {
+  const box = $('tq'); if (!box || !F) return;
+  const q = turnQueue(F.list.length > 2 ? 6 : 0); box.innerHTML = '';
+  q.forEach((f, i) => {
+    const c = document.createElement('canvas'); c.width = c.height = 48; c.className = (f.side === 'player' ? 'ally' : 'foe') + (i ? '' : ' now');
+    c.title = (i ? i + '. sırada: ' : 'Şimdi: ') + f.name;
+    const src = f.ui && f.ui.querySelector('canvas'); if (src) c.getContext('2d').drawImage(src, 0, 0, 48, 48);
+    box.appendChild(c);
+  });
+}
 const teamDown = t => F[t].every(f => !isAlive(f));
 function checkEnd() { if (teamDown('A')) { end('B'); return true; } if (teamDown('B')) { end('A'); return true; } return false; }
 function nextTurn(from) { const n = nextUp(from.team); if (n) beginTurn(n); }
@@ -2010,6 +2041,7 @@ function updateHUD() {
   const c = S2.cur, w = $('whose');
   w.textContent = S2.over ? 'Bitti' : mine ? 'Senin sıran' : c ? (c.side === 'player' ? c.name.replace(/^Müttefik /, '') : 'Rakip: ' + c.name.replace(/^Rakip /, '')) : '';
   w.className = !c || c.side === 'player' ? 'you' : 'foe';
+  renderQueue();
   const p = F.me;
   p.skills.forEach((sk, i) => {
     const b = $('sk-' + i); if (!b) return;
