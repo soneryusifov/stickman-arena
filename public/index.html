@@ -16,9 +16,9 @@
 html,body{background:var(--ink);color:var(--text)}
 [hidden]{display:none!important}
 body{font-family:var(--font-body);font-size:15px;background:radial-gradient(120% 80% at 50% 0%, #1f1830 0%, var(--ink) 60%) fixed, var(--ink)}
-.wrap{max-width:1180px;margin:0 auto;padding-block:18px 32px;
+.wrap{max-width:none;margin:0 auto;padding-block:8px 24px;
   padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));
-  display:flex;flex-direction:column;gap:14px}
+  display:flex;flex-direction:column;gap:10px}
 .topbar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;min-height:48px}
 .topbar .plaque{grid-column:2}
 .tleft{grid-column:1;justify-self:start} .tright{grid-column:3;justify-self:end;display:flex;gap:6px}
@@ -121,7 +121,18 @@ body{font-family:var(--font-body);font-size:15px;background:radial-gradient(120%
 #town[data-only] .bld:not(.only){display:none}
 #town[data-only]{grid-template-columns:minmax(0,520px);justify-content:center}
 #townScreen[data-only] .quests{display:none}
-@media (hover:hover) and (pointer:fine){.spad{display:none}}
+/* dokunmatik joystick (yalnızca dokunmatik ekranda) */
+.joy{position:absolute;left:14px;bottom:14px;width:104px;height:104px;border-radius:50%;background:rgba(14,11,20,.45);border:2px solid rgba(242,193,78,.5);touch-action:none;user-select:none;-webkit-user-select:none;display:none}
+.joy .knob{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe29a,#c99a2a);box-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none}
+@media (hover:none) and (pointer:coarse){.joy{display:block}}
+/* telefon dikeyken: yan çevir uyarısı */
+.rotate{position:fixed;inset:0;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:var(--ink)}
+.rotate svg{width:84px;height:84px;color:var(--gold);fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;animation:turn 2.4s ease-in-out infinite}
+.rotate p{margin:0;font-size:17px;max-width:280px;line-height:1.4}
+@keyframes turn{0%,20%{transform:rotate(0)}50%,70%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
+@media (hover:none) and (pointer:coarse) and (orientation:portrait) and (max-width:600px){.rotate{display:flex}}
+@media (prefers-reduced-motion:reduce){.rotate svg{animation:none}}
+}
 .lobby{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:14px;align-items:start}
 .lpanel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .lpanel h3{margin:0;font-family:var(--font-display);font-weight:800;font-size:17px;letter-spacing:.06em;color:var(--gold);display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -232,14 +243,44 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   .info{width:100%} .skills{gap:6px;padding:8px} .skill svg{width:28px;height:28px} .skill .nm{font-size:12px} .skill .key{display:none}
 }
 @media (prefers-reduced-motion:reduce){ .bar i{transition:none} .skill,.card{transition:none} }
+/* tam pencere: oyun alanı (meydan ve savaş) pencereyi doldurur; diğer bölümler aşağıda kaydırılır */
+#lobbyScreen .street{order:-1;display:flex;justify-content:center;background:#0b0918;margin-bottom:0}
+#sv{width:min(100%,calc((100dvh - 74px) * 1280 / 520));height:auto;max-width:100%}
+#battleScreen{--aw:min(100%,calc((100dvh - 228px) * 16 / 9));align-items:center}
+#battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{max-width:var(--aw)}
+.select,.townbar,.town,.quests,.lobby{width:100%;max-width:1400px;margin-inline:auto}
+/* telefon yatay: ekranı doldur, savaşta yetenekler sağda */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:520px){
+  .wrap{max-width:none;padding:4px 10px 14px}
+  .topbar{min-height:36px} .topbar .plaque{font-size:14px;padding:.25em .8em}
+  .tbtn{height:32px;min-width:32px;font-size:13px;padding:0 7px} .tbtn svg{width:16px;height:16px} .back{width:32px;height:32px} .tright{gap:4px}
+  .screen{gap:8px} .hint,.shead p{display:none}
+  #lobbyScreen{position:relative} .shead{position:absolute;top:8px;left:8px;z-index:5;margin:0} .shead .btn{padding:.3em .8em;font-size:12px;opacity:.92}
+  .street{display:flex;justify-content:center;background:#0b0918;margin-bottom:8px}
+  #sv{width:min(100%,calc((100dvh - 50px) * 1280 / 520))}
+  .sbox{bottom:8px;padding:6px 8px 6px 12px} .sbox span{font-size:13px} .sbox .btn{font-size:13px}
+  .joy{width:92px;height:92px;left:10px;bottom:10px}
+  #battleScreen{display:grid;grid-template-columns:auto 150px;gap:8px;align-items:start;justify-content:center}
+  #battleScreen .arena{width:min(calc((100dvh - 50px) * 16 / 9),calc(100vw - 180px))} #battleScreen .lower{width:150px}
+  .hud{font-size:10px;padding:1% 1.4%} .hud .portrait{width:34px;height:34px}
+  .lower{display:block} .log{display:none}
+  .skills{grid-template-columns:minmax(0,1fr);gap:4px;padding:4px;max-height:calc(100dvh - 50px)}
+  .skill{flex-direction:row;justify-content:flex-start;gap:6px;padding:5px 6px;min-height:0} .skill svg{width:22px;height:22px;flex:none}
+  .skill .nm{font-size:11.5px;text-align:left} .skill .cost{font-size:10px;margin-left:auto} .skill .key{display:none}
 </style>
 
+<div class="rotate" id="rotate" role="dialog" aria-labelledby="rotT">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+  <p id="rotT">Stickman Arena yatay oynanır. Telefonunu yan çevir.</p>
+  <button class="btn" id="rotBtn" type="button">Tam ekran yatay oyna</button>
+</div>
 <div class="wrap">
   <div class="topbar">
     <div class="tleft"><button class="back" id="backBtn" type="button" aria-label="Kasabaya dön" hidden><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button></div>
     <div class="plaque" id="plaque">KASABA</div>
     <div class="tright">
     <button class="tbtn" id="speedBtn" type="button" aria-pressed="false" aria-label="Savaş hızı" title="Savaş hızı" hidden>1×</button>
+    <button class="tbtn" id="fsBtn" type="button" aria-label="Tam ekran" title="Tam ekran" hidden><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
     <button class="tbtn" id="helpBtn" type="button" aria-label="Nasıl oynanır" title="Nasıl oynanır">?</button>
     <button class="tbtn snd" id="sfxBtn" type="button" aria-label="Ses efektleri" title="Ses efektleri"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="off" d="M17 9l5 6M22 9l-5 6"/></svg></button>
     <button class="tbtn snd" id="musBtn" type="button" aria-label="Müzik" title="Müzik"><svg viewBox="0 0 24 24"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/><path class="off" d="M3 3l18 18"/></svg></button>
@@ -276,12 +317,11 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   </section>
 
   <section class="screen" id="lobbyScreen" hidden>
-    <div class="shead"><p>Yürü: ok tuşları ya da W A S D, ya da yere tıkla · Kenara yürü: yan bölüme geç · Karakterle konuş ya da kapıdan geç: E · Bir oyuncuya tıkla: meydan oku</p><button class="btn ghost" id="openTown" type="button">Kasaba yönetimi ve görevler</button></div>
+    <div class="shead"><p>Yürü: ok tuşları ya da W A S D, telefonda joystick, ya da yere dokun · Kenara yürü: yan bölüme geç · Karakterle konuş ya da kapıdan geç: E · Bir oyuncuya tıkla: meydan oku</p><button class="btn ghost" id="openTown" type="button">Kasaba yönetimi ve görevler</button></div>
     <div class="street">
       <canvas id="sv" width="1280" height="520" tabindex="0" aria-label="Kasaba meydanı. Kahramanını ok tuşlarıyla yürüt, bir binanın önünde E tuşuyla içeri gir."></canvas>
       <div class="sbox" id="sbox" hidden><span id="sboxT"></span><button class="btn" id="sboxB" type="button"></button></div>
-      <div class="spad l"><button id="padL" type="button" aria-label="Sola yürü">◀</button><button id="padR" type="button" aria-label="Sağa yürü">▶</button></div>
-      <div class="spad r"><button id="padU" type="button" aria-label="İçeri yürü">▲</button><button id="padD" type="button" aria-label="Dışarı yürü">▼</button></div>
+      <div class="joy" id="joy" role="application" aria-label="Yürüme joysticki: sürükleyerek yürü"><div class="knob" id="knob"></div></div>
     </div>
     <div class="lobby">
       <section class="lpanel" aria-labelledby="plT">
@@ -1005,7 +1045,7 @@ function drawStreet(t, dt) {
   let sp = avg;
   if (me.A && me.A.cur === 'walk') { const an = me.A.ANIMS.walk, p = (me.A.at % an.dur) / an.dur; sp = 24 * STRIDE * 2 * Math.PI / an.dur * Math.abs(Math.cos(p * 2 * Math.PI)) * HS * WALK_RATE * dt; }
   sp *= scaleAt(me.y) / HS;
-  let dx = keys.r - keys.l, dy = keys.d - keys.u;
+  let dx = keys.r - keys.l + joy.x, dy = keys.d - keys.u + joy.y;
   if (trans) dx = dy = 0;
   if (dx || dy) { me.target = null; me.door = null; }
   else if (me.target) {
@@ -1049,7 +1089,7 @@ function drawStreet(t, dt) {
   for (const d of S.doors) if (Math.abs(me.x - d.x) < 60 && me.y < Y0 + 30) near = { type: 'door', d };
   for (const n of S.npcs) if (Math.abs(me.x - n.x) < 110 && Math.abs(me.y - n.y) < 55) near = { type: 'npc', n };
   // arka kenarda kapıya doğru yürüyen içeri girer
-  if (near && near.type === 'door' && keys.u && me.y <= Y0 + 1) goScene(near.d.to, 'door');
+  if (near && near.type === 'door' && (keys.u || joy.y < -.6) && me.y <= Y0 + 1) goScene(near.d.to, 'door');
   for (const d of S.doors) drawDoor(d, t, near && near.d === d);
   // kenar çıkışlarının tabelaları
   if (S.left) drawLabel(110 - camX, Y0 - 24, '← ' + SCENES[S.left].name, '#e9e4f5');
@@ -1164,11 +1204,33 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { const k = KEYMAP[e.key.toLowerCase()]; if (k) keys[k] = 0; });
 addEventListener('blur', () => { keys.l = keys.r = keys.u = keys.d = 0; });
-for (const [id, side] of [['padL', 'l'], ['padR', 'r'], ['padU', 'u'], ['padD', 'd']]) {
-  const b = $(id);
-  b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); keys[side] = 1; me.target = null; });
-  for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => { keys[side] = 0; });
+// dokunmatik joystick: topu sürükleme yönü yürüme yönüdür (merkeze yakın küçük hareket sayılmaz)
+const joy = { x: 0, y: 0 };
+(function () {
+  const base = $('joy'), knob = $('knob'); let pid = null;
+  const set = e => {
+    const r = base.getBoundingClientRect(), R = r.width / 2; let dx = e.clientX - (r.left + R), dy = e.clientY - (r.top + R);
+    const L = Math.hypot(dx, dy), m = Math.min(L, R * .62);
+    if (L) { dx = dx / L * m; dy = dy / L * m; }
+    knob.style.transform = `translate(${dx}px,${dy}px)`;
+    const on = L > R * .16; joy.x = on ? dx / m : 0; joy.y = on ? dy / m : 0;
+  };
+  base.addEventListener('pointerdown', e => { e.preventDefault(); pid = e.pointerId; base.setPointerCapture(pid); me.target = null; me.door = null; set(e); });
+  base.addEventListener('pointermove', e => { if (e.pointerId === pid) set(e); });
+  const end = e => { if (e.pointerId !== pid) return; pid = null; joy.x = joy.y = 0; knob.style.transform = ''; };
+  base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end); base.addEventListener('lostpointercapture', end);
+})();
+// tam ekran + yatay kilit (Android tarayıcıları destekler; iPhone'da telefonu çevirmek yeterli)
+const canFs = !!(document.documentElement.requestFullscreen && document.fullscreenEnabled);
+async function goLandscape() {
+  try { if (canFs && !document.fullscreenElement) await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
+  try { if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {}
 }
+$('rotBtn').addEventListener('click', goLandscape);
+if (!canFs) $('rotBtn').hidden = true;
+if (canFs) $('fsBtn').hidden = false; // tam ekran düğmesi PC'de de var
+document.addEventListener('fullscreenchange', () => $('fsBtn').setAttribute('aria-pressed', !!document.fullscreenElement));
+$('fsBtn').addEventListener('click', () => { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); else goLandscape(); });
 for (const n of scene().npcs) npcActor(n);
 setFloor(scene());
 
