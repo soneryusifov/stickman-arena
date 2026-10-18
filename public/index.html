@@ -189,7 +189,19 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .unit.cur{background:rgba(242,193,78,.14);box-shadow:inset 0 0 0 1px rgba(242,193,78,.6)}
 .unit.tgt{box-shadow:inset 0 0 0 2px #ff5a5a} .unit.atgt{box-shadow:inset 0 0 0 2px #4be38a}
 .unit.dead{opacity:.4;filter:grayscale(.8)}
-.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px} .modes.three{grid-template-columns:repeat(3,1fr)} .modes.three button{font-size:13px}
+.modes button:disabled{opacity:.45;cursor:not-allowed}
+.mlist{display:flex;flex-direction:column;gap:8px}
+.mcard{border:1px solid #2e2840;border-radius:4px;background:#100d17;padding:8px;display:flex;flex-direction:column;gap:6px}
+.mcard.mine{border-color:var(--gold)}
+.mhead{font-weight:700;color:var(--gold);font-size:14px}
+.mteams{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mteam{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mteam b{font-size:12px;color:var(--muted)}
+.mslot{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 4px;border-radius:3px;background:#17131f}
+.mslot.me{color:var(--gold)}
+.mteam .btn,.mact .btn{padding:.3em .8em;font-size:12.5px}
+.mact{display:flex;gap:6px;justify-content:flex-end}
 .modes button{font:inherit;font-weight:800;font-size:15px;padding:.5em;border-radius:4px;border:1px solid var(--line);background:#100d17;color:var(--muted);cursor:pointer}
 .modes button[aria-checked="true"]{border-color:var(--gold);color:var(--gold);background:#1c1626}
 .modes button:focus-visible{outline:2px solid #fff;outline-offset:1px}
@@ -398,6 +410,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         <div class="ohud">
           <button class="btn ghost" id="openTown" type="button">Kasaba ve görevler</button>
           <button class="btn ghost" id="plToggle" type="button" aria-expanded="false" aria-controls="plPanel">Oyuncular <b id="plCount"></b></button>
+          <button class="btn ghost" id="mToggle" type="button" aria-expanded="false" aria-controls="mPanel">Takım maçı</button>
           <button class="btn ghost" id="lbToggle" type="button" aria-expanded="false" aria-controls="lbPanel" hidden>Sıralama</button>
         </div>
         <section class="opanel players" id="plPanel" aria-labelledby="plT" hidden>
@@ -406,6 +419,12 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
           <form class="chatf" id="nickf" hidden><input id="nickIn" maxlength="20" autocomplete="nickname" placeholder="Takma adın" aria-label="Takma adın"><button type="submit">Adı kaydet</button></form>
           <div class="plist" id="plist"></div>
           <p class="lnote">Düelloda <b id="lobbyCls"></b> sınıfınla ve onun ekipmanıyla savaşırsın. Galibiyet +200, yenilgi +50 altın; lig değişmez.</p>
+        </section>
+        <section class="opanel players matches" id="mPanel" aria-labelledby="mT" hidden>
+          <h3 id="mT">Takım maçı <small>lobidekilerle</small></h3>
+          <div class="modes three" role="group" aria-label="Maç kur"><button type="button" data-mk="1v2">1v2 kur</button><button type="button" data-mk="2v2">2v2 kur</button><button type="button" data-mk="3v3">3v3 kur</button></div>
+          <div id="mList" class="mlist"></div>
+          <p class="lnote">Boş yerlere bot gelir. Kazanan takıma altın, EXP ve lig puanı.</p>
         </section>
         <section class="opanel players board" id="lbPanel" aria-labelledby="lbT" hidden>
           <h3 id="lbT">Sıralama <small id="lbSub"></small></h3>
@@ -1479,7 +1498,7 @@ function showScreen(name) {
   $('speedBtn').hidden = name !== 'battle'; $('helpBtn').hidden = name !== 'town' && name !== 'lobby';
   Sfx.music(name === 'battle' ? 'battle' : 'town');
   $('backBtn').setAttribute('aria-label', name === 'battle' ? 'Karakter seçimine dön' : 'Meydana dön');
-  $('plaque').textContent = name === 'town' ? 'KASABA' : name === 'lobby' ? 'KASABA MEYDANI' : name === 'battle' ? (pvp ? 'DÜELLO' : 'SAVAŞ ARENASI (' + battleMode + ')') : mode === 'smith' ? 'DEMİRCİ' : 'ARENA · KARAKTER SEÇ';
+  $('plaque').textContent = name === 'town' ? 'KASABA' : name === 'lobby' ? 'KASABA MEYDANI' : name === 'battle' ? (pvp ? (pvp.kind === 'team' ? 'TAKIM MAÇI (' + pvp.mode + ')' : 'DÜELLO') : 'SAVAŞ ARENASI (' + battleMode + ')') : mode === 'smith' ? 'DEMİRCİ' : 'ARENA · KARAKTER SEÇ';
   if (name === 'town') renderTown();
   lobbyPresence();
   scrollTo({ top: 0 });
@@ -1672,7 +1691,7 @@ function targetFor(f, sk, t) {
 // savaşı kur: cfg = { A: [üye], B: [üye] }, üye = { id, gear, alch, ctrl: 'me'|'ai'|'remote', name }
 function newBattle(cfg) {
   const list = [];
-  for (const team of ['A', 'B']) cfg[team].forEach((m, slot) => { const f = mkFighter(m.id, team, m.gear, m.alch, m); f.slot = slot; f.idx = list.length; list.push(f); });
+  for (const team of ['A', 'B']) cfg[team].forEach((m, slot) => { const f = mkFighter(m.id, team, m.gear, m.alch, m); f.slot = slot; f.idx = list.length; f.peer = m.peer || null; list.push(f); });
   F = { list, A: list.filter(f => f.team === 'A'), B: list.filter(f => f.team === 'B') };
   F.me = list.find(f => f.ctrl === 'me'); F.player = F.me; F.enemy = F[otherTeam(F.me.team)][0]; // eski adlar (testler, düello)
   for (const f of list) {
@@ -1680,7 +1699,7 @@ function newBattle(cfg) {
     const [x, dy, s] = LAYOUT[F[f.team].length][f.slot], left = f.side === 'player';
     f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = GY + dy; f.sc = f.A.sc = s;
   }
-  S2 = { turn: 1, moves: 0, cur: null, busy: false, over: false, waiting: false, timer: 15, gid: S2.gid + 1, ptr: { A: -1, B: -1 }, foe: null, ally: null };
+  S2 = { turn: 1, moves: 0, cur: null, busy: false, over: false, waiting: false, timer: 15, gid: S2.gid + 1, ptr: { A: -1, B: -1 }, foe: null, ally: null, mv: 0 };
   parts.length = texts.length = projs.length = 0; flash = null;
   $('log').innerHTML = ''; $('over').hidden = true;
   buildHUD(); buildSkillButtons();
@@ -1832,7 +1851,7 @@ async function act(f, idx, tgt) {
   if (!sk || S2.busy || S2.over || f.mp < sk.cost) return;
   if (sk.kind === 'potion' && f.potions <= 0) return;
   const o = targetFor(f, sk, tgt), who = f.side;
-  S2.busy = true; S2.waiting = false; f.mp -= sk.cost; updateHUD();
+  S2.busy = true; S2.waiting = false; f.mp -= sk.cost; S2.mv++; updateHUD(); // mv: oynanan hamle sayısı (çok oyunculu sıra)
   const live = () => g === S2.gid;
   const anim = sk.anim === undefined ? 'attack' : sk.anim;
   if (sk.kind === 'melee') {
@@ -1903,12 +1922,13 @@ async function beginTurn(f, first) {
     if (!S2.foe || !isAlive(S2.foe)) S2.foe = autoFoe(f);
     if (S2.ally && !isAlive(S2.ally)) S2.ally = null;
     updateHUD();
-  } else if (f.ctrl === 'remote') { S2.waiting = false; S2.remote = true; updateHUD(); pvpNext(); } // başka oyuncu: hamlesi odadan gelir
+    if (pvp) pvpNext(); // vekil benim yerime oynadıysa hamlesi bekliyor olabilir
+  } else if (f.ctrl === 'remote') { S2.waiting = false; S2.remote = true; updateHUD(); pvpNext(); maybeProxy(f); } // başka oyuncu: hamlesi odadan gelir
   else { S2.waiting = false; updateHUD(); await wait(800); if (g !== S2.gid || S2.over) return; const c = aiChoose(f); act(f, c.i, c.t); }
 }
 // bot: zayıf rakibe yüklenir, yaralı arkadaşını iyileştirir (zarlar ortak üreteçten: her ekranda aynı karar)
-function aiChoose(e) {
-  const s = e.skills, can = i => e.mp >= s[i].cost, R = crng;
+function aiChoose(e, R = crng) {
+  const s = e.skills, can = i => e.mp >= s[i].cost;
   const foes = foesOf(e), weak = foes.slice().sort((a, b) => a.hp - b.hp)[0];
   const t = R() < .65 ? weak : foes[Math.floor(R() * foes.length)], hurt = autoAlly(e);
   if (e.hp < e.maxHp * .35 && e.potions > 0 && R() < .6) return { i: 4 };
@@ -1925,7 +1945,7 @@ function playerAct(i) {
   if (!myTurn() || !S2.waiting || S2.busy) return;
   const b = $('sk-' + i); if (!b || b.disabled) return;
   const sk = F.me.skills[i], t = needsFoe(sk) ? S2.foe : needsAlly(sk) ? S2.ally : null;
-  if (pvp) pvpSend({ t: 'act', i, tg: t ? t.idx : -1, n: pvp.n++ });
+  if (pvp) pvpAct({ t: 'act', f: F.me.idx, i, tg: t ? t.idx : -1, mv: S2.mv });
   act(F.me, i, t);
 }
 // tecrübe: seviye n'den n+1'e 100 + 50(n-1) EXP
@@ -1942,12 +1962,13 @@ async function end(winTeam) {
   else { gain = reward(won, L0); lp = won ? 1 : -1; xp = won ? 40 : 12; }
   const lv0 = xpLevel(SAVE.xp);
   SAVE.gold += gain; SAVE.league = Math.max(0, SAVE.league + lp); SAVE.xp = (SAVE.xp || 0) + xp; // ödül hemen yazılır
+  const pk = pvp ? pvp.kind : null; // pvpFinish pvp'yi sıfırlar
   if (duel) pvpFinish();
   const St = SAVE.stats; St.battles++; track('play');
   if (won) { St.wins++; St.won[chosen] = 1; if (duel) St.duelWins = (St.duelWins || 0) + 1; if (team) St.teamWins = (St.teamWins || 0) + 1; track('win'); track('class', 1, chosen); }
   St.bestLeague = Math.max(St.bestLeague, leagueOf(SAVE.league)); persist();
   const L1 = leagueOf(SAVE.league), lv1 = xpLevel(SAVE.xp), ye = n => ['', "'e", "'ye", "'e", "'e", "'e", "'ya", "'ye", "'e", "'a", "'a"][n]; // 1'e, 2'ye, 6'ya, 9'a, 10'a
-  const lg = (duel ? ' · Düello' : '') + (L1 > L0 ? ` · Lig ${L1}${ye(L1)} yükseldin!` : L1 < L0 ? ` · Lig ${L1}${ye(L1)} düştün` : lp > 0 ? ' · +1 lig puanı' : duel ? '' : ` · Lig ${L1}`);
+  const lg = (pk === 'team' ? ' · Takım maçı' : duel ? ' · Düello' : '') + (L1 > L0 ? ` · Lig ${L1}${ye(L1)} yükseldin!` : L1 < L0 ? ` · Lig ${L1}${ye(L1)} düştün` : lp > 0 ? ' · +1 lig puanı' : duel ? '' : ` · Lig ${L1}`);
   const g = S2.gid; await wait(1500); if (g !== S2.gid) return;
   Sfx.play(won ? 'win' : 'lose');
   const o = $('over'); o.classList.toggle('lose', !won);
@@ -1957,11 +1978,9 @@ async function end(winTeam) {
   o.hidden = false; $('again').focus();
 }
 setInterval(() => {
-  // çok oyunculu: sırası gelen oyuncu uzun süre hamle göndermezse çekilmiş sayılır
-  if (pvp && screen === 'battle' && S2.remote && !S2.over) { if (++pvp.idle > 60) { pvpSend({ t: 'claim' }); pvpWin('Rakip 1 dakikadır hamle yapmadı.'); } } else if (pvp) pvp.idle = 0;
   if (screen !== 'battle' || !S2.waiting || S2.busy || S2.over || (document.hidden && !pvp)) return;
   S2.timer--; updateHUD();
-  if (S2.timer <= 0) { S2.waiting = false; log('Süre doldu, sıra geçti.', 'enemy'); if (pvp) pvpSend({ t: 'pass', n: pvp.n++ }); nextTurn(F.me); }
+  if (S2.timer <= 0) { S2.waiting = false; log('Süre doldu, sıra geçti.', 'enemy'); if (pvp) pvpAct({ t: 'pass', f: F.me.idx, mv: S2.mv }); S2.mv++; nextTurn(F.me); }
 }, 1000);
 // sahnede bir savaşçıya dokunmak da hedef seçer
 $('cv').addEventListener('click', e => {
@@ -2115,7 +2134,8 @@ async function initRoom() {
     $('nickf').hidden = false; $('nickIn').value = user.nick();
     $('nickf').addEventListener('submit', e => { e.preventDefault(); const n = $('nickIn').value.trim().slice(0, 20); if (n) { user.setName(n); addChat(null, 'Adın artık ' + n + '.', null, true); } });
   }
-  room.onPeers(() => { renderLobby(); if (screen === 'town') { const b = $('goLobby'); if (b) renderTown(); } }, () => {});
+  if (user && user.me) user.me().then(u => { myLobbyName = (u && u.name) || ''; }).catch(() => {});
+  room.onPeers(() => { renderLobby(); renderMatches(); if (screen === 'town') { const b = $('goLobby'); if (b) renderTown(); } }, () => {});
   room.on('chat', m => { const text = typeof m.data?.text === 'string' ? m.data.text.slice(0, 200) : ''; if (text) { addChat(m.by, text, m.peer); if (!m.isMe) bubbles.set(m.peer, { text, t: now() }); } });
   room.on('duel', onDuelMsg);
   room.onConnection(c => { $('lobbyNote').textContent = c ? 'Bu oyunu şu an açık tutan herkes burada görünür. Birine meydan okumak için yanındaki düğmeye bas.' : 'Bağlantı yok, yeniden bağlanılıyor…'; $('chatSend').disabled = !c; }, () => {});
@@ -2125,7 +2145,7 @@ function lobbyPresence() {
   if (!room) return;
   const g = gearOf(chosen);
   room.presence({ cls: chosen, lv: gearLevel(g), lg: leagueOf(SAVE.league), st: pvp ? 'duel' : screen === 'battle' ? 'battle' : 'lobby',
-    sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, g: ITEMS.map(k => g[k]) }).catch(() => {});
+    sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, g: ITEMS.map(k => g[k]), m: typeof matchPub === 'function' ? matchPub() : undefined }).catch(() => {});
 }
 const lobbyOthers = () => room ? room.peers().filter(p => !p.isMe && p.kind === 'viewer').length : 0;
 function openLobby() { showScreen('lobby'); streetActor(); $('lobbyCls').textContent = CLASSES[chosen].name; renderLobby(); renderChat(); }
@@ -2151,7 +2171,7 @@ async function renderLobby() {
     info.append(n, d); el.append(img, info);
     if (!p.sameTab) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Meydan oku';
-      b.disabled = busy || !cls || !!pvp || !!(invite && invite.mine);
+      b.disabled = busy || !cls || !!pvp || !!(invite && invite.mine) || !!myMatch;
       b.setAttribute('aria-label', nameOf(p) + ' oyuncusuna meydan oku');
       b.onclick = () => challenge(p, nameOf(p));
       el.append(b);
@@ -2197,7 +2217,7 @@ async function renderBoard() {
 }
 document.querySelectorAll('#lbPanel [data-by]').forEach(b => b.addEventListener('click', () => { lbBy = b.dataset.by; renderBoard(); }));
 function togglePanel(which) {
-  for (const [btn, pan] of [['plToggle', 'plPanel'], ['lbToggle', 'lbPanel']]) {
+  for (const [btn, pan] of [['plToggle', 'plPanel'], ['lbToggle', 'lbPanel'], ['mToggle', 'mPanel']]) {
     const open = btn === which && $(pan).hidden;
     $(pan).hidden = !open; $(btn).setAttribute('aria-expanded', open);
   }
@@ -2239,8 +2259,9 @@ const myPeer = () => room && (room.peers().find(p => p.sameTab) || {}).peer;
 const cleanGear = g => Object.fromEntries(ITEMS.map(k => [k, Math.max(1, Math.min(10, Math.round(+(g && g[k]) || 1)))]));
 async function onDuelMsg(m) {
   const d = m.data || {}; if (m.isMe || !d.t) return;
+  if (d.t === 'mjoin' || d.t === 'mleave' || d.t === 'mstart') return onMatchLobby(m, d);
   if (d.t === 'ask' && d.to === myPeer()) {
-    if (pvp || invite || !CLASSES[d.cls]) { room.emit('duel', { t: 'no', id: d.id, to: m.peer, busy: true }).catch(() => {}); return; }
+    if (pvp || invite || myMatch || !CLASSES[d.cls]) { room.emit('duel', { t: 'no', id: d.id, to: m.peer, busy: true }).catch(() => {}); return; }
     const prof = m.by && user ? await user.profiles([m.by]) : {}, name = (m.by && prof[m.by] && prof[m.by].name) || 'Bir oyuncu';
     invite = { mine: false, id: d.id, from: m.peer, by: m.by, name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)) };
     $('invT').textContent = `${name} seni ${CLASSES[d.cls].name} ile düelloya çağırıyor. Sen ${CLASSES[chosen].name} ile savaşacaksın.`;
@@ -2261,43 +2282,219 @@ $('invYes').addEventListener('click', () => {
   room.emit('duel', { t: 'yes', id: inv.id, to: inv.from, cls: chosen, gear: gearOf(chosen), alch: T.alch, seed }).catch(() => {});
   startDuel({ id: inv.id, opp: inv.from, oppBy: inv.by, oppName: inv.name, cls: inv.cls, gear: inv.gear, alch: inv.alch, seed, first: false });
 });
-/* ---------- düello ---------- */
-async function startDuel(o) {
-  let dr; try { dr = await room.join('duel-' + o.id); } catch (e) { addChat(null, 'Düello odası açılamadı.', null, true); return; }
-  try { await Promise.all([Rig.load(chosen), Rig.loadTiers(chosen), Rig.load(o.cls), Rig.loadTiers(o.cls)]); } catch (e) {}
-  pvp = { room: dr, id: o.id, opp: o.opp, n: 0, q: [], seen: false, idle: 0 };
-  lastDuel = true;
-  const oppTeam = () => F.list.find(f => f.ctrl === 'remote').team;
-  dr.on('duel', m => { if (m.isMe || m.peer !== pvp?.opp) return; const d = m.data || {}; if (d.t === 'act' || d.t === 'pass') { pvp.q.push(d); pvpNext(); } else if (d.t === 'quit') pvpWin('Rakip düellodan çekildi.'); else if (d.t === 'claim' && !S2.over) { log('Çok uzun süre hamle yapmadın, düello kaybedildi.', 'enemy'); S2.busy = false; S2.gid++; end(oppTeam()); } });
-  dr.onPeers(c => { if (!pvp) return; if (c.peers.some(p => p.peer === pvp.opp)) pvp.seen = true; else if (pvp.seen) pvpWin('Rakip düellodan ayrıldı.'); }, () => {});
-  // meydan okuyan A takımı, kabul eden B takımı: iki ekranda da aynı sıra; zarlar ortak tohumla
-  foeId = o.cls; Sfx.loadSkills(chosen); Sfx.loadSkills(o.cls);
-  const mine = { id: chosen, gear: gearOf(chosen), ctrl: 'me', name: 'Sen · ' + CLASSES[chosen].name };
-  const theirs = { id: o.cls, gear: o.gear, alch: o.alch, ctrl: 'remote', name: o.oppName + ' · ' + CLASSES[o.cls].name };
-  crng = seeded(o.seed);
+/* ---------- çok oyunculu maç (düello = 1v1 maç) ----------
+   Kadro (roster) her ekranda aynı sırayla kurulur: [{ team, slot, peer|null, id, g: [10 eşya], a, name }].
+   Her hamle odaya { t:'act', f: savaşçı, i: yetenek, tg: hedef, mv: hamle sırası } olarak gider; ekranlar hamleleri
+   mv sırasıyla oynar (geç gelen bekletilir, eskisi atılır). Mesajlar kaybolabilir: yeni katılana ve arada bir yeniden yollanır.
+   Botlar her ekranda ortak zarla aynı kararı verir. Ayrılan ya da 45 sn oynamayan oyuncunun yerine, kadroda hâlâ
+   odada olan ilk oyuncu bot kararını yollar; karar hamle sırasından türeyen tohumla seçildiği için kim yollarsa yollasın aynıdır. */
+const gearArr = g => ITEMS.map(k => g[k]);
+const gearObj = a => cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(a) ? a[i] : 1])));
+async function startMatch(o) { // o = { id, room, kind: 'duel'|'team', mode, seed, roster }
+  let dr; try { dr = await room.join(o.room); } catch (e) { addChat(null, 'Maç odası açılamadı.', null, true); return; }
+  const ids = [...new Set(o.roster.map(r => r.id))], mine = myPeer();
+  try { await Promise.all(ids.flatMap(k => [Rig.load(k), Rig.loadTiers(k)])); } catch (e) {}
+  pvp = { room: dr, id: o.id, kind: o.kind, mode: o.mode, seed: o.seed >>> 0, pend: {}, sent: [], idle: 0, humans: o.roster.filter(r => r.peer).map(r => r.peer), gone: new Set(), seen: new Set() };
+  lastDuel = true; myMatch = null;
+  dr.on('duel', onMatchMsg);
+  dr.onPeers(c => {
+    if (!pvp) return;
+    for (const p of c.peers) pvp.seen.add(p.peer);
+    if (c.joined && c.joined.length) for (const d of pvp.sent) pvp.room.emit('duel', d).catch(() => {}); // geç katılana hamleleri yeniden yolla
+    for (const p of c.left || []) if (pvp.humans.includes(p.peer)) playerGone(p.peer, 'ayrıldı');
+  }, () => {});
+  crng = seeded(pvp.seed);
+  for (const k of ids) Sfx.loadSkills(k);
+  const cfg = { A: [], B: [] };
+  for (const r of o.roster) cfg[r.team][r.slot] = { id: r.id, gear: gearObj(r.g), alch: Math.max(1, Math.min(8, r.a | 0 || 1)), peer: r.peer || null,
+    ctrl: r.peer === mine ? 'me' : r.peer ? 'remote' : 'ai', name: r.peer === mine ? 'Sen · ' + CLASSES[r.id].name : (r.peer ? r.name : 'Bot') + ' · ' + CLASSES[r.id].name };
   showScreen('battle');
-  newBattle(o.first ? { A: [mine], B: [theirs] } : { A: [theirs], B: [mine] });
-  log(`Düello: ${CLASSES[chosen].name}, ${theirs.name} karşısında! ${o.first ? 'İlk hamle senin.' : 'İlk hamle rakibin.'}`);
+  newBattle(cfg);
+  log(o.kind === 'duel' ? `Düello: ${F.list.map(f => f.name).join(' – ')}. ${F.me.team === 'A' ? 'İlk hamle senin.' : 'İlk hamle rakibin.'}`
+    : `${o.mode} takım maçı başladı! Takımın: ${F[F.me.team].map(f => f.name).join(', ')}. Hedefini seçmek için bir karaktere dokun.`);
   beginTurn(nextUp('B'), true);
 }
 const pvpSend = d => { if (pvp) pvp.room.emit('duel', d).catch(() => {}); };
-// sırası başka oyuncudaysa ve önceki hamle bittiyse, kuyruktaki hamlesini oyna
+// kendi (ya da vekil olduğum) hamleyi yolla ve sakla
+function pvpAct(d) { pvp.sent.push(d); if (pvp.sent.length > 40) pvp.sent.shift(); pvpSend(d); }
+function onMatchMsg(m) {
+  const d = m.data || {}; if (m.isMe || !pvp || !d.t) return;
+  if (d.t === 'act' || d.t === 'pass') {
+    if (typeof d.mv !== 'number' || d.mv < (S2.mv || 0) || pvp.pend[d.mv] || !F.list[d.f]) return;
+    if (F.list[d.f].peer === m.peer) pvp.gone.delete(m.peer); // kendi hamlesini yollayan oyuncu geri dönmüştür
+    // benim savaşçım için gelen hamle yalnızca vekilden olabilir (çok uzun süre oynamadıysam): onu da kabul ederim, yoksa ekranım ayrışır
+    pvp.pend[d.mv] = d; pvpNext();
+  } else if (d.t === 'quit') playerGone(m.peer, 'maçtan çekildi');
+}
+// sırası gelen başkasıysa ve hamlesi geldiyse oyna
 function pvpNext() {
-  if (!pvp || S2.over || !S2.cur || S2.cur.ctrl !== 'remote' || !S2.remote || S2.busy) return;
-  const d = pvp.q.shift(); if (!d) return;
-  S2.remote = false;
-  if (d.t === 'pass') { log('Rakibin süresi doldu.', 'player'); nextTurn(S2.cur); }
+  if (!pvp || S2.over || S2.busy || !S2.cur) return;
+  const c = S2.cur;
+  if (c.ctrl === 'ai' || (c.ctrl === 'remote' && !S2.remote) || (c.ctrl === 'me' && !S2.waiting)) return;
+  const d = pvp.pend[S2.mv]; if (!d || d.f !== c.idx) return;
+  delete pvp.pend[S2.mv]; S2.remote = false; S2.waiting = false; pvp.idle = 0;
+  if (d.t === 'pass') { log(`${S2.cur.name}: süresi doldu.`, S2.cur.side); S2.mv++; nextTurn(S2.cur); }
   else act(S2.cur, Math.max(0, Math.min(4, d.i | 0)), F.list[d.tg]);
+}
+// odada kalan ilk oyuncu (kadro sırasıyla) vekildir; herkes aynı kişiyi bulur
+const actingHost = () => !!pvp && pvp.humans.find(p => !pvp.gone.has(p)) === myPeer();
+function proxyAct(f) {
+  if (!pvp || S2.over || S2.cur !== f || !S2.remote || pvp.pend[S2.mv]) return;
+  const c = aiChoose(f, seeded((pvp.seed ^ Math.imul(S2.mv + 1, 7919)) >>> 0));
+  const d = { t: 'act', f: f.idx, i: c.i, tg: c.t ? c.t.idx : -1, mv: S2.mv };
+  pvpAct(d); pvp.pend[S2.mv] = d; pvpNext();
+}
+function maybeProxy(f) { if (pvp && f.peer && pvp.gone.has(f.peer) && actingHost()) setTimeout(() => proxyAct(f), 900 / SPD); }
+function playerGone(peer, why) {
+  if (!pvp || pvp.gone.has(peer)) return;
+  pvp.gone.add(peer);
+  const f = F && F.list.find(x => x.peer === peer); if (!f) return;
+  const others = pvp.humans.filter(p => p !== myPeer() && !pvp.gone.has(p));
+  if (pvp.kind === 'duel' && !others.length) { pvpWin('Rakip düellodan ' + (why === 'ayrıldı' ? 'ayrıldı.' : 'çekildi.')); return; }
+  if (!S2.over) log(`${f.name} ${why}; yerine bot oynayacak.`, 'enemy');
+  if (S2.cur === f) maybeProxy(f);
 }
 function pvpWin(msg) {
   if (!pvp || S2.over) return; log(msg, 'player'); S2.busy = false; S2.gid++; end(F.me.team);
 }
 function pvpFinish() { const p = pvp; pvp = null; crng = Math.random; if (p) setTimeout(() => p.room.leave().catch(() => {}), 3000); lobbyPresence(); }
 function pvpQuit() {
-  if (pvp && !S2.over) { pvpSend({ t: 'quit' }); const p = pvp; S2.over = true; S2.gid++; pvp = null; crng = Math.random; p.room.leave().catch(() => {}); addChat(null, 'Düellodan çekildin.', null, true); }
+  if (pvp && !S2.over) { pvpSend({ t: 'quit' }); const p = pvp; S2.over = true; S2.gid++; pvp = null; crng = Math.random; p.room.leave().catch(() => {}); addChat(null, 'Maçtan çekildin.', null, true); }
   lastDuel = false; openLobby();
 }
+// arada bir: oynamayan oyuncunun yerine geç; son hamlelerimi yeniden yolla (kaybolan mesaj olmasın)
+setInterval(() => {
+  if (!pvp || screen !== 'battle' || S2.over) return;
+  if (S2.remote && S2.cur) {
+    if (++pvp.idle > 45 && S2.cur.peer) { pvp.idle = 0; playerGone(S2.cur.peer, '45 saniyedir oynamadı'); maybeProxy(S2.cur); }
+    if (pvp.idle % 4 === 3) for (const d of pvp.sent.slice(-3)) pvpSend(d);
+  } else pvp.idle = 0;
+}, 1000);
+// düello: meydan okuyan A, kabul eden B
+function startDuel(o) {
+  const me = { peer: myPeer(), id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, name: 'Sen' };
+  const them = { peer: o.opp, id: o.cls, g: gearArr(o.gear), a: o.alch, name: o.oppName };
+  const [A, B] = o.first ? [me, them] : [them, me];
+  startMatch({ id: o.id, room: 'duel-' + o.id, kind: 'duel', mode: '1v1', seed: o.seed, roster: [{ team: 'A', slot: 0, ...A }, { team: 'B', slot: 0, ...B }] });
+}
 $('again').addEventListener('click', () => { if (lastDuel) { lastDuel = false; openLobby(); } else startArena(); });
+
+/* ---------- takım maçı odaları (lobide) ----------
+   Kurucu maçı kendi durumunda (presence) yayınlar: { id, md: kip, A: [yer], B: [yer] }, yer = { p, n, c, l } ya da 0.
+   Katılmak isteyen kurucuya 'mjoin' yollar; kurucu yer açıksa ekler. 'Başlat' ile boş yerlere bot konur ve
+   kadro herkese 'mstart' ile gider. */
+let myMatch = null; // kurucuysam { host: true, id, mode, A, B, info: { peer: { g, a, id } } }, üyeysem { host: false, id, hostPeer, team }
+const myName = () => ACC.name || (user && user.nick ? user.nick() : '') || myLobbyName || 'Oyuncu';
+let myLobbyName = '';
+function matchPub() {
+  if (!myMatch || !myMatch.host) return undefined;
+  const pub = s => s ? { p: s.p, n: s.n, c: s.c, l: s.l } : 0;
+  return { id: myMatch.id, md: myMatch.mode, A: myMatch.A.map(pub), B: myMatch.B.map(pub) };
+}
+function createMatch(mode) {
+  if (!room || pvp || myMatch) return;
+  const [na, nb] = MODES[mode], id = Math.random().toString(36).slice(2, 10), g = gearOf(chosen), p = myPeer();
+  myMatch = { host: true, id, mode, A: Array(na).fill(0), B: Array(nb).fill(0), info: {} };
+  myMatch.A[0] = { p, n: myName(), c: chosen, l: gearLevel(g) }; myMatch.info[p] = { g: gearArr(g), a: T.alch, id: chosen };
+  lobbyPresence(); renderMatches();
+}
+function joinMatch(hostPeer, mid, team) {
+  if (!room || pvp || myMatch) return;
+  myMatch = { host: false, id: mid, hostPeer, team, t0: Date.now() };
+  room.emit('duel', { t: 'mjoin', mid, team, to: hostPeer, id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, l: gearLevel(gearOf(chosen)), n: myName() }).catch(() => {});
+  lobbyPresence(); renderMatches();
+}
+function leaveMatch() {
+  if (!myMatch) return;
+  if (!myMatch.host) room.emit('duel', { t: 'mleave', mid: myMatch.id, to: myMatch.hostPeer }).catch(() => {});
+  myMatch = null; lobbyPresence(); renderMatches();
+}
+function startTeamMatch() {
+  if (!myMatch || !myMatch.host) return;
+  const M = myMatch, used = new Set([...M.A, ...M.B].filter(Boolean).map(s => s.c));
+  const humans = [...M.A, ...M.B].filter(Boolean), avgLv = Math.round(humans.reduce((s, h) => s + h.l, 0) / humans.length) || 1;
+  const pool = ORDER.filter(k => !used.has(k)).sort(() => Math.random() - .5);
+  const roster = [], seed = (Math.random() * 4294967296) >>> 0;
+  for (const team of ['A', 'B']) M[team].forEach((s, slot) => {
+    if (s) { const inf = M.info[s.p] || {}; roster.push({ team, slot, peer: s.p, id: inf.id || s.c, g: inf.g, a: inf.a, name: s.n }); }
+    else { const id = pool.pop() || ORDER[0]; roster.push({ team, slot, peer: null, id, g: gearArr(foeGear(avgLv)), a: T.alch, name: 'Bot' }); }
+  });
+  const msg = { t: 'mstart', mid: M.id, mode: M.mode, seed, roster };
+  room.emit('duel', msg).catch(() => {});
+  startMatch({ id: M.id, room: 'match-' + M.id, kind: 'team', mode: M.mode, seed, roster });
+}
+// lobideki maç mesajları (onDuelMsg'den gelir)
+function onMatchLobby(m, d) {
+  const M = myMatch;
+  if (d.t === 'mjoin' && M && M.host && d.to === myPeer() && d.mid === M.id && CLASSES[d.id]) {
+    if ([...M.A, ...M.B].some(s => s && s.p === m.peer)) return;
+    const arr = M[d.team === 'B' ? 'B' : 'A'], k = arr.findIndex(s => !s); if (k < 0) return;
+    arr[k] = { p: m.peer, n: String(d.n || 'Oyuncu').slice(0, 20), c: d.id, l: Math.max(1, Math.min(10, d.l | 0)) };
+    M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id };
+    lobbyPresence(); renderMatches();
+  } else if (d.t === 'mleave' && M && M.host && d.to === myPeer() && d.mid === M.id) {
+    for (const t of ['A', 'B']) M[t] = M[t].map(s => s && s.p === m.peer ? 0 : s);
+    lobbyPresence(); renderMatches();
+  } else if (d.t === 'mstart' && Array.isArray(d.roster) && d.roster.some(r => r.peer === myPeer()) && !pvp) {
+    const roster = d.roster.filter(r => CLASSES[r.id] && (r.team === 'A' || r.team === 'B')).slice(0, 6);
+    startMatch({ id: d.mid, room: 'match-' + d.mid, kind: 'team', mode: d.mode, seed: d.seed >>> 0, roster });
+  }
+}
+// açık maçlar: lobidekilerin durumundan okunur
+function openMatches() {
+  if (!room) return [];
+  return room.peers().filter(p => p.presence && p.presence.m && MODES[p.presence.m.md]).map(p => ({ host: p.peer, isMine: p.sameTab, ...p.presence.m }));
+}
+// lobi değişince: üyeysem ve kurucunun ilanında artık yoksam maçtan düştüm; kurucuysam lobiden gidenleri çıkar
+function checkMatch() {
+  if (!myMatch || !room) return;
+  if (!myMatch.host) {
+    const hm = openMatches().find(x => x.host === myMatch.hostPeer && x.id === myMatch.id);
+    const inIt = hm && [...hm.A, ...hm.B].some(s => s && s.p === myPeer());
+    if ((!hm && Date.now() - myMatch.t0 > 4000) || (hm && !inIt && Date.now() - myMatch.t0 > 4000)) { myMatch = null; addChat(null, 'Maç kapandı ya da yer kalmadı.', null, true); lobbyPresence(); }
+  } else {
+    const here = new Set(room.peers().map(p => p.peer)); let changed = false;
+    for (const t of ['A', 'B']) myMatch[t] = myMatch[t].map(s => { if (s && !here.has(s.p)) { changed = true; return 0; } return s; });
+    if (changed) lobbyPresence();
+  }
+}
+function renderMatches() {
+  checkMatch();
+  const box = $('mList'); if (!box || $('mPanel').hidden) return;
+  document.querySelectorAll('#mPanel [data-mk]').forEach(b => { b.disabled = !!myMatch || !!pvp || !room; });
+  box.innerHTML = '';
+  const list = openMatches();
+  if (!list.length) { box.innerHTML = '<p class="lnote">Şu an açık maç yok. Yukarıdan bir kip seçip maç kur; diğerleri katılabilir.</p>'; return; }
+  for (const mt of list) {
+    const card = document.createElement('div'); card.className = 'mcard' + (myMatch && myMatch.id === mt.id ? ' mine' : '');
+    const hostName = (mt.A[0] && mt.A[0].n) || 'Oyuncu';
+    const head = document.createElement('div'); head.className = 'mhead'; head.textContent = `${mt.md} · kurucu ${hostName}`;
+    card.appendChild(head);
+    const teams = document.createElement('div'); teams.className = 'mteams';
+    for (const t of ['A', 'B']) {
+      const col = document.createElement('div'); col.className = 'mteam';
+      const h = document.createElement('b'); h.textContent = t === 'A' ? 'A takımı' : 'B takımı'; col.appendChild(h);
+      mt[t].forEach(s => {
+        const row = document.createElement('div'); row.className = 'mslot' + (s && s.p === myPeer() ? ' me' : '');
+        row.textContent = s ? `${s.n} · ${CLASSES[s.c] ? CLASSES[s.c].name : ''} Lv ${s.l}` : 'boş (bot)';
+        col.appendChild(row);
+      });
+      const free = mt[t].some(s => !s);
+      if (free && !myMatch && !pvp && !mt.isMine) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.textContent = 'Katıl'; b.onclick = () => joinMatch(mt.host, mt.id, t); col.appendChild(b); }
+      teams.appendChild(col);
+    }
+    card.appendChild(teams);
+    if (myMatch && myMatch.id === mt.id) {
+      const row = document.createElement('div'); row.className = 'mact';
+      if (myMatch.host) { const s = document.createElement('button'); s.type = 'button'; s.className = 'btn'; s.textContent = 'Başlat'; s.onclick = startTeamMatch; row.appendChild(s); }
+      const l = document.createElement('button'); l.type = 'button'; l.className = 'btn ghost'; l.textContent = myMatch.host ? 'Maçı kapat' : 'Ayrıl'; l.onclick = leaveMatch; row.appendChild(l);
+      card.appendChild(row);
+    }
+    box.appendChild(card);
+  }
+}
+document.querySelectorAll('#mPanel [data-mk]').forEach(b => b.addEventListener('click', () => createMatch(b.dataset.mk)));
+$('mToggle').addEventListener('click', () => { togglePanel('mToggle'); renderMatches(); });
 
 pick(chosen); openLobby(); requestAnimationFrame(frame);
 cloudInit().finally(initRoom);

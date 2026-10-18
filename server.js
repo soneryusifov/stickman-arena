@@ -73,7 +73,7 @@ const wss = new WebSocketServer({ server, path: '/ws', maxPayload: 8 * 1024 });
 const clients = new Map();            // peer -> client
 const rooms = new Map();              // oda adı -> Set(peer)
 const GRACE_MS = 10000;               // kısa kopmalarda oyuncu 10 sn odada kalır
-const ROOM_RE = /^(lobby|duel-[a-z0-9]{1,16})$/;
+const ROOM_RE = /^(lobby|duel-[a-z0-9]{1,16}|match-[a-z0-9]{1,16})$/;
 const ID_RE = /^[a-z0-9]{8,32}$/;
 const cleanName = s => String(s || '').replace(/[\u0000-\u001f\u007f<>]/g, '').trim().slice(0, 20) || 'Oyuncu';
 
@@ -98,7 +98,8 @@ function markDirty(room) {
 function join(c, r) {
   if (!rooms.has(r)) rooms.set(r, new Set());
   const set = rooms.get(r);
-  if (r !== 'lobby' && set.size >= 2 && !set.has(c.peer)) return false; // düello odası 2 kişilik
+  const cap = r.startsWith('match-') ? 6 : 2; // düello odası 2, takım maçı en çok 6 kişilik
+  if (r !== 'lobby' && set.size >= cap && !set.has(c.peer)) return false;
   set.add(c.peer); c.rooms.add(r); markDirty(r); return true;
 }
 function leave(c, r) {
