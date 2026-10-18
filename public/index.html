@@ -434,6 +434,21 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
 .tq canvas{width:1.9em;height:1.9em;border-radius:.3em;border:1px solid #b3202c;background:#0c0a12;opacity:.85}
 .tq canvas.ally{border-color:#f2c14e} .tq canvas.now{width:2.6em;height:2.6em;opacity:1;border-width:2px;box-shadow:0 0 .7em currentColor}
 .tq canvas.now.ally{color:#f2c14e} .tq canvas.now.foe{color:#ff5a5a}
+/* orman paneli */
+.guide.forest .gc.fc{max-width:none;width:min(1100px,94vw);max-height:92vh;display:flex;flex-direction:column;gap:10px;padding:16px 18px;position:relative;overflow:hidden}
+.frow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.fmats{display:flex;gap:10px;flex-wrap:wrap;font-size:13px} .fmats span{display:flex;align-items:center;gap:5px} .fmats i{width:10px;height:10px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c)} .fmats b{color:var(--c)}
+.fsize{display:flex;align-items:center;gap:4px} .fsize span{font-size:12px;color:var(--muted);font-weight:700;margin-right:4px}
+.fsize button{font:inherit;font-weight:800;width:34px;height:30px;border-radius:4px;border:1px solid var(--line);background:#100d17;color:var(--muted);cursor:pointer} .fsize button[aria-checked="true"]{border-color:var(--gold);color:var(--gold);background:#1c1626}
+.fstages{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;min-height:0}
+.fst{display:flex;flex-direction:column;gap:4px;padding:8px;border-radius:6px;border:1px solid #2e2840;background:linear-gradient(#15201a,#0e1210);min-width:0}
+.fst.boss{border-color:#8a2a2a;background:linear-gradient(#2a1214,#120b0c)} .fst.done{opacity:.85} .fst.locked{opacity:.45}
+.fst .fn{display:flex;gap:6px;align-items:baseline;font-weight:800;font-size:13.5px} .fst .fn b{color:var(--gold);font-family:var(--font-display);font-size:18px} .fst .fn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fst small{color:var(--muted);font-size:11.5px;line-height:1.25;min-height:2.5em} .fst em{font-style:normal;font-size:11.5px;font-weight:700;color:#9fe6a8} .fst.locked em{color:var(--muted)}
+.fst .btn{padding:.3em .6em;font-size:12.5px;margin-top:auto}
+.ge.mat{color:#9fe6a8} .ge.mat.no{color:#ff8a7a}
+.imon{grid-column:1/-1;grid-row:1/-1;display:flex;align-items:center;gap:16px;min-height:0} .imon canvas{height:100%;max-height:240px;aspect-ratio:1;border-radius:8px} .imon p{color:#cfc8de;font-size:15px;line-height:1.45}
+@media (max-height:520px){.guide.forest .gc.fc{padding:10px 12px;gap:6px} .fst{padding:5px;gap:2px} .fst small{display:none} .fst .fn{font-size:12px} .guide.forest .ihead p{display:none}}
 </style>
 
 <div class="verbar" id="verBar" role="status" hidden><span>Oyunun yeni sürümü yayında.</span><button class="btn" id="verGo" type="button">Yenile</button></div>
@@ -475,6 +490,15 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
         <p class="lnote" style="text-align:center">Giriş yapıldı: <b id="accWho"></b><br>İlerlemen sunucuya kaydediliyor.</p>
         <div class="row"><button class="btn ghost" id="accLogout" type="button">Çıkış yap</button><button class="btn" id="accClose" type="button">Kapat</button></div>
       </div>
+    </div>
+  </div>
+  <div class="guide forest" id="forest" role="dialog" aria-modal="true" aria-labelledby="forestT" hidden>
+    <div class="gc fc">
+      <button class="tbtn iclose" id="forestClose" type="button" aria-label="Kapat">✕</button>
+      <div class="ihead"><h2 id="forestT">Orman Yolu</h2><p>Aşamaları sırayla geç. 5. ve 10. aşamada boss var. Malzemeler, ekipmanın 6–10. seviyeleri için gerekir.</p></div>
+      <div class="frow"><div class="fmats" id="fMats"></div>
+        <div class="fsize" id="fSize" role="radiogroup" aria-label="Takım büyüklüğü"><span>Takımın</span><button type="button" role="radio" data-n="1">1</button><button type="button" role="radio" data-n="2">2</button><button type="button" role="radio" data-n="3">3</button><button type="button" role="radio" data-n="4">4</button><button type="button" role="radio" data-n="5">5</button></div></div>
+      <div class="fstages" id="fStages"></div>
     </div>
   </div>
   <div class="guide insp" id="insp" role="dialog" aria-modal="true" aria-labelledby="inspT" hidden>
@@ -730,7 +754,7 @@ const fx = { spark: s => parts.push({ ...s, life: 0, size: 2.5, g: 0 }) };
 function burst(x, y, color, n = 24, sp = 260) {
   for (let i = 0; i < n; i++) { const a = Math.random() * 7, s = rnd(.3, 1) * sp; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: rnd(.4, .9), color, size: rnd(2, 5), g: 300 }); }
 }
-function floatText(A, txt, color, size = 36) { texts.push({ x: A.x + A.off * A.face + rnd(-20, 20), y: (A.gy || GY) + (A.offY || 0) - 330 * (A.sc || 1), txt, color, size, life: 0, max: 1.3 }); }
+function floatText(A, txt, color, size = 36) { texts.push({ x: A.x + A.off * A.face + rnd(-20, 20), y: (A.gy || GY) + (A.offY || 0) - (A.topH || 362) * .91 * (A.sc || 1), txt, color, size, life: 0, max: 1.3 }); }
 function shake(m) { if (!reduceMotion) { shakeT = now(); shakeMag = m; } }
 const TORCH_X = [46, 1234]; // duvar dipleri: en arkadaki kahramanın başının arkasına düşmesin
 const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
@@ -868,7 +892,9 @@ const DAILY_POOL = [
   { id: 'dmg1500', ev: 'dmg', n: 1500, txt: 'Toplam 1500 hasar ver', r: 120 },
   { id: 'crit5', ev: 'crit', n: 5, txt: '5 kritik vuruş yap', r: 100 },
   { id: 'pot2', ev: 'potion', n: 2, txt: '2 can iksiri kullan', r: 80 },
-  { id: 'cls2', ev: 'class', n: 2, txt: '2 farklı sınıfla kazan', r: 150 }
+  { id: 'cls2', ev: 'class', n: 2, txt: '2 farklı sınıfla kazan', r: 150 },
+  { id: 'fwin2', ev: 'forest', n: 2, txt: 'Ormanda 2 aşama geç', r: 140 },
+  { id: 'fkill8', ev: 'fkill', n: 8, txt: 'Ormanda 8 canavar yen', r: 120 }
 ];
 const DAILY_BONUS = 200;
 const dayKey = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
@@ -1038,8 +1064,8 @@ function frame(t) {
   ctx.save();
   const sk = Math.max(0, 1 - (t - shakeT) / 350) * shakeMag;
   if (sk > 0) ctx.translate(rnd(-sk, sk), rnd(-sk, sk));
-  ctx.drawImage(bg, 0, 0);
-  if (bgArt) drawFires(t); else for (const x of TORCH_X) drawTorch(x, t);
+  ctx.drawImage(forestRun && fbgOk ? fbg : bg, 0, 0);
+  if (forestRun && fbgOk) {} else if (bgArt) drawFires(t); else for (const x of TORCH_X) drawTorch(x, t);
   if (F) {
     for (const f of F.list) Rig.update(f.A, dt * SPD);
     // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
@@ -1148,9 +1174,13 @@ const SCENES = {
     img: { src: 'assets/bg/market.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .58,
     doors: [], npcs: [{ k: 'smith', x: 400, y: 452, cls: 'tank', face: 1, name: 'Demirci Usta' }, { k: 'alch', x: 905, y: 452, cls: 'mage', face: -1, name: 'Simyacı' }] },
   // maden yolu: kaya sırası 610-650. satır, toprak 655'ten; maden girişi x 620-1240, aletler x 480-600
-  mineroad: { name: 'Maden Yolu', w: 1280, map: [-2, 0], right: 'market', lamps: [],
+  mineroad: { name: 'Maden Yolu', w: 1280, map: [-2, 0], left: 'forest', right: 'market', lamps: [],
     img: { src: 'assets/bg/mineroad.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
     doors: [], npcs: [{ k: 'mine', x: 470, y: 452, cls: 'berserker', face: 1, name: 'Madenci' }] },
+  // orman kenarı: orman aşamalarına açılan taş kemer ortada (resmi gelene kadar geçici olarak maden yolu resmi)
+  forest: { name: 'Orman Kenarı', w: 1280, map: [-3, 0], right: 'mineroad', lamps: [],
+    img: { src: 'assets/bg/mineroad.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
+    doors: [{ x: 640, to: '@forest', name: 'Orman Yolu · 10 aşama', painted: true, ly: 300 }], npcs: [] },
   // arena kapısı: kaldırım 631. satır, zemin 668'den; demir kapı x 800-1120, sol direk x 760
   arenagate: { name: 'Arena Kapısı', w: 1280, map: [1, 0], left: 'square', lamps: [],
     img: { src: 'assets/bg/arenagate.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .6,
@@ -1386,7 +1416,7 @@ function drawMinimap() {
   const pos = id => [cx + SCENES[id].map[0] * gx, cy + SCENES[id].map[1] * gy];
   for (const [id, S] of Object.entries(SCENES)) {
     const [x, y] = pos(id);
-    for (const to of [S.right, ...S.doors.map(d => d.to)]) if (to) { const [x2, y2] = pos(to); sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x2, y2); sctx.stroke(); }
+    for (const to of [S.right, ...S.doors.map(d => d.to)]) if (SCENES[to]) { const [x2, y2] = pos(to); sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x2, y2); sctx.stroke(); }
   }
   for (const id of Object.keys(SCENES)) {
     const [x, y] = pos(id), cur = id === me.sc;
@@ -1420,8 +1450,8 @@ function drawStreet(t, dt) {
   }
   me.walk = !!len;
   // kenara gelince yan sahneye geç; çıkışı olmayan kenar duvardır
-  if (me.x < 40) { if (S.left) goScene(S.left, 'left'); me.x = 40; }
-  if (me.x > S.w - 40) { if (S.right) goScene(S.right, 'right'); me.x = S.w - 40; }
+  if (me.x < 40) me.x = 40;
+  if (me.x > S.w - 40) me.x = S.w - 40; // kenarda durur; geçmek için alttaki tuş (E)
   if (me.A) {
     if (me.walk && me.A.cur !== 'walk') Rig.play(me.A, 'walk'); else if (!me.walk && me.A.cur === 'walk') Rig.play(me.A, 'idle');
     me.A.face = me.face; Rig.update(me.A, me.walk ? dt * WALK_RATE : dt);
@@ -1447,6 +1477,8 @@ function drawStreet(t, dt) {
   near = null;
   for (const d of S.doors) if (Math.abs(me.x - d.x) < 60 && me.y < Y0 + 30) near = { type: 'door', d };
   for (const n of S.npcs) if (Math.abs(me.x - n.x) < 110 && Math.abs(me.y - n.y) < 55) near = { type: 'npc', n };
+  if (S.left && me.x < 120) near = { type: 'edge', to: S.left, via: 'left' };
+  if (S.right && me.x > S.w - 120) near = { type: 'edge', to: S.right, via: 'right' };
   // arka kenarda kapıya doğru yürüyen içeri girer
   if (near && near.type === 'door' && (keys.u || joy.y < -.6) && me.y <= Y0 + 1) goScene(near.d.to, 'door');
   for (const d of S.doors) drawDoor(d, t, near && near.d === d);
@@ -1515,7 +1547,8 @@ function streetBox() {
   const o = sel && others.get(sel);
   if (o) { const pr = o.p.presence || {}; key = 'p' + sel + o.busy + !!pvp + !!invite; txt = `${nameOfPeer(o.p)} · ${CLASSES[pr.cls].name} · Sv ${+pr.pl || 1} · Lig ${+pr.lg || 1}`; btn = o.busy ? 'Meşgul' : 'Meydan oku'; }
   else if (near && near.type === 'npc') { key = 'n' + near.n.k; txt = `${near.n.name} · ${BNAME[near.n.k]}`; btn = near.n.k === 'arena' ? 'Arenaya gir (E)' : 'Konuş (E)'; }
-  else if (near && near.type === 'door') { key = 'd' + near.d.to; txt = near.d.name; btn = 'Kapıdan geç (E)'; }
+  else if (near && near.type === 'door') { key = 'd' + near.d.to; txt = near.d.name; btn = near.d.to === '@forest' ? 'Ormana gir (E)' : 'Kapıdan geç (E)'; }
+  else if (near && near.type === 'edge') { key = 'e' + near.to; txt = (near.via === 'left' ? '← ' : '') + SCENES[near.to].name + (near.via === 'right' ? ' →' : ''); btn = 'Geç (E)'; }
   if (key === boxKey) return; boxKey = key;
   $('sbox').hidden = !key; if (!key) return;
   $('sboxT').textContent = txt; $('sboxB').textContent = btn;
@@ -1530,7 +1563,10 @@ function enterBuilding(k) {
 }
 function interact() {
   if (!near || sel || trans) return;
-  if (near.type === 'npc') enterBuilding(near.n.k); else goScene(near.d.to, 'door');
+  if (near.type === 'npc') enterBuilding(near.n.k);
+  else if (near.type === 'edge') goScene(near.to, near.via);
+  else if (near.d.to === '@forest') openForest();
+  else goScene(near.d.to, 'door');
 }
 $('sboxB').addEventListener('click', () => {
   const o = sel && others.get(sel);
@@ -1615,12 +1651,12 @@ function renderGear() {
   $('gold').textContent = SAVE.gold + ' Altın · sınır ' + gearCap() + '. seviye';
   const list = $('gearList'); list.innerHTML = '';
   for (const k of ITEMS) {
-    const n = g[k], cost = UP_COST[n], max = n >= 10, locked = !max && n + 1 > gearCap();
+    const n = g[k], cost = UP_COST[n], max = n >= 10, locked = !max && n + 1 > gearCap(), need = !max && MAT_COST[n + 1], mats = !need || hasMats(n + 1);
     const el = document.createElement('div'); el.className = 'gi';
     const cv = document.createElement('canvas'); cv.width = cv.height = 68; drawIcon(cv, key, k, n);
     const info = document.createElement('div'); info.style.minWidth = '0';
-    info.innerHTML = `<div class="gn">${names[k]}<span class="gt">${n}</span></div><div class="ge">${perkText(k, n)}</div>`;
-    const b = document.createElement('button'); b.type = 'button'; b.textContent = max ? 'Azami' : locked ? 'Kilitli' : '▲ ' + cost; b.disabled = max || locked || SAVE.gold < cost;
+    info.innerHTML = `<div class="gn">${names[k]}<span class="gt">${n}</span></div><div class="ge">${perkText(k, n)}</div>` + (need && !locked ? `<div class="ge mat${mats ? '' : ' no'}">Gerekir: ${matTxt(need)}</div>` : '');
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = max ? 'Azami' : locked ? 'Kilitli' : '▲ ' + cost; b.disabled = max || locked || SAVE.gold < cost || !mats;
     b.title = max ? 'En yüksek seviye' : locked ? `${n + 1}. seviye için Belediye ${n - 1} gerekir` : `${n + 1}. seviyeye yükselt (${cost} altın): ${perkText(k, n + 1)}`;
     b.setAttribute('aria-label', max ? `${names[k]} en yüksek seviyede` : locked ? `${names[k]} kilitli, Belediye ${n - 1} gerekir` : `${names[k]} yükselt, ${cost} altın`);
     b.addEventListener('click', () => upgrade(k));
@@ -1636,7 +1672,8 @@ function renderStats() {
 }
 function upgrade(k) {
   const g = gearOf(chosen), n = g[k], cost = UP_COST[n];
-  if (n >= 10 || n + 1 > gearCap() || SAVE.gold < cost) return;
+  if (n >= 10 || n + 1 > gearCap() || SAVE.gold < cost || !hasMats(n + 1)) return;
+  for (const [m, q] of Object.entries(MAT_COST[n + 1] || {})) SAVE.forest.mats[m] -= q; // ormandan gelen malzeme harcanır
   SAVE.gold -= cost; g[k] = n + 1; SAVE.stats.upgrades++; persist(); track('upgrade'); Sfx.play('upgrade');
   renderGear(); renderStats();
   if (pA && Rig.sprites[chosen]) { pA = Rig.actor(chosen, 0, 1, g); pNext = now() + 600; }
@@ -1844,7 +1881,7 @@ function renderModes() {
   $('modeNote').textContent = modeText(battleMode);
 }
 
-function toSelect() { S2.over = true; S2.waiting = false; S2.gid++; openSelect('arena'); }
+function toSelect() { S2.over = true; S2.waiting = false; S2.gid++; if (forestRun) { forestRun = null; $('change').textContent = 'Karakter Değiştir'; openLobby(); openForest(); return; } openSelect('arena'); }
 $('backBtn').addEventListener('click', () => {
   if (screen === 'battle' && (pvp || lastDuel)) { pvpQuit(); return; }
   if (screen === 'battle') toSelect(); else openLobby();
@@ -1910,7 +1947,7 @@ function targetFor(f, sk, t) {
 // savaşı kur: cfg = { A: [üye], B: [üye] }, üye = { id, gear, alch, ctrl: 'me'|'ai'|'remote', name }
 function newBattle(cfg) {
   const list = [];
-  for (const team of ['A', 'B']) cfg[team].forEach((m, slot) => { const f = mkFighter(m.id, team, m.gear, m.alch, m); f.slot = slot; f.idx = list.length; f.peer = m.peer || null; list.push(f); });
+  for (const team of ['A', 'B']) cfg[team].forEach((m, slot) => { const f = m.mon ? mkMonster(m, team) : mkFighter(m.id, team, m.gear, m.alch, m); f.slot = slot; f.idx = list.length; f.peer = m.peer || null; list.push(f); });
   F = { list, A: list.filter(f => f.team === 'A'), B: list.filter(f => f.team === 'B') };
   F.me = list.find(f => f.ctrl === 'me'); F.player = F.me; F.enemy = F[otherTeam(F.me.team)][0]; // eski adlar (testler, düello)
   const N = Math.max(F.A.length, F.B.length);
@@ -1999,7 +2036,7 @@ function placePlates() {
   for (const f of F.list) {
     const u = f.ui; if (!u) continue;
     u.style.left = ((f.A.x + f.A.off * f.A.face) / W * 100) + '%';
-    u.style.top = ((footY(f) - 362 * f.sc) / H * 100) + '%';
+    u.style.top = ((footY(f) - (f.topH || 362) * f.sc) / H * 100) + '%';
   }
 }
 const statusChips = f => (f.shield ? `<i style="color:${f.shieldColor}">${f.shield >= 1 ? 'Kaçış' : 'Kalkan'}</i>` : '') + (f.rage ? '<i style="color:#ff5a3a">Öfke</i>' : '')
@@ -2056,7 +2093,7 @@ function log(txt, who) {
 
 /* ---------- Savaş mantığı ---------- */
 const footY = f => (f.gy || GY) + (f.A.offY || 0); // yürürken anlık zemin çizgisi
-const body = f => [f.A.x + f.A.off * f.A.face, footY(f) - 170 * (f.sc || 1)];
+const body = f => [f.A.x + f.A.off * f.A.face, footY(f) - (f.topH ? f.topH * .47 : 170) * (f.sc || 1)];
 // yürüyüş: yatay (off) ve istenirse derinlik (offY: hedefin zemin çizgisine iner/çıkar)
 function tweenOff(A, to, ms, toY) {
   const from = A.off, fromY = A.offY || 0, t0 = now(); ms /= SPD;
@@ -2227,6 +2264,7 @@ function playerAct(i) {
 }
 async function end(winTeam) {
   S2.over = true; S2.waiting = false; updateHUD();
+  if (forestRun) return forestEnd(winTeam);
   for (const f of F[winTeam]) if (isAlive(f)) Rig.play(f.A, 'win');
   const won = winTeam === F.me.team, duel = !!pvp, team = F.A.length + F.B.length > 2, foes = F[otherTeam(F.me.team)].length;
   log(won ? 'Rakip takım yenildi. Zafer senin!' : 'Yenildin. Tekrar dene!', won ? 'player' : 'enemy');
@@ -2262,11 +2300,12 @@ $('cv').addEventListener('click', e => {
   if (!F || S2.over) return;
   const r = $('cv').getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
   let best = null, bd = 90;
-  for (const f of F.list) { if (!isAlive(f)) continue; const fx = f.A.x + f.A.off * f.A.face, d = Math.abs(fx - x); if (d < bd && y > f.gy - 340 * f.sc && y < f.gy + 20) { bd = d; best = f; } }
+  for (const f of F.list) { if (!isAlive(f)) continue; const fx = f.A.x + f.A.off * f.A.face, d = Math.abs(fx - x); if (d < bd && y > f.gy - (f.topH || 362) * .94 * f.sc && y < f.gy + 20) { bd = d; best = f; } }
   if (best) pickTarget(best);
 });
 // Arena: kip seç, rakip ve bot arkadaşları rastgele sınıflardan kur
 async function startArena() {
+  forestRun = null; $('change').textContent = 'Karakter Değiştir';
   const b = $('choose'); b.disabled = true; b.textContent = 'Rakipler hazırlanıyor…';
   const [na, nb] = MODES[battleMode], L = leagueOf(SAVE.league);
   const pool = ORDER.filter(k => k !== chosen).sort(() => Math.random() - .5);
@@ -2288,6 +2327,7 @@ renderModes();
 /* ---------- savaşçı bilgi penceresi: ekipmanlar (seviye, bonus) ve değerler ---------- */
 let inspA = null;
 function openInspect(f) {
+  if (f.mon) return openMonInspect(f);
   const names = Object.fromEntries(RC[f.id].items), pct = v => (v >= 0 ? '+' : '') + Math.round(v * 100) + '%';
   $('inspT').textContent = f.name;
   $('inspSub').textContent = `${f.cls.name} · Sv ${f.lvl} · ekipman ortalaması ${gearLevel(f.gear)} · ${f.side === 'player' ? (f === F.me ? 'sen' : 'takım arkadaşın') : 'rakip'}` + (f.hand ? ` · kalabalık takım: güç %${Math.round(f.hand * 100)}` : '');
@@ -2308,6 +2348,21 @@ function openInspect(f) {
   inspA = Rig.actor(f.id, 0, 1, f.gear);
   $('insp').hidden = false; $('inspClose').focus();
   requestAnimationFrame(drawInspect);
+}
+// canavarın bilgi penceresi: ekipman yerine resmi, açıklaması ve düşürdüğü malzeme
+function openMonInspect(f) {
+  const d = f.mon, pct = v => (v >= 0 ? '+' : '') + Math.round(v * 100) + '%';
+  $('inspT').textContent = f.name + (d.boss ? ' · BOSS' : '');
+  $('inspSub').textContent = `Canavar · Orman ${f.stage}. aşama · Düşürdüğü: ${MATS[d.mat][0]}${d.boss ? ' + ' + MATS.relic[0] : ''}`;
+  const grid = $('inspItems'); grid.innerHTML = '';
+  const it = document.createElement('div'); it.className = 'imon';
+  const cv = document.createElement('canvas'); cv.width = cv.height = 240; Rig.portrait(cv, f.id);
+  const p = document.createElement('p'); p.textContent = d.desc; it.append(cv, p); grid.appendChild(it);
+  const rows = [['Can', `${f.hp} / ${f.maxHp}`], ['Mana', `${f.mp} / ${f.maxMp}`], ['Yenilenme', `+${f.regen} / tur`], ['Hasar', pct(f.dmgMul - 1)],
+    ['Kritik', Math.round(f.crit * 100) + '%'], ['Kaçınma', Math.round(f.dodge * 100) + '%'], ['Zırh', Math.round(f.armor * 100) + '%']];
+  $('inspStats').innerHTML = ''; for (const [a, v] of rows) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = a; dd.textContent = v; $('inspStats').append(dt, dd); }
+  $('inspSkills').innerHTML = ''; for (const sk of f.skills.slice(0, 4)) { const sp = document.createElement('span'); sp.style.color = sk.color; sp.textContent = sk.name; sp.title = skillDesc(sk); $('inspSkills').appendChild(sp); }
+  inspA = null; $('insp').hidden = false; $('inspClose').focus();
 }
 function drawInspect(t) {
   if (!inspA || $('insp').hidden) return;
@@ -2686,7 +2741,7 @@ function startDuel(o) {
   const [A, B] = o.first ? [me, them] : [them, me];
   startMatch({ id: o.id, room: 'duel-' + o.id, kind: 'duel', mode: '1v1', seed: o.seed, roster: [{ team: 'A', slot: 0, ...A }, { team: 'B', slot: 0, ...B }] });
 }
-$('again').addEventListener('click', () => { if (lastDuel) { lastDuel = false; openLobby(); } else startArena(); });
+$('again').addEventListener('click', () => { if (lastDuel) { lastDuel = false; openLobby(); } else if (forestRun) startForest(forestRun.next || forestRun.k); else startArena(); });
 
 /* ---------- takım maçı odaları (lobide) ----------
    Kurucu maçı kendi durumunda (presence) yayınlar: { id, md: kip, A: [yer], B: [yer] }, yer = { p, n, c, l } ya da 0.
@@ -2834,6 +2889,186 @@ paintMk(); $('mkGo').textContent = mkMode + ' maç kur';
 $('mkGo').addEventListener('click', () => createMatch(mkMode));
 $('mToggle').addEventListener('click', () => { togglePanel('mToggle'); renderMatches(); });
 
+/* =====================================================================
+   ORMAN (PvE): Maden Yolu'nun solunda. 10 aşama; 5. ve 10. aşamada boss.
+   Sen + seçtiğin sayıda bot arkadaş, aşamanın sabit canavar sürüsüne karşı.
+   Ödül: altın + EXP, ilk geçişte sandık, canavarlardan malzeme (yüksek seviye
+   ekipman yükseltmeleri için), günlük görevler.
+   Canavarlar kahramanlarla aynı savaş motorunu kullanır; yalnızca çizimleri ayrı
+   (resim yoksa geçici renkli siluet çizilir).
+   ===================================================================== */
+const MATS = { pelt: ['Post', '#d0a878'], silk: ['İpek', '#d9d2ff'], ess: ['Orman Özü', '#7dffb0'], relic: ['Kadim Kalıntı', '#ffcf5a'] };
+SAVE.forest = { best: 0, ...(SAVE.forest || {}) };
+SAVE.forest.mats = { pelt: 0, silk: 0, ess: 0, relic: 0, ...(SAVE.forest.mats || {}) };
+// her canavarın tam 4 yeteneği var (botların karar kodu 0-3 sırasını bekler); h: kahramana göre boy
+const MONSTERS = {
+  wolf:    { name: 'Kurt', desc: 'Sürü halinde avlanır, ısırığı kanatır.', hp: 300, mp: 100, regen: 14, crit: .14, dodge: .12, armor: 0, h: .55, color: '#9aa6b8', mat: 'pelt',
+    skills: [M('Isırık', 0, [26, 34], 'fang'), M('Parçalama', 25, [30, 40], 'fang', { dot: BLEED }), M('Atılma', 20, [32, 42], 'fang'), M('Boğaz Isırığı', 50, [60, 76], 'fang', { big: true })] },
+  spider:  { name: 'Dev Örümcek', desc: 'Ağıyla avını sabitler, zehirli ısırır.', hp: 260, mp: 120, regen: 14, crit: .12, dodge: .14, armor: .04, h: .45, color: '#8a5cc8', mat: 'silk',
+    skills: [M('Zehirli Isırık', 0, [22, 30], 'fang', { dot: POISON }), Rg('Ağ Fırlat', 25, [16, 22], 'trap', 'trap', { stun: true }), M('Sokma', 15, [28, 36], 'dagger'), M('Ölümcül Isırık', 55, [58, 74], 'fang', { big: true, dot: POISON })] },
+  goblin:  { name: 'Goblin', desc: 'Sinsi ve hızlı; hançeriyle kanatır.', hp: 250, mp: 110, regen: 14, crit: .22, dodge: .16, armor: 0, h: .72, color: '#6fae4a', mat: 'silk',
+    skills: [M('Hançer', 0, [24, 32], 'dagger'), M('Sinsi Bıçak', 25, [28, 36], 'dagger', { dot: BLEED }), G('Saklan', 20, .6, 'moon'), M('Arkadan Vuruş', 50, [62, 80], 'target', { big: true })] },
+  mushroom:{ name: 'Mantar Adam', desc: 'Zehirli sporlar saçar, kökleriyle iyileşir.', hp: 330, mp: 140, regen: 16, crit: .08, dodge: .05, armor: .05, h: .76, color: '#e0503c', mat: 'ess',
+    skills: [Rg('Spor Bulutu', 0, [18, 26], 'drop', 'bolt', { dot: POISON, color: '#c4ff6a' }), HL('Kök Tutun', 30, 90, 'heart'), M('Şapka Darbesi', 15, [26, 34], 'bash'), Rg('Spor Patlaması', 55, [50, 64], 'drop', 'bolt', { big: true, color: '#c4ff6a' })] },
+  boar:    { name: 'Yaban Domuzu', desc: 'Kalın postu var; toslayıp sersemletir.', hp: 400, mp: 100, regen: 12, crit: .10, dodge: .04, armor: .10, h: .6, color: '#8a5a3a', mat: 'pelt',
+    skills: [M('Toslama', 0, [30, 40], 'bash'), M('Diş Darbesi', 30, [34, 44], 'axe', { stun: true }), M('Eşelenme', 15, [26, 34], 'bash'), M('Hücum', 50, [66, 84], 'whirl', { big: true })] },
+  wisp:    { name: 'Orman Ruhu', desc: 'Uçuşan ışık; vurması zor, uzaktan büyü atar.', hp: 210, mp: 180, regen: 18, crit: .14, dodge: .26, armor: 0, h: .7, float: true, color: '#7dffe0', mat: 'ess',
+    skills: [Rg('Ruh Oku', 0, [24, 32], 'arcane', 'bolt', { color: '#7dffe0' }), G('Saydamlaş', 25, 1, 'moon'), Rg('Soğuk Işık', 20, [28, 36], 'arcane', 'bolt', { color: '#7dffe0' }), Rg('Işık Patlaması', 60, [64, 82], 'sun', 'bolt', { big: true, color: '#b0fff0' })] },
+  treant:  { name: 'Ent', desc: 'Yürüyen ağaç; kabuğu çok sert, kökleriyle ezer.', hp: 580, mp: 110, regen: 12, crit: .06, dodge: .02, armor: .15, h: 1.25, color: '#6b5a3a', mat: 'ess',
+    skills: [M('Dal Savuruşu', 0, [34, 44], 'hammer'), G('Kabuk', 20, .6, 'shield'), M('Kök Dolaması', 30, [28, 36], 'vines', { stun: true }), M('Kök Ezme', 55, [72, 92], 'whirl', { big: true })] },
+  alpha:   { name: 'Alfa Kurtadam', desc: 'Sürünün lideri. Öfkelenince çok sert vurur.', hp: 1150, mp: 140, regen: 16, crit: .20, dodge: .10, armor: .06, h: 1.2, color: '#3a3440', mat: 'pelt', boss: true,
+    skills: [M('Pençe', 0, [40, 52], 'fang'), { name: 'Kan Uluması', kind: 'rage', anim: 'block', cost: 25, icon: 'rage' }, M('Yırtıcı', 30, [42, 54], 'fang', { dot: BLEED }), M('Parçalayıcı', 55, [86, 108], 'fang', { big: true })] },
+  witch:   { name: 'Orman Cadısı', desc: 'Ormanın kadim koruyucusu: dikenler, zehir ve doğanın gazabı.', hp: 1350, mp: 240, regen: 22, crit: .14, dodge: .08, armor: .06, h: 1.15, color: '#5fd16a', mat: 'ess', boss: true,
+    skills: [Rg('Diken Büyüsü', 0, [34, 44], 'vines', 'vines', { color: '#7dff6b' }), HL('Orman Şifası', 40, 180, 'heart'), Rg('Zehir Bulutu', 30, [30, 40], 'drop', 'bolt', { dot: POISON, color: '#9dff6b' }), Rg('Doğanın Gazabı', 70, [100, 126], 'meteor', 'meteor', { big: true, color: '#7dff6b' })] },
+};
+const STAGES = [
+  { n: 'Kurt İzleri', pack: ['wolf', 'wolf'] },
+  { n: 'Goblin Pususu', pack: ['goblin', 'wolf', 'goblin'] },
+  { n: 'Örümcek Yuvası', pack: ['spider', 'goblin', 'spider'] },
+  { n: 'Mantar Korusu', pack: ['mushroom', 'boar', 'mushroom'] },
+  { n: 'Alfa\'nın İni', pack: ['alpha', 'wolf', 'wolf'], boss: true },
+  { n: 'Yaban Patikası', pack: ['boar', 'wolf', 'wisp', 'boar'] },
+  { n: 'Ruhlar Vadisi', pack: ['wisp', 'spider', 'mushroom', 'wisp'] },
+  { n: 'Ent Geçidi', pack: ['treant', 'goblin', 'spider', 'goblin'] },
+  { n: 'Kadim Ağaçlar', pack: ['treant', 'wisp', 'treant', 'wisp'] },
+  { n: 'Cadının Sunağı', pack: ['witch', 'treant', 'wisp', 'wisp', 'mushroom'], boss: true },
+];
+const stagePow = k => 1 + .17 * (k - 1); // aşama güçlendikçe can ve hasar artar
+// canavar resimleri: assets/mon/<id>.webp (sola bakar); yoksa geçici siluet
+const MON_IMG = {};
+for (const id of Object.keys(MONSTERS)) { const im = new Image(); im.onload = () => { MON_IMG[id] = im; }; im.src = 'assets/mon/' + id + '.webp?v=1'; }
+const MON_ANIMS = { idle: { loop: true, dur: 1000 }, walk: { loop: true, dur: 500 }, attack: { dur: 620, hitAt: .55 }, block: { dur: 600, cast: .5 },
+  hit: { dur: 320, flash: true }, death: { dur: 900, hold: true }, win: { loop: true, dur: 700 } };
+const monActor = (id, topH) => ({ mon: MONSTERS[id], id, cur: 'idle', at: 0, fired: false, waits: [], ended: false, endCb: null, hitT: -9999, x: 0, face: -1, off: 0, offY: 0, wp: {}, ANIMS: MON_ANIMS, topH });
+function mkMonster(m, team) {
+  const d = MONSTERS[m.id], k = m.stage || 1, pw = stagePow(k), hp = Math.round(d.hp * pw), topH = Math.round(d.h * 300 + 50);
+  return { team, side: 'enemy', ctrl: 'ai', id: m.id, mon: d, stage: k, cls: { name: d.name, hp: d.hp }, gear: null, lvl: m.lvl || k * 2, name: d.name,
+    hp, maxHp: hp, mp: d.mp, maxMp: d.mp, regen: d.regen, crit: d.crit, dodge: d.dodge, dmgMul: pw * .95, armor: d.armor,
+    skills: [...d.skills.map(s => ({ ...s, color: s.color || d.color })), { ...POTION, heal: 0 }], healMul: 1, heals: 0,
+    shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: 0, topH, A: monActor(m.id, topH) };
+}
+// canavar çizimi: nefes alma, yürüme sekmesi, atılma, darbe, devrilme; resim sola bakar
+function drawMonster(c, A, t, gx, gy, s) {
+  const d = A.mon, an = A.ANIMS[A.cur] || MON_ANIMS.idle, p = Math.max(0, Math.min(1, A.at / an.dur)), h = d.h * 227 * s;
+  let dx = 0, dy = d.float ? -h * .18 + Math.sin(t / 420) * 6 * s : 0, rot = 0, alpha = 1, sy = 1;
+  if (A.cur === 'idle') sy = 1 + .025 * Math.sin(t / 320);
+  else if (A.cur === 'walk') dy -= Math.abs(Math.sin(t / 95)) * 7 * s;
+  else if (A.cur === 'attack') { const k = p < .55 ? ease(p / .55) : 1 - (p - .55) / .45; dx = 46 * s * k; rot = .14 * k; }
+  else if (A.cur === 'block') sy = 1 + .1 * Math.sin(p * Math.PI);
+  else if (A.cur === 'hit') dx = -16 * s * (1 - p);
+  else if (A.cur === 'death') { rot = -1.25 * Math.min(1, p * 1.6); alpha = 1 - .55 * p; dy = d.float ? dy + h * .18 * p : 0; }
+  else if (A.cur === 'win') dy -= Math.abs(Math.sin(t / 150)) * 12 * s;
+  const x = gx + A.off * A.face;
+  c.save(); c.globalAlpha *= alpha;
+  // ayak gölgesi
+  c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(x, gy + 2, h * .32, h * .06, 0, 0, 7); c.fill();
+  c.translate(x, gy + dy); c.scale(A.face, 1); c.rotate(rot); c.scale(1, sy); // +x = baktığı yön
+  const im = MON_IMG[A.id];
+  if (im) { const w = h * im.naturalWidth / im.naturalHeight; c.scale(-1, 1); c.drawImage(im, -w / 2, -h, w, h); } // resim sola bakar
+  else monSilhouette(c, d, h);
+  c.restore();
+}
+// resim gelene kadar: renkli gövde, baş ve parlayan gözler (+x yönüne bakar)
+function monSilhouette(c, d, h) {
+  const w = h * (d.h < .65 ? 1.5 : .8);
+  c.lineWidth = Math.max(2, h * .025); c.strokeStyle = '#120e18';
+  c.fillStyle = d.color; c.beginPath(); c.ellipse(0, -h * .45, w * .5, h * .4, 0, 0, 7); c.fill(); c.stroke();
+  c.beginPath(); c.arc(w * .38, -h * .72, h * .2, 0, 7); c.fill(); c.stroke();
+  c.fillStyle = d.boss ? '#ff4a4a' : '#fff'; c.shadowColor = c.fillStyle; c.shadowBlur = 8;
+  c.beginPath(); c.arc(w * .44, -h * .75, h * .035, 0, 7); c.arc(w * .3, -h * .75, h * .035, 0, 7); c.fill(); c.shadowBlur = 0;
+  c.fillStyle = '#120e18'; for (const lx of [-w * .25, w * .2]) c.fillRect(lx, -h * .12, h * .05, h * .12);
+}
+function monPortrait(cv, id) {
+  const x = cv.getContext('2d'), S = cv.width, d = MONSTERS[id];
+  const g = x.createRadialGradient(S / 2, S * .6, 4, S / 2, S * .6, S * .65); g.addColorStop(0, d.color + '66'); g.addColorStop(1, '#0c0a12');
+  x.fillStyle = g; x.fillRect(0, 0, S, S);
+  const A = monActor(id, 0); A.face = -1; drawMonster(x, A, 0, S / 2, S * (d.h > 1 ? 1.25 : .95), S / 227 / Math.max(.5, d.h) * .95);
+  return true;
+}
+{ // Rig'e canavar desteği: çizim ve portre canavarsa buradan
+  const rd = Rig.draw, rp = Rig.portrait;
+  Rig.draw = (c, A, t, dt, gx, gy, s, fx) => A && A.mon ? drawMonster(c, A, t, gx, gy, s) : rd(c, A, t, dt, gx, gy, s, fx);
+  Rig.portrait = (cv, id, face, glow, tiers) => MONSTERS[id] ? monPortrait(cv, id) : rp(cv, id, face, glow, tiers);
+}
+// ormana özel savaş arka planı (assets/bg/forest_battle.webp); yoksa arena resmi kullanılır
+const fbg = document.createElement('canvas'); fbg.width = W; fbg.height = H; let fbgOk = false;
+(function () { const im = new Image(); im.onload = () => { fbg.getContext('2d').drawImage(im, 0, 0, W, H); fbgOk = true; }; im.src = 'assets/bg/forest_battle.webp?v=1'; })();
+
+let forestRun = null; // { k, size } orman savaşındayken
+let forestSize = 1; try { forestSize = Math.max(1, Math.min(5, +localStorage.getItem('sa.fsize') || 1)); } catch (e) {}
+const matTxt = o => Object.entries(o).filter(([, n]) => n > 0).map(([m, n]) => `${MATS[m][0]} ×${n}`).join(', ');
+function openForest() {
+  Sfx.play('click'); renderForest(); $('forest').hidden = false; $('forestClose').focus();
+}
+function closeForest() { $('forest').hidden = true; }
+function renderForest() {
+  const F0 = SAVE.forest;
+  $('fMats').innerHTML = Object.entries(MATS).map(([k, [n, col]]) => `<span style="--c:${col}"><i></i>${n} <b>${F0.mats[k] || 0}</b></span>`).join('');
+  $('fSize').querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', +b.dataset.n === forestSize));
+  const box = $('fStages'); box.innerHTML = '';
+  STAGES.forEach((st, i) => {
+    const k = i + 1, open = k <= F0.best + 1, done = k <= F0.best;
+    const el = document.createElement('div'); el.className = 'fst' + (st.boss ? ' boss' : '') + (done ? ' done' : '') + (open ? '' : ' locked');
+    const names = [...new Set(st.pack)].map(id => MONSTERS[id].name).join(', ');
+    el.innerHTML = `<div class="fn"><b>${k}</b><span></span></div><small></small><em>${done ? '✔ Geçildi' : open ? '🎁 İlk geçiş sandığı' : '🔒 Kilitli'}</em>`;
+    el.querySelector('.fn span').textContent = st.n + (st.boss ? ' · BOSS' : ''); el.querySelector('small').textContent = `${st.pack.length} canavar: ${names}`;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = open ? 'Savaş' : 'Kilitli'; b.disabled = !open;
+    b.addEventListener('click', () => { closeForest(); startForest(k); });
+    el.appendChild(b); box.appendChild(el);
+  });
+}
+async function startForest(k) {
+  const st = STAGES[k - 1]; if (!st || k > SAVE.forest.best + 1) return;
+  const pool = ORDER.filter(x => x !== chosen).sort(() => Math.random() - .5), allies = pool.slice(0, forestSize - 1), L = leagueOf(SAVE.league);
+  try { await Promise.all([chosen, ...allies].flatMap(x => [Rig.load(x), Rig.loadTiers(x)])); } catch (e) { return; }
+  for (const x of [chosen, ...allies]) Sfx.loadSkills(x);
+  forestRun = { k, size: forestSize }; pvp = null; crng = Math.random; lastDuel = false;
+  $('again').textContent = 'Tekrar Savaş'; $('change').hidden = false; $('change').textContent = 'Orman Haritası';
+  showScreen('battle');
+  newBattle({
+    A: [{ id: chosen, gear: gearOf(chosen), ctrl: 'me', lvl: myLevel(), name: 'Sen · ' + CLASSES[chosen].name }, ...allies.map(id => ({ id, gear: foeGear(L), lvl: myLevel(), name: 'Müttefik ' + CLASSES[id].name }))],
+    B: st.pack.map(id => ({ id, mon: true, stage: k, lvl: k * 2 })),
+  });
+  log(`Orman · ${k}. aşama: ${st.n}${st.boss ? ' (BOSS)' : ''}. Hedefini seçmek için bir canavara dokun. İlk hamle senin.`);
+  beginTurn(nextUp('B'), true);
+}
+async function forestEnd(winTeam) {
+  const won = winTeam === F.me.team, { k } = forestRun, st = STAGES[k - 1], F0 = SAVE.forest;
+  for (const f of F[winTeam]) if (isAlive(f)) Rig.play(f.A, 'win');
+  log(won ? 'Sürü dağıldı. Aşama geçildi!' : 'Orman seni geri püskürttü. Tekrar dene!', won ? 'player' : 'enemy');
+  const lv0 = xpLevel(SAVE.xp), gain = won ? 50 + 35 * k : 10 + 4 * k, xp = won ? 25 + 12 * k : 8;
+  const drops = {}, add = (m, n) => { drops[m] = (drops[m] || 0) + n; };
+  let chest = 0;
+  if (won) {
+    for (const f of F.B) { const d = f.mon; if (d.boss) { add('relic', 1); add(d.mat, 2); } else if (Math.random() < .55) add(d.mat, 1); }
+    if (k > F0.best) { chest = 150 * k; add(st.pack.map(id => MONSTERS[id].mat)[0], 2); if (st.boss) add('relic', 1); F0.best = k; } // ilk geçiş sandığı
+  }
+  for (const [m, n] of Object.entries(drops)) F0.mats[m] = (F0.mats[m] || 0) + n;
+  SAVE.gold += gain + chest; SAVE.xp = (SAVE.xp || 0) + xp;
+  const St = SAVE.stats; St.battles++; track('play');
+  if (won) { St.forestWins = (St.forestWins || 0) + 1; track('forest'); track('fkill', F.B.length); }
+  persist();
+  const lv1 = xpLevel(SAVE.xp), g = S2.gid; await wait(1500); if (g !== S2.gid) return;
+  Sfx.play(won ? 'win' : 'lose');
+  const o = $('over'); o.classList.toggle('lose', !won);
+  $('overT').textContent = won ? 'AŞAMA GEÇİLDİ' : 'YENİLGİ';
+  $('overP').textContent = `Orman ${k}. aşama · +${gain} Altın · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}!` : '')
+    + (Object.keys(drops).length ? ` · Malzeme: ${matTxt(drops)}` : '') + (chest ? ` · İlk geçiş sandığı: +${chest} Altın` : '');
+  $('again').textContent = won && k < STAGES.length ? 'Sonraki Aşama' : 'Tekrar Savaş';
+  forestRun.next = won && k < STAGES.length ? k + 1 : k;
+  o.hidden = false; $('again').focus();
+}
+$('forestClose').addEventListener('click', closeForest);
+$('forest').addEventListener('click', e => { if (e.target === $('forest')) closeForest(); });
+$('forest').addEventListener('keydown', e => { if (e.key === 'Escape') closeForest(); });
+$('fSize').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  forestSize = +b.dataset.n; try { localStorage.setItem('sa.fsize', forestSize); } catch (x) {} renderForest();
+});
+// ekipmanın 6-10. seviyeleri ormandan malzeme de ister
+const MAT_COST = { 6: { pelt: 2 }, 7: { pelt: 3, silk: 2 }, 8: { silk: 3, ess: 3 }, 9: { ess: 5, relic: 1 }, 10: { ess: 8, relic: 2 } };
+const hasMats = n => Object.entries(MAT_COST[n] || {}).every(([m, q]) => (SAVE.forest.mats[m] || 0) >= q);
+
 /* ---------- yeni sürüm uyarısı: açık sekme eski kodla kalmasın (yalnızca kendi sunucumuzda) ---------- */
 let pageVer = null, verNote = false;
 async function checkVersion() {
@@ -2850,7 +3085,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) chec
 pick(chosen); openLobby(); requestAnimationFrame(frame);
 cloudInit().finally(initRoom);
 try { if (!localStorage.getItem('sa.guide')) openGuide(); } catch (e) { openGuide(); }
-window.__game = { street: () => me, track, daily, renderQuests, F: () => F, S: () => S2, act: playerAct, pick, start: () => $('choose').click(), CLASSES, save: () => SAVE, open: openSelect, town: () => showScreen('town'), skillHeal, mkFighter, leagueOf, reward };
+window.__game = { openForest, startForest, forest: () => SAVE.forest, street: () => me, track, daily, renderQuests, F: () => F, S: () => S2, act: playerAct, pick, start: () => $('choose').click(), CLASSES, save: () => SAVE, open: openSelect, town: () => showScreen('town'), skillHeal, mkFighter, leagueOf, reward };
 })();
 </script>
 

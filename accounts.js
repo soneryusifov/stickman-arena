@@ -31,6 +31,7 @@ function cleanSave(s) {
     town: { hall: int(t.hall, 1, 8, 1), mine: int(t.mine, 1, 8, 1), alch: int(t.alch, 1, 8, 1), mineAt: int(t.mineAt, 0, 9e15, Date.now()) },
     stats: s.stats && typeof s.stats === 'object' ? s.stats : {}, ach: s.ach && typeof s.ach === 'object' ? s.ach : {},
     daily: s.daily && typeof s.daily === 'object' ? s.daily : null, _t: int(s._t, 0, 9e15, Date.now()), xp: int(s.xp, 0, 1e9, 0),
+    forest: { best: int((s.forest || {}).best, 0, 10, 0), mats: Object.fromEntries(['pelt', 'silk', 'ess', 'relic'].map(m => [m, int(((s.forest || {}).mats || {})[m], 0, 1e6, 0)])) },
   };
   if (out.stats) for (const k of ['wins', 'battles', 'duelWins', 'teamWins']) if (k in out.stats) out.stats[k] = int(out.stats[k], 0, 1e7, 0);
   return JSON.stringify(out).length > 32 * 1024 ? null : out;
