@@ -276,12 +276,12 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   </section>
 
   <section class="screen" id="lobbyScreen" hidden>
-    <div class="shead"><p>Yürü: ← → ya da A D, ya da sokağa tıkla · Binaya gir: E · Bir oyuncuya tıkla: meydan oku</p><button class="btn ghost" id="openTown" type="button">Kasaba yönetimi ve görevler</button></div>
+    <div class="shead"><p>Yürü: ok tuşları ya da W A S D, ya da yere tıkla · Kenara yürü: yan bölüme geç · Karakterle konuş ya da kapıdan geç: E · Bir oyuncuya tıkla: meydan oku</p><button class="btn ghost" id="openTown" type="button">Kasaba yönetimi ve görevler</button></div>
     <div class="street">
       <canvas id="sv" width="1280" height="520" tabindex="0" aria-label="Kasaba meydanı. Kahramanını ok tuşlarıyla yürüt, bir binanın önünde E tuşuyla içeri gir."></canvas>
       <div class="sbox" id="sbox" hidden><span id="sboxT"></span><button class="btn" id="sboxB" type="button"></button></div>
-      <div class="spad l"><button id="padL" type="button" aria-label="Sola yürü">◀</button></div>
-      <div class="spad r"><button id="padR" type="button" aria-label="Sağa yürü">▶</button></div>
+      <div class="spad l"><button id="padL" type="button" aria-label="Sola yürü">◀</button><button id="padR" type="button" aria-label="Sağa yürü">▶</button></div>
+      <div class="spad r"><button id="padU" type="button" aria-label="İçeri yürü">▲</button><button id="padD" type="button" aria-label="Dışarı yürü">▼</button></div>
     </div>
     <div class="lobby">
       <section class="lpanel" aria-labelledby="plT">
@@ -723,19 +723,33 @@ function frame(t) {
 }
 
 /* =====================================================================
-   KASABA MEYDANI: yandan görünen, kayan bir sokak. Kahraman yürür,
-   binaların önünde içeri girer; diğer oyuncular konumlarıyla görünür.
+   DÜNYA HARİTASI: birbirine bağlı sahneler, ortada Meydan (lobi).
+   Kahraman zemin şeridinde iki eksende yürür: sağ-sol (x) ve içeri-dışarı (y).
+   Sahnenin sağ/sol sınırı yan sahneye, arka kenardaki kapılar başka sahneye açılır.
+   Binaların işini önlerindeki karakterler (NPC) görür; karakterle konuşunca ekranı açılır.
    ===================================================================== */
-const SV = $('sv'), sctx = SV.getContext('2d'), SW = 1280, SH = 520, SGY = 470, WORLD = 3400, HS = .62;
+const SV = $('sv'), sctx = SV.getContext('2d'), SW = 1280, SH = 520, HS = .62;
 const WALK_RATE = 1.8; // yürüme temposu (1 = savaştaki yürüyüş); hız buna göre hesaplanır
-const BLD = [
-  { k: 'hall', x: 430, name: 'Belediye', img: () => `assets/baked/town_hall_${T.hall}.png?v=1` },
-  { k: 'mine', x: 1040, name: 'Altın Madeni', img: () => `assets/baked/town_mine_${T.mine}.png?v=1` },
-  { k: 'alch', x: 1650, name: 'Simyacı', img: () => `assets/baked/town_alch_${T.alch}.png?v=1` },
-  { k: 'smith', x: 2260, name: 'Demirci', img: () => 'assets/baked/town_smith.png?v=1' },
-  { k: 'arena', x: 2920, name: 'Arena', img: () => 'assets/baked/town_arena.png?v=1' },
-];
-const LAMPS = [140, 735, 1345, 1955, 2590, 3260], LAMP_Y = 262;
+const Y0 = 412, Y1 = 505; // zemin şeridi: arka kenar (kapılar) ve ön kenar
+const scaleAt = y => HS * (.82 + .18 * (y - Y0) / (Y1 - Y0)); // arkadaki küçük görünür
+const BNAME = { hall: 'Belediye', mine: 'Altın Madeni', alch: 'Simyacı', smith: 'Demirci', arena: 'Arena' };
+// Sahneler. Kapı: arka kenarda x konumu; NPC: duran karakter (yeni görseller gelene dek çöp adam iskeletiyle çizilir).
+// map: küçük haritadaki yeri. bg: arka plan resmi (şimdilik hepsi aynı geçici resim).
+const SCENES = {
+  square: { name: 'Meydan', w: 2400, map: [0, 0], left: 'market', right: 'arenagate', lamps: [260, 820, 1580, 2140],
+    doors: [{ x: 1200, to: 'hall', name: 'Belediye' }], npcs: [] },
+  hall: { name: 'Belediye', w: 1500, map: [0, -1], lamps: [200, 1300],
+    doors: [{ x: 420, to: 'square', name: 'Meydan' }], npcs: [{ k: 'hall', x: 950, y: 440, cls: 'paladin', face: -1, name: 'Kâhya' }] },
+  market: { name: 'Çarşı', w: 2400, map: [-1, 0], left: 'mineroad', right: 'square', lamps: [300, 1200, 2100],
+    doors: [], npcs: [{ k: 'smith', x: 760, y: 440, cls: 'tank', face: 1, name: 'Demirci Usta' }, { k: 'alch', x: 1640, y: 440, cls: 'mage', face: -1, name: 'Simyacı' }] },
+  mineroad: { name: 'Maden Yolu', w: 1900, map: [-2, 0], right: 'market', lamps: [400, 1500],
+    doors: [], npcs: [{ k: 'mine', x: 760, y: 440, cls: 'berserker', face: 1, name: 'Madenci' }] },
+  arenagate: { name: 'Arena Kapısı', w: 1900, map: [1, 0], left: 'square', lamps: [300, 1600],
+    doors: [], npcs: [{ k: 'arena', x: 1150, y: 440, cls: 'warrior', face: -1, name: 'Arena Görevlisi' }] },
+};
+const npcSign = k => k === 'hall' ? `Belediye · Sv ${T.hall}` : k === 'mine' ? `Altın Madeni · Sv ${T.mine} · ${mineStored()} altın` : k === 'alch' ? `Simyacı · Sv ${T.alch}`
+  : k === 'smith' ? `Demirci · sınır ${gearCap()}. sv` : `Arena · Lig ${leagueOf(SAVE.league)}`;
+const LAMP_Y = 262;
 /* Arka plan resmi (assets/bg/town_night.webp, 1536x1024): kaldırım 704. satırda başlar.
    Üstü (gök + kasaba) yarı hızda kayan uzak katman, altı (sokak) dünya ile kayan yakın katman olur.
    Resim kenarları birbirini tutmadığı için her katmanın son BG_FADE sütunu başına eritilir: dikişsiz döşenir. */
@@ -762,63 +776,11 @@ function seamless(im, y0, y1, k, bright, shade, fog) {
   im.src = 'assets/bg/town_night.webp?v=1';
 })();
 function tileX(img, off, y) { const w = img.width; for (let x = -(((off % w) + w) % w); x < SW; x += w) sctx.drawImage(img, x, y); }
-const imgs = {};
-const imgOf = src => { if (!imgs[src]) { const i = new Image(); i.src = src; imgs[src] = i; } return imgs[src]; };
-// gündüz çizilmiş bina resmini geceye çevirir (bir kez, önbellekli): renk soluklaşıp maviye kayar ve kararır;
-// ateş/pencere (sıcak, parlak) ve iksir (parlak yeşil) pikselleri kendi rengini korur ve bulanık bir ışık katmanı verir
-const nights = {}, NG = 40;
-function nightOf(src) {
-  if (nights[src]) return nights[src];
-  const im = imgOf(src); if (!im.complete || !im.naturalWidth) return null;
-  const w = im.naturalWidth, h = im.naturalHeight, c = document.createElement('canvas'); c.width = w; c.height = h;
-  const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(im, 0, 0);
-  const m = document.createElement('canvas'); m.width = w; m.height = h; const mx = m.getContext('2d');
-  const d = x.getImageData(0, 0, w, h), p = d.data, md = mx.createImageData(w, h), q = md.data;
-  for (let i = 0; i < p.length; i += 4) {
-    if (!p[i + 3]) continue;
-    const r = p[i], g = p[i + 1], b = p[i + 2], hi = Math.max(r, g, b), sat = hi ? (hi - Math.min(r, g, b)) / hi : 0;
-    // saman ve tahta da sıcak renkli ama soluk: ateş sayılması için güçlü doygunluk gerekir
-    const fire = r > 200 && g > 70 && b < 100 && sat > .62 ? Math.min(1, (r - 200) / 40 + (sat - .62) * 2) : 0;
-    const potion = g > 160 && g > r + 30 && g > b + 60 ? Math.min(1, (g - 160) / 50) : 0;
-    const e = Math.min(1, Math.max(fire, potion));
-    const l = .3 * r + .59 * g + .11 * b;
-    const nr = (r * .55 + l * .45) * .4, ng = (g * .55 + l * .45) * .44, nb = (b * .55 + l * .45) * .64 + 10;
-    p[i] = nr + (r - nr) * e; p[i + 1] = ng + (g - ng) * e; p[i + 2] = nb + (b - nb) * e;
-    if (e > .15) { q[i] = r; q[i + 1] = g; q[i + 2] = b * .7; q[i + 3] = e * p[i + 3]; }
-  }
-  x.putImageData(d, 0, 0); mx.putImageData(md, 0, 0);
-  const glow = document.createElement('canvas'); glow.width = w + NG * 2; glow.height = h + NG * 2;
-  const gx = glow.getContext('2d'); gx.filter = 'blur(16px)'; gx.drawImage(m, NG, NG); gx.filter = 'blur(5px)'; gx.drawImage(m, NG, NG);
-  return nights[src] = { c, glow, w, h };
-}
-const me = { x: 1650, face: 1, target: null, walk: false, A: null, key: '' };
-const keys = { l: 0, r: 0 }, others = new Map(), bubbles = new Map();
-let camX = 0, near = null, sel = null, sendT = 0, sent = '';
-// uzak sokak: gökyüzü, ay, çatı siluetleri ve kaldırım bir kez çizilir
-const sbg = document.createElement('canvas'); sbg.width = WORLD; sbg.height = SH;
-(function () {
-  const c = sbg.getContext('2d');
-  let seed = 7; const sr = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  let g = c.createLinearGradient(0, 0, 0, SGY); g.addColorStop(0, '#0b0918'); g.addColorStop(.6, '#1d1733'); g.addColorStop(1, '#2d2140');
-  c.fillStyle = g; c.fillRect(0, 0, WORLD, SH);
-  for (let i = 0; i < 260; i++) { c.fillStyle = `rgba(255,255,255,${sr() * .5})`; c.fillRect(sr() * WORLD, sr() * 230, 1.5, 1.5); }
-  c.fillStyle = '#d9d2ee'; c.beginPath(); c.arc(2400, 80, 30, 0, 7); c.fill();
-  c.fillStyle = '#1d1733'; c.beginPath(); c.arc(2413, 72, 27, 0, 7); c.fill();
-  c.fillStyle = '#18132a'; c.beginPath(); c.moveTo(0, 330); for (let x = 0; x <= WORLD; x += 90) c.lineTo(x, 250 + sr() * 70); c.lineTo(WORLD, 420); c.lineTo(0, 420); c.fill();
-  // arka sıradaki evler
-  for (let x = -20; x < WORLD; x += 70 + sr() * 50) {
-    const w = 60 + sr() * 60, hh = 70 + sr() * 70, base = 400;
-    c.fillStyle = '#141022'; c.fillRect(x, base - hh, w, hh + 20);
-    c.beginPath(); c.moveTo(x - 8, base - hh); c.lineTo(x + w / 2, base - hh - 30 - sr() * 30); c.lineTo(x + w + 8, base - hh); c.fill();
-    if (sr() > .35) { c.fillStyle = `rgba(255,170,80,${.35 + sr() * .4})`; c.fillRect(x + w * .3, base - hh + 22, 9, 12); if (sr() > .5) c.fillRect(x + w * .62, base - hh + 22, 9, 12); }
-  }
-  // kaldırım
-  g = c.createLinearGradient(0, 395, 0, SH); g.addColorStop(0, '#2a2236'); g.addColorStop(1, '#0d0b13');
-  c.fillStyle = g; c.fillRect(0, 395, WORLD, SH - 395);
-  c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 2;
-  for (let i = 0, y = 395; y < SH; i++, y += 9 + i * 5) { c.beginPath(); c.moveTo(0, y); c.lineTo(WORLD, y); c.stroke(); }
-  for (let y = 395, r = 0; y < SH; r++, y += 9 + r * 5) for (let x = (r % 2) * 30; x < WORLD; x += 60) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 9 + (r + 1) * 5); c.stroke(); }
-})();
+
+const me = { sc: 'square', x: 1200, y: 470, face: 1, target: null, door: null, walk: false, A: null, key: '' };
+const keys = { l: 0, r: 0, u: 0, d: 0 }, others = new Map(), bubbles = new Map();
+let camX = 0, near = null, sel = null, sendT = 0, sent = '', trans = null, banner = null;
+const scene = () => SCENES[me.sc];
 // kahramanın aktörü: sınıf ya da ekipman değişince yeniden kurulur
 async function streetActor() {
   const g = gearOf(chosen), key = chosen + ITEMS.map(k => g[k]).join('');
@@ -828,14 +790,37 @@ async function streetActor() {
   if (me.key !== key) return;
   me.A = Rig.actor(chosen, me.x, me.face, g);
 }
+// sahne karakterleri: sahneye girilince yüklenir
+function npcActor(n) {
+  if (n.A || n.loading) return;
+  n.loading = true;
+  Promise.all([Rig.load(n.cls), Rig.loadTiers(n.cls)]).then(() => { n.A = Rig.actor(n.cls, n.x, n.face, 7); }).catch(() => { n.loading = false; });
+}
+// sahne değiştir: kenardan çıkınca karşı kenarda, kapıdan çıkınca hedefteki dönüş kapısının önünde başlar
+function goScene(to, via) {
+  if (trans || !SCENES[to]) return;
+  trans = { t0: now(), to, via, from: me.sc, done: false };
+  keys.l = keys.r = keys.u = keys.d = 0; me.target = null; me.door = null; sel = null;
+}
+function arrive(tr) {
+  const S = SCENES[tr.to];
+  me.sc = tr.to;
+  if (tr.via === 'left') { me.x = S.w - 90; me.face = -1; }
+  else if (tr.via === 'right') { me.x = 90; me.face = 1; }
+  else { const back = S.doors.find(d => d.to === tr.from); me.x = back ? back.x : S.w / 2; me.y = Y0 + 34; me.face = 1; }
+  others.clear(); boxKey = ''; banner = { t0: now(), txt: S.name };
+  for (const n of S.npcs) npcActor(n);
+  lobbyPresence(); renderLobby();
+}
 function syncOthers() {
   const ps = room ? room.peers().filter(p => !p.sameTab && p.kind === 'viewer') : [], seen = new Set();
   for (const p of ps) {
-    const pr = p.presence || {}; if (!CLASSES[pr.cls] || typeof pr.x !== 'number') continue;
+    const pr = p.presence || {}; if (!CLASSES[pr.cls] || typeof pr.x !== 'number' || (pr.sc || 'square') !== me.sc) continue;
     seen.add(p.peer);
     let o = others.get(p.peer);
-    if (!o) { o = { x: pr.x, A: null, key: '' }; others.set(p.peer, o); }
-    o.tx = Math.max(0, Math.min(WORLD, pr.x)); o.face = pr.f === -1 ? -1 : 1; o.w = !!pr.w; o.p = p; o.busy = pr.st === 'duel' || pr.st === 'battle';
+    if (!o) { o = { x: pr.x, y: typeof pr.y === 'number' ? pr.y : 470, A: null, key: '' }; others.set(p.peer, o); }
+    o.tx = Math.max(0, Math.min(scene().w, pr.x)); o.ty = Math.max(Y0, Math.min(Y1, typeof pr.y === 'number' ? pr.y : 470));
+    o.face = pr.f === -1 ? -1 : 1; o.w = !!pr.w; o.p = p; o.busy = pr.st === 'duel' || pr.st === 'battle';
     const gear = cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(pr.g) ? pr.g[i] : 1]))), key = pr.cls + ITEMS.map(k => gear[k]).join('');
     if (o.key !== key) {
       o.key = key; o.A = null;
@@ -852,10 +837,10 @@ setInterval(async () => { // isimleri arada bir çöz (her karede değil)
   if (!ids.length) return;
   const pr = await user.profiles(ids); for (const id of ids) profCache[id] = (pr[id] && pr[id].name) || '';
 }, 1500);
-function drawLabel(x, y, txt, color, bgc) {
-  sctx.font = '700 15px "Barlow Semi Condensed", sans-serif'; sctx.textAlign = 'center';
+function drawLabel(x, y, txt, color, bgc, size = 15) {
+  sctx.font = `700 ${size}px "Barlow Semi Condensed", sans-serif`; sctx.textAlign = 'center';
   const w = sctx.measureText(txt).width + 14;
-  sctx.fillStyle = bgc || 'rgba(10,8,16,.7)'; sctx.beginPath(); sctx.roundRect(x - w / 2, y - 15, w, 21, 4); sctx.fill();
+  sctx.fillStyle = bgc || 'rgba(10,8,16,.7)'; sctx.beginPath(); sctx.roundRect(x - w / 2, y - size, w, size + 6, 4); sctx.fill();
   sctx.fillStyle = color; sctx.fillText(txt, x, y + 1);
 }
 function drawBubble(x, y, txt) {
@@ -865,158 +850,217 @@ function drawBubble(x, y, txt) {
   sctx.beginPath(); sctx.moveTo(x - 6, y); sctx.lineTo(x + 6, y); sctx.lineTo(x, y + 8); sctx.fill();
   sctx.fillStyle = '#1a1205'; sctx.fillText(t, x, y - 8, w - 10);
 }
-// kahraman gece ışığında: ayrı katmana çizilir, üstüne yalnız kendi piksellerine mavi-koyu bir ton basılır
+// karakter gece ışığında: ayrı katmana çizilir, üstüne yalnız kendi piksellerine mavi-koyu bir ton basılır
 const hl = document.createElement('canvas'); hl.width = SW; hl.height = SH; const hctx = hl.getContext('2d');
-function drawHero(A, t, dt, x) {
-  const x0 = Math.max(0, Math.floor(x - 170)), w = Math.min(SW, Math.ceil(x + 170)) - x0, y0 = 180, h = SH - y0;
+function drawHero(A, t, dt, x, y, s) {
+  const r = 170 * s / HS, x0 = Math.max(0, Math.floor(x - r)), w = Math.min(SW, Math.ceil(x + r)) - x0, y0 = Math.max(0, Math.floor(y - 330 * s / HS)), h = SH - y0;
   if (w <= 0) return;
   hctx.setTransform(1, 0, 0, 1, 0, 0); hctx.clearRect(x0, y0, w, h);
-  Rig.draw(hctx, A, t, dt, x, SGY, HS, null);
+  Rig.draw(hctx, A, t, dt, x, y, s, null);
   hctx.setTransform(1, 0, 0, 1, 0, 0);
   hctx.globalCompositeOperation = 'source-atop'; hctx.fillStyle = 'rgba(16,14,46,.36)'; hctx.fillRect(x0, y0, w, h);
   hctx.globalCompositeOperation = 'source-over';
   sctx.drawImage(hl, x0, y0, w, h, x0, y0, w, h);
 }
+const headY = (y, s) => y - 182 * s / HS; // karakterin başının üstü
+// geçici kapı: kaldırımın arkasında taş kemer (sahne görseli gelince resmin kendi kapısı kullanılacak)
+function drawDoor(d, t, hot) {
+  const sx = d.x - camX; if (sx < -100 || sx > SW + 100) return;
+  const b = Y0 - 8, w = 74, h = 116;
+  sctx.fillStyle = '#2b2433'; sctx.beginPath(); sctx.moveTo(sx - w / 2 - 10, b); sctx.lineTo(sx - w / 2 - 10, b - h + 20); sctx.arc(sx, b - h + 20, w / 2 + 10, Math.PI, 0); sctx.lineTo(sx + w / 2 + 10, b); sctx.fill();
+  sctx.fillStyle = '#120d1a'; sctx.beginPath(); sctx.moveTo(sx - w / 2, b); sctx.lineTo(sx - w / 2, b - h + 20); sctx.arc(sx, b - h + 20, w / 2, Math.PI, 0); sctx.lineTo(sx + w / 2, b); sctx.fill();
+  const g = sctx.createLinearGradient(0, b - h, 0, b); g.addColorStop(0, 'rgba(255,170,80,0)'); g.addColorStop(1, `rgba(255,170,80,${hot ? .55 : .3 + .05 * Math.sin(t / 300)})`);
+  sctx.fillStyle = g; sctx.fill();
+  drawLabel(sx, b - h - 12, d.name, hot ? '#1a1205' : '#f2c14e', hot ? '#f2c14e' : null);
+}
+function drawMinimap() {
+  const cx = SW - 104, cy = 58, gx = 40, gy = 30;
+  sctx.fillStyle = 'rgba(10,8,16,.72)'; sctx.beginPath(); sctx.roundRect(SW - 214, 12, 202, 96, 6); sctx.fill();
+  sctx.strokeStyle = 'rgba(242,193,78,.5)'; sctx.lineWidth = 2;
+  const pos = id => [cx + SCENES[id].map[0] * gx, cy + SCENES[id].map[1] * gy];
+  for (const [id, S] of Object.entries(SCENES)) {
+    const [x, y] = pos(id);
+    for (const to of [S.right, ...S.doors.map(d => d.to)]) if (to) { const [x2, y2] = pos(to); sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x2, y2); sctx.stroke(); }
+  }
+  for (const id of Object.keys(SCENES)) {
+    const [x, y] = pos(id), cur = id === me.sc;
+    const n = room ? room.peers().filter(p => !p.sameTab && (p.presence?.sc || 'square') === id && CLASSES[p.presence?.cls]).length : 0;
+    sctx.fillStyle = cur ? '#f2c14e' : '#3a3150'; sctx.beginPath(); sctx.arc(x, y, cur ? 9 : 7, 0, 7); sctx.fill();
+    if (n) { sctx.fillStyle = '#7db4ff'; sctx.beginPath(); sctx.arc(x + 8, y - 7, 6, 0, 7); sctx.fill(); sctx.fillStyle = '#0b0918'; sctx.font = '700 10px sans-serif'; sctx.textAlign = 'center'; sctx.fillText(n, x + 8, y - 3.5); }
+  }
+  sctx.fillStyle = '#e9e4f5'; sctx.font = '700 13px "Barlow Semi Condensed", sans-serif'; sctx.textAlign = 'center'; sctx.fillText(scene().name, cx, 102);
+}
 function drawStreet(t, dt) {
+  const S = scene();
   // yürüme hızı adıma bağlı: yere basan ayak (footF/footB = ±24·sin) ne kadar geri giderse beden o kadar ilerler,
-  // böylece ayak yerde kaymaz; ortalama hız yarım döngüde (450 ms) 48 birimdir
+  // böylece ayak yerde kaymaz; ortalama hız yarım döngüde (450 ms) 48 birimdir. Arkada (küçük) adım da kısalır.
   const avg = 48 * HS / 450 * WALK_RATE * dt;
   let sp = avg;
   if (me.A && me.A.cur === 'walk') { const an = me.A.ANIMS.walk, p = (me.A.at % an.dur) / an.dur; sp = 24 * 2 * Math.PI / an.dur * Math.abs(Math.cos(p * 2 * Math.PI)) * HS * WALK_RATE * dt; }
-  let dir = keys.r - keys.l;
-  if (dir) me.target = null;
-  else if (me.target != null) { const d = me.target - me.x; if (Math.abs(d) < 5) me.target = null; else dir = Math.sign(d); }
-  if (dir) { me.x = Math.max(70, Math.min(WORLD - 70, me.x + dir * Math.min(sp, me.target != null ? Math.abs(me.target - me.x) : sp))); me.face = dir; }
-  me.walk = !!dir;
+  sp *= scaleAt(me.y) / HS;
+  let dx = keys.r - keys.l, dy = keys.d - keys.u;
+  if (trans) dx = dy = 0;
+  if (dx || dy) { me.target = null; me.door = null; }
+  else if (me.target) {
+    const ex = me.target.x - me.x, ey = (me.target.y - me.y) / .6, dist = Math.hypot(ex, ey);
+    if (dist < 4) { me.target = null; if (me.door) { const d = me.door; me.door = null; goScene(d.to, 'door'); } }
+    else { dx = ex / dist; dy = ey / dist; sp = Math.min(sp, dist); }
+  }
+  const len = Math.hypot(dx, dy);
+  if (len) {
+    dx /= len; dy /= len;
+    me.x += dx * sp; me.y = Math.max(Y0, Math.min(Y1, me.y + dy * sp * .6));
+    if (Math.abs(dx) > .15) me.face = dx > 0 ? 1 : -1;
+  }
+  me.walk = !!len;
+  // kenara gelince yan sahneye geç; çıkışı olmayan kenar duvardır
+  if (me.x < 40) { if (S.left) goScene(S.left, 'left'); me.x = 40; }
+  if (me.x > S.w - 40) { if (S.right) goScene(S.right, 'right'); me.x = S.w - 40; }
   if (me.A) {
     if (me.walk && me.A.cur !== 'walk') Rig.play(me.A, 'walk'); else if (!me.walk && me.A.cur === 'walk') Rig.play(me.A, 'idle');
     me.A.face = me.face; Rig.update(me.A, me.walk ? dt * WALK_RATE : dt);
   }
-  camX = Math.max(0, Math.min(WORLD - SW, me.x - SW / 2));
-  const st = Math.round(me.x / 8) + ',' + me.face + ',' + (me.walk ? 1 : 0);
+  camX = Math.max(0, Math.min(S.w - SW, me.x - SW / 2));
+  const st = me.sc + Math.round(me.x / 8) + ',' + Math.round(me.y / 6) + ',' + me.face + ',' + (me.walk ? 1 : 0);
   if (st !== sent && t - sendT > 180) { sent = st; sendT = t; lobbyPresence(); }
   syncOthers();
 
-  if (bgFar && bgNear) {
-    tileX(bgFar, camX * .5, STREET_Y - bgFar.height);
-    tileX(bgNear, camX, STREET_Y);
-  } else sctx.drawImage(sbg, camX, 0, SW, SH, 0, 0, SW, SH);
+  sctx.fillStyle = '#0b0918'; sctx.fillRect(0, 0, SW, SH);
+  if (bgFar && bgNear) { tileX(bgFar, camX * .5, STREET_Y - bgFar.height); tileX(bgNear, camX, STREET_Y); }
   // fener direkleri kaldırımın önünde
-  for (const x of LAMPS) {
+  for (const x of S.lamps) {
     const sx = x - camX; if (sx < -40 || sx > SW + 40) continue;
-    sctx.fillStyle = '#0f0c16'; sctx.fillRect(sx - 4, LAMP_Y + 20, 8, 412 - LAMP_Y - 20); sctx.fillRect(sx - 10, 406, 20, 8);
+    sctx.fillStyle = '#0f0c16'; sctx.fillRect(sx - 4, LAMP_Y + 20, 8, 404 - LAMP_Y - 20); sctx.fillRect(sx - 10, 398, 20, 8);
     sctx.fillRect(sx - 13, LAMP_Y + 16, 26, 6); sctx.beginPath(); sctx.moveTo(sx - 11, LAMP_Y - 4); sctx.lineTo(sx + 11, LAMP_Y - 4); sctx.lineTo(sx, LAMP_Y - 16); sctx.fill();
     sctx.fillStyle = '#ffc06a'; sctx.fillRect(sx - 8, LAMP_Y - 3, 16, 19);
     sctx.strokeStyle = '#0f0c16'; sctx.lineWidth = 2; sctx.strokeRect(sx - 8, LAMP_Y - 3, 16, 19); sctx.beginPath(); sctx.moveTo(sx, LAMP_Y - 3); sctx.lineTo(sx, LAMP_Y + 16); sctx.stroke();
   }
-  // binalar: gece renginde, yere gölgeli; ateş, pencere ve iksir kendi ışığıyla parlar
-  const BH = 270, BY = 414;
-  for (const b of BLD) {
-    const sx = b.x - camX; if (sx < -300 || sx > SW + 300) continue;
-    const n = nightOf(b.img()); if (!n) continue;
-    const k = BH / n.h, w = n.w * k, x0 = sx - w / 2, y0 = BY - BH;
-    const sh = sctx.createRadialGradient(sx, BY - 8, 10, sx, BY - 8, w * .55);
-    sh.addColorStop(0, 'rgba(0,0,0,.6)'); sh.addColorStop(1, 'rgba(0,0,0,0)');
-    sctx.save(); sctx.translate(sx, BY - 8); sctx.scale(1, .16); sctx.translate(-sx, -(BY - 8));
-    sctx.fillStyle = sh; sctx.fillRect(sx - w * .6, BY - 8 - w * .6, w * 1.2, w * 1.2); sctx.restore();
-    sctx.drawImage(n.c, x0, y0, w, BH);
-    sctx.save(); sctx.globalCompositeOperation = 'lighter'; sctx.globalAlpha = .5 + .12 * Math.sin(t / 150 + b.x) + .05 * Math.sin(t / 47 + b.x);
-    sctx.drawImage(n.glow, x0 - NG * k, y0 - NG * k, (n.w + NG * 2) * k, (n.h + NG * 2) * k); sctx.restore();
-  }
-  // fener ışıkları (binaların da üstüne düşer)
+  // yakındaki kapı ya da karakter
+  near = null;
+  for (const d of S.doors) if (Math.abs(me.x - d.x) < 60 && me.y < Y0 + 30) near = { type: 'door', d };
+  for (const n of S.npcs) if (Math.abs(me.x - n.x) < 110 && Math.abs(me.y - n.y) < 55) near = { type: 'npc', n };
+  // arka kenarda kapıya doğru yürüyen içeri girer
+  if (near && near.type === 'door' && keys.u && me.y <= Y0 + 1) goScene(near.d.to, 'door');
+  for (const d of S.doors) drawDoor(d, t, near && near.d === d);
+  // kenar çıkışlarının tabelaları
+  if (S.left) drawLabel(110 - camX, Y0 - 24, '← ' + SCENES[S.left].name, '#e9e4f5');
+  if (S.right) drawLabel(S.w - 110 - camX, Y0 - 24, SCENES[S.right].name + ' →', '#e9e4f5');
+  // fener ışıkları
   sctx.save(); sctx.globalCompositeOperation = 'lighter';
-  for (const x of LAMPS) {
+  for (const x of S.lamps) {
     const sx = x - camX; if (sx < -200 || sx > SW + 200) continue;
     const fl = .85 + Math.sin(t / 120 + x) * .08, g = sctx.createRadialGradient(sx, LAMP_Y + 6, 4, sx, LAMP_Y + 6, 170);
     g.addColorStop(0, `rgba(255,170,70,${.42 * fl})`); g.addColorStop(1, 'rgba(255,120,40,0)');
     sctx.fillStyle = g; sctx.fillRect(sx - 180, LAMP_Y - 170, 360, 340);
-    // yere düşen ışık havuzu
     sctx.save(); sctx.translate(sx, 440); sctx.scale(1, .22);
     const pg = sctx.createRadialGradient(0, 0, 4, 0, 0, 200); pg.addColorStop(0, `rgba(255,160,70,${.3 * fl})`); pg.addColorStop(1, 'rgba(255,120,40,0)');
     sctx.fillStyle = pg; sctx.fillRect(-200, -200, 400, 400); sctx.restore();
   }
   sctx.restore();
-  // bina tabelaları
-  near = null;
-  for (const b of BLD) {
-    const sx = b.x - camX;
-    if (sx < -300 || sx > SW + 300) continue;
-    const close = Math.abs(me.x - b.x) < 120;
-    if (close) near = b;
-    drawLabel(sx, 430, b.name, close ? '#1a1205' : '#f2c14e', close ? '#f2c14e' : null);
+  // karakterler derinliğe göre: arkadaki önce
+  const drawn = [];
+  for (const n of S.npcs) { npcActor(n); if (n.A) { Rig.update(n.A, dt); n.A.face = me.x < n.x ? -1 : 1; } drawn.push({ y: n.y, A: n.A, x: n.x, n }); }
+  for (const [k, o] of others) {
+    const ex = o.tx - o.x, ey = o.ty - o.y, dist = Math.hypot(ex, ey), step = dist > 260 ? dist : avg * 1.08;
+    if (dist > 0) { const k2 = Math.min(1, step / dist); o.x += ex * k2; o.y += ey * k2; }
+    const walking = dist > 3 || o.w;
+    if (o.A) { if (walking && o.A.cur !== 'walk') Rig.play(o.A, 'walk'); else if (!walking && o.A.cur === 'walk') Rig.play(o.A, 'idle'); o.A.face = o.face; Rig.update(o.A, walking ? dt * WALK_RATE : dt); }
+    drawn.push({ y: o.y, A: o.A, x: o.x, k, o });
   }
-  // diğer oyuncular
-  const list = [...others.entries()];
-  for (const [k, o] of list) {
-    const d = o.tx - o.x; o.x += Math.sign(d) * Math.min(Math.abs(d), Math.abs(d) > 260 ? Math.abs(d) : avg * 1.08);
-    const walking = Math.abs(d) > 3 || o.w;
-    if (o.A) {
-      if (walking && o.A.cur !== 'walk') Rig.play(o.A, 'walk'); else if (!walking && o.A.cur === 'walk') Rig.play(o.A, 'idle');
-      o.A.face = o.face; Rig.update(o.A, walking ? dt * WALK_RATE : dt);
-      drawHero(o.A, t, dt, o.x - camX);
+  drawn.push({ y: me.y, A: me.A, x: me.x, me: true });
+  drawn.sort((a, b) => a.y - b.y);
+  for (const d of drawn) if (d.A) drawHero(d.A, t, dt, d.x - camX, d.y, scaleAt(d.y));
+  // etiketler ve balonlar hepsinin üstünde
+  for (const d of drawn) {
+    const sx = d.x - camX, s = scaleAt(d.y), hy = headY(d.y, s);
+    if (d.n) { const hot = near && near.n === d.n; drawLabel(sx, hy - 22, npcSign(d.n.k), hot ? '#1a1205' : '#f2c14e', hot ? '#f2c14e' : null); drawLabel(sx, hy, d.n.name, '#e9e4f5', null, 13); }
+    else if (d.o) {
+      const pr = d.o.p.presence || {};
+      drawLabel(sx, hy, nameOfPeer(d.o.p) + ' · Lv ' + (+pr.lv || 1), sel === d.k ? '#1a1205' : '#e9e4f5', sel === d.k ? '#7db4ff' : null);
+      const bb = bubbles.get(d.k); if (bb && now() - bb.t < 6000) drawBubble(sx, hy - 24, bb.text);
+    } else {
+      drawLabel(sx, hy, 'Sen · ' + CLASSES[chosen].name, '#1a1205', '#f2c14e');
+      const mb = bubbles.get('me'); if (mb && now() - mb.t < 6000) drawBubble(sx, hy - 24, mb.text);
     }
-    const sx = o.x - camX, pr = o.p.presence || {};
-    drawLabel(sx, SGY - 178, nameOfPeer(o.p) + ' · Lv ' + (+pr.lv || 1), sel === k ? '#1a1205' : '#e9e4f5', sel === k ? '#7db4ff' : null);
-    const bb = bubbles.get(k); if (bb && now() - bb.t < 6000) drawBubble(sx, SGY - 200, bb.text);
   }
-  // kendi kahramanın en önde
-  if (me.A) drawHero(me.A, t, dt, me.x - camX);
-  drawLabel(me.x - camX, SGY - 178, 'Sen · ' + CLASSES[chosen].name, '#1a1205', '#f2c14e');
-  const mb = bubbles.get('me'); if (mb && now() - mb.t < 6000) drawBubble(me.x - camX, SGY - 200, mb.text);
-  // seçili oyuncu uzaklaştıysa bırak
+  drawMinimap();
+  // sahne adı (girişte) ve geçiş kararması
+  if (banner) {
+    const k = (now() - banner.t0) / 1800;
+    if (k >= 1) banner = null;
+    else { sctx.globalAlpha = k < .15 ? k / .15 : k > .7 ? (1 - k) / .3 : 1; sctx.font = '800 44px Cinzel, Georgia, serif'; sctx.textAlign = 'center'; sctx.lineWidth = 6; sctx.strokeStyle = '#000'; sctx.strokeText(banner.txt, SW / 2, 150); sctx.fillStyle = '#f2c14e'; sctx.fillText(banner.txt, SW / 2, 150); sctx.globalAlpha = 1; }
+  }
+  if (trans) {
+    const k = (now() - trans.t0) / 240;
+    if (k >= 1 && !trans.done) { trans.done = true; trans.t1 = now(); arrive(trans); }
+    const a = trans.done ? 1 - (now() - trans.t1) / 240 : k;
+    if (trans.done && a <= 0) trans = null;
+    else { sctx.fillStyle = `rgba(0,0,0,${Math.max(0, Math.min(1, a))})`; sctx.fillRect(0, 0, SW, SH); }
+  }
   if (sel && (!others.has(sel) || Math.abs(others.get(sel).x - me.x) > 700)) sel = null;
   streetBox();
 }
-// alt kutu: önünde durulan bina ya da seçili oyuncu
+// alt kutu: seçili oyuncu, önünde durulan karakter ya da kapı
 let boxKey = '';
 function streetBox() {
   let key = '', txt = '', btn = '';
   const o = sel && others.get(sel);
   if (o) { const pr = o.p.presence || {}; key = 'p' + sel + o.busy + !!pvp + !!invite; txt = `${nameOfPeer(o.p)} · ${CLASSES[pr.cls].name} · Lv ${+pr.lv || 1} · Lig ${+pr.lg || 1}`; btn = o.busy ? 'Meşgul' : 'Meydan oku'; }
-  else if (near) { key = 'b' + near.k; txt = near.name; btn = near.k === 'arena' ? 'Arenaya gir (E)' : 'İçeri gir (E)'; }
+  else if (near && near.type === 'npc') { key = 'n' + near.n.k; txt = `${near.n.name} · ${BNAME[near.n.k]}`; btn = near.n.k === 'arena' ? 'Arenaya gir (E)' : 'Konuş (E)'; }
+  else if (near && near.type === 'door') { key = 'd' + near.d.to; txt = near.d.name; btn = 'Kapıdan geç (E)'; }
   if (key === boxKey) return; boxKey = key;
   $('sbox').hidden = !key; if (!key) return;
   $('sboxT').textContent = txt; $('sboxB').textContent = btn;
   $('sboxB').disabled = !!o && (o.busy || !!pvp || !!invite);
 }
-function enterBuilding(b) {
+function enterBuilding(k) {
   Sfx.play('click');
-  if (b.k === 'smith') return openSelect('smith');
-  if (b.k === 'arena') return openSelect('arena');
-  showScreen('town'); $('town').dataset.only = b.k; $('townScreen').dataset.only = b.k; renderTown();
-  $('plaque').textContent = b.name.toLocaleUpperCase('tr');
+  if (k === 'smith') return openSelect('smith');
+  if (k === 'arena') return openSelect('arena');
+  showScreen('town'); $('town').dataset.only = k; $('townScreen').dataset.only = k; renderTown();
+  $('plaque').textContent = BNAME[k].toLocaleUpperCase('tr');
+}
+function interact() {
+  if (!near || sel || trans) return;
+  if (near.type === 'npc') enterBuilding(near.n.k); else goScene(near.d.to, 'door');
 }
 $('sboxB').addEventListener('click', () => {
   const o = sel && others.get(sel);
   if (o) { if (!o.busy) challenge(o.p, nameOfPeer(o.p)); boxKey = ''; return; }
-  if (near) enterBuilding(near);
+  interact();
 });
 $('openTown').addEventListener('click', () => showScreen('town'));
 SV.addEventListener('click', e => {
-  const r = SV.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * SW, y = (e.clientY - r.top) / r.height * SH, wx = x + camX;
-  // bir oyuncuya tıklandı mı?
-  let hit = null, best = 60;
-  for (const [k, o] of others) { const d = Math.abs(o.x - wx); if (d < best && y > SGY - 200 && y < SGY + 20) { best = d; hit = k; } }
-  if (hit) { sel = hit; boxKey = ''; return; }
-  sel = null; boxKey = '';
-  const b = y < 420 && BLD.find(b => Math.abs(b.x - wx) < 150);
-  me.target = Math.max(70, Math.min(WORLD - 70, b ? b.x : wx));
+  if (trans) return;
+  const r = SV.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * SW, y = (e.clientY - r.top) / r.height * SH, wx = x + camX, S = scene();
+  const hitAt = (ox, oy) => { const s = scaleAt(oy); return Math.abs(ox - wx) < 55 * s / HS && y > headY(oy, s) && y < oy + 12; };
+  // oyuncu seç
+  for (const [k, o] of others) if (hitAt(o.x, o.y)) { sel = k; boxKey = ''; return; }
+  sel = null; boxKey = ''; me.door = null;
+  // karaktere tıklayınca önüne yürü
+  const n = S.npcs.find(n => hitAt(n.x, n.y));
+  if (n) { me.target = { x: n.x + (me.x < n.x ? -90 : 90), y: n.y }; return; }
+  // kapıya tıklayınca kapıya yürü ve geç
+  const d = y < Y0 && S.doors.find(d => Math.abs(d.x - wx) < 60);
+  if (d) { me.target = { x: d.x, y: Y0 }; me.door = d; return; }
+  me.target = { x: Math.max(40, Math.min(S.w - 40, wx)), y: Math.max(Y0, Math.min(Y1, y)) };
 });
+const KEYMAP = { arrowleft: 'l', a: 'l', arrowright: 'r', d: 'r', arrowup: 'u', w: 'u', arrowdown: 'd', s: 'd' };
 addEventListener('keydown', e => {
   if (screen !== 'lobby' || e.altKey || e.ctrlKey || e.metaKey || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
   const k = e.key.toLowerCase();
-  if (k === 'arrowleft' || k === 'a') { keys.l = 1; e.preventDefault(); }
-  else if (k === 'arrowright' || k === 'd') { keys.r = 1; e.preventDefault(); }
-  else if ((k === 'e' || k === 'arrowup') && near && !sel) { e.preventDefault(); enterBuilding(near); }
+  if (KEYMAP[k]) { keys[KEYMAP[k]] = 1; e.preventDefault(); }
+  else if (k === 'e') { e.preventDefault(); interact(); }
   else if (k === 'escape') sel = null;
 });
-addEventListener('keyup', e => { const k = e.key.toLowerCase(); if (k === 'arrowleft' || k === 'a') keys.l = 0; if (k === 'arrowright' || k === 'd') keys.r = 0; });
-addEventListener('blur', () => { keys.l = keys.r = 0; });
-for (const [id, side] of [['padL', 'l'], ['padR', 'r']]) {
+addEventListener('keyup', e => { const k = KEYMAP[e.key.toLowerCase()]; if (k) keys[k] = 0; });
+addEventListener('blur', () => { keys.l = keys.r = keys.u = keys.d = 0; });
+for (const [id, side] of [['padL', 'l'], ['padR', 'r'], ['padU', 'u'], ['padD', 'd']]) {
   const b = $(id);
   b.addEventListener('pointerdown', e => { e.preventDefault(); b.setPointerCapture(e.pointerId); keys[side] = 1; me.target = null; });
   for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => { keys[side] = 0; });
 }
+for (const n of scene().npcs) npcActor(n);
 
 /* ---------- Karakter seçimi ---------- */
 ORDER.forEach(id => {
@@ -1609,7 +1653,7 @@ function lobbyPresence() {
   if (!room) return;
   const g = gearOf(chosen);
   room.presence({ cls: chosen, lv: gearLevel(g), lg: leagueOf(SAVE.league), st: pvp ? 'duel' : screen === 'battle' ? 'battle' : 'lobby',
-    x: Math.round(me.x), f: me.face, w: me.walk ? 1 : 0, g: ITEMS.map(k => g[k]) }).catch(() => {});
+    sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, g: ITEMS.map(k => g[k]) }).catch(() => {});
 }
 const lobbyOthers = () => room ? room.peers().filter(p => !p.isMe && p.kind === 'viewer').length : 0;
 function openLobby() { showScreen('lobby'); streetActor(); $('lobbyCls').textContent = CLASSES[chosen].name; renderLobby(); renderChat(); }
@@ -1631,7 +1675,7 @@ async function renderLobby() {
     const n = document.createElement('div'); n.className = 'pn'; n.textContent = nameOf(p) + (p.sameTab ? ' (sen)' : '') + (p.guest ? ' · misafir' : '');
     const d = document.createElement('div'); d.className = 'pd';
     const busy = pr.st === 'duel' || pr.st === 'battle';
-    d.innerHTML = cls ? `${CLASSES[cls].name} · Lv ${+pr.lv || 1} · Lig ${+pr.lg || 1} · <span class="${busy ? 'busy' : ''}">${pr.st === 'duel' ? 'düelloda' : pr.st === 'battle' ? 'savaşta' : 'lobide'}</span>` : 'katılıyor…';
+    d.innerHTML = cls ? `${CLASSES[cls].name} · Lv ${+pr.lv || 1} · Lig ${+pr.lg || 1} · <span class="${busy ? 'busy' : ''}">${pr.st === 'duel' ? 'düelloda' : pr.st === 'battle' ? 'savaşta' : (SCENES[pr.sc] || SCENES.square).name}</span>` : 'katılıyor…';
     info.append(n, d); el.append(img, info);
     if (!p.sameTab) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Meydan oku';
