@@ -181,7 +181,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .right .chips{justify-content:flex-end}
 .chip{font-size:.72em;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.1em .5em;border-radius:2px;background:rgba(0,0,0,.55);border:1px solid currentColor}
 /* takım kartları: her takım bir sütun; çok kişide kartlar küçülür; dokununca hedef seçilir */
-.team{display:flex;flex-direction:column;gap:.35em;width:36%;min-width:0}
+.team{display:flex;flex-direction:column;gap:.35em;width:min(30%,25em);min-width:0}
 .team .unit{width:100%;cursor:pointer;border-radius:4px;padding:.15em;pointer-events:auto}
 .team .unit:focus-visible{outline:2px solid #fff;outline-offset:1px}
 .team.crowd{gap:.15em} .team.crowd .unit{gap:.4em;padding:.05em .15em} .team.crowd .info{gap:.1em} .team.crowd .portrait{width:1.75em;height:1.75em;border-width:1px} .team.crowd .bar{height:.55em} .team.crowd .bar span,.team.crowd .bar.mp,.team.crowd .chips{display:none} .team.crowd .name{font-size:.74em}
@@ -677,6 +677,7 @@ function burst(x, y, color, n = 24, sp = 260) {
 }
 function floatText(A, txt, color, size = 36) { texts.push({ x: A.x + A.off * A.face + rnd(-20, 20), y: (A.gy || GY) - 330 * (A.sc || 1), txt, color, size, life: 0, max: 1.3 }); }
 function shake(m) { if (!reduceMotion) { shakeT = now(); shakeMag = m; } }
+const TORCH_X = [46, 1234]; // duvar dipleri: en arkadaki kahramanın başının arkasına düşmesin
 const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
 (function () {
   const c = bg.getContext('2d');
@@ -713,13 +714,32 @@ const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
     c.globalAlpha = 1;
   };
   banner(40, 0, 80, 300, 1); banner(1160, 0, 80, 300, 1); banner(500, 210, 44, 150, .55); banner(736, 210, 44, 150, .55);
-  for (const x of [150, 1130]) {
+  for (const x of TORCH_X) {
     c.fillStyle = '#16121d'; c.fillRect(x - 10, 480, 20, GY - 480);
     c.fillStyle = '#2a2230'; c.beginPath(); c.moveTo(x - 34, 470); c.lineTo(x + 34, 470); c.lineTo(x + 20, 492); c.lineTo(x - 20, 492); c.fill();
   }
   g = c.createRadialGradient(640, 380, 300, 640, 380, 820); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.65)');
   c.fillStyle = g; c.fillRect(0, 0, W, H);
 })();
+// baş üstü: can (takım rengi çerçeve), ince mana, 5 öfke noktası
+function drawOverhead(f) {
+  const x = f.A.x + f.A.off * f.A.face, w = Math.round(40 + 74 * f.sc), top = f.gy - 372 * f.sc - 14, l = x - w / 2;
+  const mine = f.side === 'player';
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,6,12,.82)'; ctx.fillRect(l - 2, top - 2, w + 4, 18);
+  ctx.fillStyle = '#2a0d12'; ctx.fillRect(l, top, w, 9);
+  const hp = f.hp / f.maxHp; ctx.fillStyle = hp > .5 ? (mine ? '#3fcf6a' : '#e0393f') : hp > .25 ? '#e8a23a' : '#ff3030';
+  ctx.fillRect(l, top, w * hp, 9);
+  ctx.fillStyle = '#0d1a33'; ctx.fillRect(l, top + 11, w, 3);
+  ctx.fillStyle = '#4f8cff'; ctx.fillRect(l, top + 11, w * f.mp / f.maxMp, 3);
+  ctx.strokeStyle = mine ? '#f2c14e' : '#b3202c'; ctx.lineWidth = 1.5; ctx.strokeRect(l - 2, top - 2, w + 4, 18);
+  for (let i = 0; i < FURY_HITS; i++) { // öfke noktaları; mod hazırsa hepsi yanar
+    const on = f.furyReady || i < f.fury, px = x + (i - 2) * 9;
+    ctx.fillStyle = on ? (f.furyReady ? '#ff3a1a' : '#e07a3a') : 'rgba(60,40,40,.85)';
+    ctx.beginPath(); ctx.arc(px, top + 22, 3, 0, 7); ctx.fill();
+  }
+  ctx.restore();
+}
 function drawTorch(x, t) {
   const fl = Math.sin(t / 90 + x) * .5 + Math.sin(t / 37 + x * 2) * .3;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -946,13 +966,20 @@ function frame(t) {
   const sk = Math.max(0, 1 - (t - shakeT) / 350) * shakeMag;
   if (sk > 0) ctx.translate(rnd(-sk, sk), rnd(-sk, sk));
   ctx.drawImage(bg, 0, 0);
-  drawTorch(150, t); drawTorch(1130, t);
+  for (const x of TORCH_X) drawTorch(x, t);
   if (F) {
     for (const f of F.list) Rig.update(f.A, dt * SPD);
     // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
     const ring = (f, col) => { if (!f || !isAlive(f)) return; ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = .75 + Math.sin(t / 200) * .2; ctx.beginPath(); ctx.ellipse(f.A.x + f.A.off * f.A.face, f.gy + 4, 78 * f.sc, 16 * f.sc, 0, 0, 7); ctx.stroke(); ctx.restore(); };
     if (myTurn() && S2.waiting) { ring(S2.foe, '#ff5a5a'); ring(S2.ally, '#4be38a'); }
     skBar.classList.toggle('show', myTurn() && S2.waiting && !S2.busy);
+    const cu = S2.cur; // sırası gelen: ayağının altında parlayan halka
+    if (cu && !S2.over && isAlive(cu)) {
+      const x = cu.A.x + cu.A.off * cu.A.face, a = .55 + Math.sin(t / 220) * .2, col = cu.side === 'player' ? '242,193,78' : '255,90,90';
+      ctx.save(); const g = ctx.createRadialGradient(x, cu.gy, 4, x, cu.gy, 95 * cu.sc);
+      g.addColorStop(0, `rgba(${col},${a * .5})`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(x, cu.gy + 2, 95 * cu.sc, 20 * cu.sc, 0, 0, 7); ctx.fill(); ctx.restore();
+    }
     const order = F.list.slice().sort((a, b) => (a.gy - b.gy) || (Math.abs(a.A.off) - Math.abs(b.A.off)));
     for (const f of order) {
       const gy = f.gy, s = S * f.sc, fx0 = f.A.x + f.A.off * f.A.face;
@@ -977,10 +1004,11 @@ function frame(t) {
         lctx.globalCompositeOperation = 'source-over'; ctx.drawImage(layer, 0, 0);
       } else Rig.draw(ctx, f.A, t, dt, f.A.x, gy, s, fx);
     }
+    for (const f of F.list) if (isAlive(f)) drawOverhead(f);
     // sırası gelenin başının üstünde ok (takım savaşında kimin oynadığı görünsün)
     const c = S2.cur;
     if (c && !S2.over && F.list.length > 2) {
-      const x = c.A.x + c.A.off * c.A.face, y = c.gy - 345 * c.sc + Math.sin(t / 160) * 5;
+      const x = c.A.x + c.A.off * c.A.face, y = c.gy - 372 * c.sc - 30 + Math.sin(t / 160) * 5;
       ctx.fillStyle = c.side === 'player' ? '#f2c14e' : '#ff5a5a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(x - 13, y - 14); ctx.lineTo(x + 13, y - 14); ctx.lineTo(x, y + 2); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
@@ -1836,7 +1864,7 @@ function pickTarget(t) {
 /* ---------- HUD ---------- */
 function buildHUD() {
   for (const [el, team] of [[$('teamL'), F.me.team], [$('teamR'), otherTeam(F.me.team)]]) {
-    el.innerHTML = ''; el.classList.toggle('many', F[team].length > 1); el.classList.toggle('crowd', F[team].length > 3);
+    el.innerHTML = ''; const N = Math.max(F.A.length, F.B.length); el.classList.toggle('many', N > 1); el.classList.toggle('crowd', N > 3); // iki taraf hep aynı boyda
     for (const f of F[team]) {
       const u = document.createElement('div'); u.className = 'unit' + (el.id === 'teamR' ? ' right' : ''); f.ui = u;
       u.innerHTML = `<canvas class="portrait" width="96" height="96"></canvas><div class="info"><div class="name"><span class="lv" title="Oyuncu seviyesi ${f.lvl}, ekipman ortalaması ${gearLevel(f.gear)}">Sv ${f.lvl}</span><span class="nm"></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="chips"></div></div>`;
