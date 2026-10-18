@@ -729,7 +729,8 @@ function frame(t) {
    Binaların işini önlerindeki karakterler (NPC) görür; karakterle konuşunca ekranı açılır.
    ===================================================================== */
 const SV = $('sv'), sctx = SV.getContext('2d'), SW = 1280, SH = 520, HS = .62;
-const WALK_RATE = 1.8; // yürüme temposu (1 = savaştaki yürüyüş); hız buna göre hesaplanır
+// yürüme: tempo (1 = savaştaki yürüyüş) ve adım boyu; hız ikisinden hesaplanır (2 kat hız = 1.4 adım × 2.57 tempo)
+const WALK_RATE = 2.57, STRIDE = 1.4;
 let Y0 = 412, Y1 = 505; // zemin şeridi: arka kenar (kapılar) ve ön kenar; boyalı sahnede resme göre değişir
 const scaleAt = y => (SCENES[me.sc].hs || HS) * (.82 + .18 * (y - Y0) / (Y1 - Y0)); // arkadaki küçük görünür
 const BNAME = { hall: 'Belediye', mine: 'Altın Madeni', alch: 'Simyacı', smith: 'Demirci', arena: 'Arena' };
@@ -803,7 +804,7 @@ async function streetActor() {
   me.key = key;
   try { await Promise.all([Rig.load(chosen), Rig.loadTiers(chosen)]); } catch (e) { return; }
   if (me.key !== key) return;
-  me.A = Rig.actor(chosen, me.x, me.face, g);
+  me.A = Rig.actor(chosen, me.x, me.face, g); me.A.stride = STRIDE;
 }
 // sahne karakterleri: sahneye girilince yüklenir
 function npcActor(n) {
@@ -839,7 +840,7 @@ function syncOthers() {
     const gear = cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(pr.g) ? pr.g[i] : 1]))), key = pr.cls + ITEMS.map(k => gear[k]).join('');
     if (o.key !== key) {
       o.key = key; o.A = null;
-      Promise.all([Rig.load(pr.cls), Rig.loadTiers(pr.cls)]).then(() => { if (o.key === key) o.A = Rig.actor(pr.cls, o.x, o.face, gear); }).catch(() => {});
+      Promise.all([Rig.load(pr.cls), Rig.loadTiers(pr.cls)]).then(() => { if (o.key === key) { o.A = Rig.actor(pr.cls, o.x, o.face, gear); o.A.stride = STRIDE; } }).catch(() => {});
     }
   }
   for (const k of [...others.keys()]) if (!seen.has(k)) { others.delete(k); if (sel === k) sel = null; }
@@ -910,9 +911,9 @@ function drawStreet(t, dt) {
   const S = scene();
   // yürüme hızı adıma bağlı: yere basan ayak (footF/footB = ±24·sin) ne kadar geri giderse beden o kadar ilerler,
   // böylece ayak yerde kaymaz; ortalama hız yarım döngüde (450 ms) 48 birimdir. Arkada (küçük) adım da kısalır.
-  const avg = 48 * HS / 450 * WALK_RATE * dt;
+  const avg = 48 * STRIDE * HS / 450 * WALK_RATE * dt;
   let sp = avg;
-  if (me.A && me.A.cur === 'walk') { const an = me.A.ANIMS.walk, p = (me.A.at % an.dur) / an.dur; sp = 24 * 2 * Math.PI / an.dur * Math.abs(Math.cos(p * 2 * Math.PI)) * HS * WALK_RATE * dt; }
+  if (me.A && me.A.cur === 'walk') { const an = me.A.ANIMS.walk, p = (me.A.at % an.dur) / an.dur; sp = 24 * STRIDE * 2 * Math.PI / an.dur * Math.abs(Math.cos(p * 2 * Math.PI)) * HS * WALK_RATE * dt; }
   sp *= scaleAt(me.y) / HS;
   let dx = keys.r - keys.l, dy = keys.d - keys.u;
   if (trans) dx = dy = 0;

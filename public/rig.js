@@ -221,7 +221,8 @@ function poseOf(A, t) {
   if (A.cur === 'idle') Object.assign(P, { crouch: 4 + br * 1.5, uaS: B.uaS + br * 2, uaK: B.uaK - br * 1.5, main: B.main + br * 2, head: br });
   else if (A.cur === 'walk') {
     const s = Math.sin(p * Math.PI * 2), c = Math.cos(p * Math.PI * 2);
-    Object.assign(P, { lean: 6, footF: 16 + 24 * s, footB: -18 - 24 * s, liftF: Math.max(0, c) * 14, liftB: Math.max(0, -c) * 14, uaS: B.uaS - 6 * s, crouch: 6 + Math.abs(s) * 4, head: -2 });
+    const k = A.stride || 1; // adım boyu çarpanı (kasabada uzun adım)
+    Object.assign(P, { lean: 6, footF: 16 + 24 * k * s, footB: -18 - 24 * k * s, liftF: Math.max(0, c) * 14 * k, liftB: Math.max(0, -c) * 14 * k, uaS: B.uaS - 6 * s, crouch: 6 + Math.abs(s) * 4, head: -2 });
   } else Object.assign(P, keyPose(A, an.keys, p));
   return P;
 }
