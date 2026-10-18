@@ -347,7 +347,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 #battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{display:none}
 #battleScreen .lower{display:block} #battleScreen .log{height:92px;overflow:hidden;padding:8px 12px} #battleScreen .log ul{font-size:13px}
 html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body{overflow:hidden}
-#battleScreen .skills{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%) scale(.96);z-index:4;width:min(54%,600px);gap:6px;padding:7px;
+#battleScreen .skills{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%) scale(.96);z-index:4;width:min(46%,600px);gap:6px;padding:7px;
   background:rgba(14,11,20,.86);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;font-size:clamp(9px,1vw,13px)}
 #battleScreen .skills.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
 #battleScreen .skills.low{top:90.5%}
@@ -371,17 +371,57 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
   #battleScreen .lower{display:none}
   .hud{font-size:10px;padding:1% 1.4%} .hud .portrait{width:34px;height:34px}
   .lower{display:block} .log{display:none}
-  html:has(#battleScreen:not([hidden])) .wrap{padding:0}
-  html:has(#battleScreen:not([hidden])) .topbar{position:fixed;left:0;top:0;bottom:0;width:44px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0;z-index:30;min-height:0}
-  html:has(#battleScreen:not([hidden])) .topbar .plaque,html:has(#battleScreen:not([hidden])) #accBtn,html:has(#battleScreen:not([hidden])) #helpBtn{display:none}
-  html:has(#battleScreen:not([hidden])) .tright{flex-direction:column}
-  #battleScreen{height:100dvh;align-items:center;padding-left:44px} #battleScreen .arena{width:min(calc(100dvh * 16 / 9),calc(100vw - 52px));border-radius:0;border:0}
   #battleScreen .skills,#battleScreen .skills.low{top:91%;width:62%;gap:3px;padding:3px;font-size:9px}
   #battleScreen .skill{flex-direction:row;justify-content:center;gap:3px;padding:3px 2px} #battleScreen .skill svg{width:16px;height:16px;flex:none}
   #battleScreen .skill .nm{font-size:9px;text-align:left} #battleScreen .skill .cost,#battleScreen .skill .key{display:none}
 }
 @media (max-height:520px){#mPanel .mslot{font-size:11px;padding:1px 4px} #mPanel .mteam{gap:2px} #mPanel .mcard{padding:5px;gap:4px} #mPanel .mhead{font-size:12px} #mPanel .mteam b{font-size:11px} #mPanel .mteam .btn,#mPanel .mact .btn{font-size:11px;padding:.2em .6em} #mPanel .lnote{display:none}}
 #mkModes[hidden],#mkGo[hidden]{display:none}
+/* ===== savaş: tam ekran arena, her şey içinde ===== */
+html:has(#battleScreen:not([hidden])) .topbar{display:none}
+html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
+#battleScreen:not([hidden]){position:fixed;inset:0;z-index:20;display:grid;place-items:center;width:100vw;height:100dvh;margin:0;padding:0;background:#07060b}
+#battleScreen .arena{width:min(100vw,calc(100dvh * 16 / 9));border:0;border-radius:0;box-shadow:none;container-type:inline-size}
+#battleScreen .lower,#battleScreen .hint,#teamL,#teamR{display:none}
+#battleScreen .hud{position:absolute;inset:0 0 auto 0;justify-content:center;padding:.8% 0;background:none;border:0;font-size:clamp(9px,1.05cqw,16px)}
+.bctl{position:absolute;top:1.4%;display:flex;gap:6px;z-index:7} .bctl.l{left:1.2%} .bctl.r{right:1.2%}
+.bctl .tbtn:not([aria-pressed="true"]),.bctl .back{background:rgba(14,11,20,.75)}
+.bset{position:absolute;top:calc(100% + 6px);right:0;display:flex;flex-direction:column;gap:6px;padding:8px;min-width:170px;background:rgba(14,11,20,.95);border:1px solid var(--line);border-radius:6px}
+.bset[hidden]{display:none}
+.bset .tbtn{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:auto;min-height:34px;padding:4px 10px;text-transform:none} .bset .tbtn::after{content:attr(title);font-size:13px;font-weight:700}
+#battleScreen .log{display:block;position:absolute;left:1.2%;top:calc(1.4% + 50px);width:28%;max-height:24%;overflow:hidden;z-index:3;pointer-events:none;
+  background:linear-gradient(rgba(10,8,16,.55),rgba(10,8,16,0));border:0;border-radius:4px;padding:.4em .6em;font-size:clamp(9px,.95cqw,13px)}
+#battleScreen .log h3{display:none} #battleScreen .log ul{font-size:1em;gap:.2em} #battleScreen .log li:nth-child(n+5){display:none}
+#battleScreen .log li{text-shadow:0 1px 2px #000} #battleScreen .log li:nth-child(3){opacity:.75} #battleScreen .log li:nth-child(4){opacity:.5}
+/* kahraman plakası */
+.plates{position:absolute;inset:0;pointer-events:none;z-index:2}
+.plate{--pc:var(--gold);position:absolute;transform:translate(-50%,-100%);font-size:clamp(7px,calc(var(--s,1) * 1cqw),16px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
+  background:rgba(8,6,12,.8);border:1px solid var(--pc);border-radius:.45em;pointer-events:auto;cursor:pointer;white-space:nowrap;transition:box-shadow .2s}
+.plate .portrait{width:2.9em;height:2.9em;border-width:1px;border-radius:.3em;box-shadow:none;flex:none}
+.plate .pb{display:flex;flex-direction:column;gap:.16em;width:6.6em;min-width:0}
+.plate .pn{font-size:.72em;font-weight:700;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #000;line-height:1.1} .plate .pn b{color:var(--gold);font-family:var(--font-display)}
+.plate .bar{height:.85em;border-radius:.15em} .plate .bar span{font-size:.62em} .plate .bar.mp{height:.32em}
+.plate.ally .bar.hp i{background:linear-gradient(#8af5a8,#33b85c 55%,#1f7a3c)}
+.plate .fz{display:flex;align-items:center;gap:.22em;height:.55em}
+.plate .fz > i{width:.5em;height:.5em;border-radius:50%;background:#3a2a2a;flex:none} .plate .fz > i.on{background:#e07a3a}
+.plate.fury .fz > i{background:#ff3a1a;box-shadow:0 0 .3em #ff3a1a} .plate.fury{border-color:#ff5a2a}
+.plate .st{font-style:normal;display:flex;gap:.3em;margin-left:.2em;font-size:.55em;font-weight:800;text-transform:uppercase} .plate .st i{font-style:normal}
+.plate.cur{box-shadow:0 0 0 1px var(--pc),0 0 1em var(--pc)}
+.plate.tgt{outline:2px solid #ff5a5a;outline-offset:1px} .plate.atgt{outline:2px solid #4be38a;outline-offset:1px}
+.plate.dead{display:none}
+/* savaşta açılan pencereler: ortada, ekranın yarısı */
+html:has(#battleScreen:not([hidden])) .guide.insp .gc.ic{width:max(50vw,min(720px,96vw));height:max(50vh,min(440px,94vh))}
+html:has(#battleScreen:not([hidden])) #inspCv{display:none}
+html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5fr) minmax(0,1fr)}
+#battleScreen .overlay{background:rgba(6,5,10,.45);z-index:8}
+#battleScreen .overlay .ocard{width:50%;min-height:50%;max-width:94%;justify-content:center;background:var(--panel);border:1px solid var(--gold-deep);border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.7)}
+@media (max-height:520px){
+  .bctl .tbtn,.bctl .back{height:30px;min-width:30px;width:auto} .bctl .back{width:30px}
+  .bset{min-width:120px;padding:6px;gap:4px} .bset .tbtn{min-height:28px;padding:2px 8px} .bset .tbtn::after{font-size:11px}
+  #battleScreen .log{top:calc(1.4% + 36px);font-size:9px} #battleScreen .log li:nth-child(n+3){display:none}
+  .plate{font-size:clamp(6.5px,calc(var(--s,1) * 1.15cqw),12px)}
+  #battleScreen .overlay .ocard{width:70%;min-height:60%;padding:12px}
+}
 </style>
 
 <div class="rotate" id="rotate" role="dialog" aria-labelledby="rotT">
@@ -542,6 +582,10 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
         <div class="team right" id="teamR"></div>
       </div>
       <canvas id="cv"></canvas>
+      <div class="plates" id="plates"></div>
+      <div class="log"><h3>SAVAŞ GÜNLÜĞÜ</h3><ul id="log"></ul></div>
+      <div class="bctl l" id="bctlL"></div>
+      <div class="bctl r" id="bctlR"><button class="tbtn" id="setBtn" type="button" aria-label="Ayarlar" title="Ayarlar" aria-expanded="false" aria-controls="bset"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button><div class="bset" id="bset" hidden></div></div>
       <div class="skills" id="skills" aria-label="Yetenekler"></div>
       <div class="overlay" id="over" hidden>
         <div class="ocard">
@@ -554,9 +598,7 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
         </div>
       </div>
     </div>
-    <div class="lower">
-      <div class="log"><h3>SAVAŞ GÜNLÜĞÜ</h3><ul id="log"></ul></div>
-    </div>
+
     <p class="hint">Klavye: 1–5 tuşları yetenekleri kullanır. Her tur 15 saniye sürer; süre biterse sıra rakibe geçer. Sağ üstteki düğme savaşı 2× hızlandırır.</p>
   </section>
 </div>
@@ -721,25 +763,6 @@ const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
   g = c.createRadialGradient(640, 380, 300, 640, 380, 820); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.65)');
   c.fillStyle = g; c.fillRect(0, 0, W, H);
 })();
-// baş üstü: can (takım rengi çerçeve), ince mana, 5 öfke noktası
-function drawOverhead(f) {
-  const x = f.A.x + f.A.off * f.A.face, w = Math.round(40 + 74 * f.sc), top = f.gy - 372 * f.sc - 14, l = x - w / 2;
-  const mine = f.side === 'player';
-  ctx.save();
-  ctx.fillStyle = 'rgba(8,6,12,.82)'; ctx.fillRect(l - 2, top - 2, w + 4, 18);
-  ctx.fillStyle = '#2a0d12'; ctx.fillRect(l, top, w, 9);
-  const hp = f.hp / f.maxHp; ctx.fillStyle = hp > .5 ? (mine ? '#3fcf6a' : '#e0393f') : hp > .25 ? '#e8a23a' : '#ff3030';
-  ctx.fillRect(l, top, w * hp, 9);
-  ctx.fillStyle = '#0d1a33'; ctx.fillRect(l, top + 11, w, 3);
-  ctx.fillStyle = '#4f8cff'; ctx.fillRect(l, top + 11, w * f.mp / f.maxMp, 3);
-  ctx.strokeStyle = mine ? '#f2c14e' : '#b3202c'; ctx.lineWidth = 1.5; ctx.strokeRect(l - 2, top - 2, w + 4, 18);
-  for (let i = 0; i < FURY_HITS; i++) { // öfke noktaları; mod hazırsa hepsi yanar
-    const on = f.furyReady || i < f.fury, px = x + (i - 2) * 9;
-    ctx.fillStyle = on ? (f.furyReady ? '#ff3a1a' : '#e07a3a') : 'rgba(60,40,40,.85)';
-    ctx.beginPath(); ctx.arc(px, top + 22, 3, 0, 7); ctx.fill();
-  }
-  ctx.restore();
-}
 function drawTorch(x, t) {
   const fl = Math.sin(t / 90 + x) * .5 + Math.sin(t / 37 + x * 2) * .3;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -1004,14 +1027,7 @@ function frame(t) {
         lctx.globalCompositeOperation = 'source-over'; ctx.drawImage(layer, 0, 0);
       } else Rig.draw(ctx, f.A, t, dt, f.A.x, gy, s, fx);
     }
-    for (const f of F.list) if (isAlive(f)) drawOverhead(f);
-    // sırası gelenin başının üstünde ok (takım savaşında kimin oynadığı görünsün)
-    const c = S2.cur;
-    if (c && !S2.over && F.list.length > 2) {
-      const x = c.A.x + c.A.off * c.A.face, y = c.gy - 372 * c.sc - 30 + Math.sin(t / 160) * 5;
-      ctx.fillStyle = c.side === 'player' ? '#f2c14e' : '#ff5a5a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x - 13, y - 14); ctx.lineTo(x + 13, y - 14); ctx.lineTo(x, y + 2); ctx.closePath(); ctx.fill(); ctx.stroke();
-    }
+    placePlates();
   }
   ctx.globalCompositeOperation = 'lighter';
   for (let i = projs.length - 1; i >= 0; i--) {
@@ -1596,8 +1612,19 @@ async function pick(key) {
 }
 // seçim ekranı iki kipte: arena (yetenekler + savaş düğmesi) ve demirci (ekipman paneli)
 let mode = 'arena';
+// savaşta üst şerit gizlenir: düğmeler arenanın köşelerine taşınır (ses, müzik, yardım "Ayarlar" içinde)
+const CTL = ['backBtn', 'speedBtn', 'fsBtn', 'sfxBtn', 'musBtn', 'helpBtn'].map(id => { const b = document.getElementById(id), m = document.createComment(id); b.before(m); return [b, m]; });
+function placeCtl(battle) {
+  const [back, speed, fs, sfx, mus, help] = CTL.map(c => c[0]);
+  if (battle) { $('bctlL').append(back); $('setBtn').before(speed, fs); $('bset').append(sfx, mus, help); }
+  else { for (const [b, m] of CTL) m.after(b); $('bset').hidden = true; $('setBtn').setAttribute('aria-expanded', 'false'); }
+}
+$('setBtn').addEventListener('click', () => { const o = $('bset').hidden; $('bset').hidden = !o; $('setBtn').setAttribute('aria-expanded', o); });
+// savaşa girerken tam ekran (tıklamayla girildiyse; tarayıcı izin vermezse sessizce geçer)
+function autoFs() { if (canFs && !document.fullscreenElement && navigator.userActivation && navigator.userActivation.isActive) goLandscape(); }
 function showScreen(name) {
   screen = name;
+  placeCtl(name === 'battle'); if (name === 'battle') { try { autoFs(); } catch (e) {} }
   $('townScreen').hidden = name !== 'town'; $('selectScreen').hidden = name !== 'select'; $('battleScreen').hidden = name !== 'battle'; $('lobbyScreen').hidden = name !== 'lobby';
   $('selectScreen').dataset.mode = mode;
   $('backBtn').hidden = name === 'lobby';
@@ -1795,16 +1822,23 @@ function sizePicker(el, get, set) {
 }
 let battleMode = '1v1';
 try { if (MODES[localStorage.getItem('sa.mode')]) battleMode = localStorage.getItem('sa.mode'); } catch (e) {}
-// dizilim: herkes aynı zemin çizgisinde; en arkadaki duvara yakın, öndekiler ortaya doğru.
-// boyutu maçtaki EN KALABALIK takım belirler; en arkadaki en öndekinden yalnızca %10 küçük
-const WALL = 120; // duvardan boşluk (1280 genişlikte)
-function lineSpot(n, slot, N) {
-  const base = SIZE[N], x0 = WALL + 40 * base;           // duvar dibindeki yer
-  const step = n > 1 ? Math.min(205 * base, (545 - x0) / (n - 1)) : 0; // öndeki ortaya en fazla 545'e kadar gelir
-  const d = n - 1 - slot;                                // duvardan kaç sıra ileride (slot 0 en önde)
-  return { x: x0 + d * step, s: base * (n > 1 ? .9 + .1 * d / (n - 1) : 1) }; // duvar dibindeki %10 küçük
+// dizilim: her takım hilal (ay) şeklinde durur, içi rakibe bakar. Ortadaki duvarın dibinde,
+// uçlar öne (ortaya) doğru; biri biraz arkada (yukarıda), biri önde (aşağıda). Kaç kişi varsa ona göre açılır.
+// boyutu maçtaki EN KALABALIK takım belirler; arkadaki öndekinden en fazla %10 küçük
+// soldaki takım için [x, ayak y] (sağdaki aynası). slot 0 önde-aşağıda; hilal duvara doğru kıvrılıp yukarıda öne açılır.
+// aynı hizaya iki kahraman gelmesin diye hilal hafif eğik
+const CRESCENT = {
+  1: [[200, 592]],
+  2: [[345, 628], [215, 548]],
+  3: [[425, 642], [190, 590], [330, 528]],
+  4: [[470, 648], [250, 612], [195, 552], [410, 522]],
+  5: [[510, 650], [310, 628], [170, 590], [250, 552], [430, 522]],
+};
+function arcSpot(n, slot, N) {
+  const pts = CRESCENT[n], [x, y] = pts[slot], ys = pts.map(p => p[1]), lo = Math.min(...ys), hi = Math.max(...ys);
+  return { x, y, s: SIZE[N] * (hi > lo ? .9 + .1 * (y - lo) / (hi - lo) : 1) }; // en arkadaki %10 küçük
 }
-const SIZE = { 1: 1, 2: .86, 3: .74, 4: .64, 5: .52 };
+const SIZE = { 1: 1.15, 2: 1, 3: .9, 4: .82, 5: .76 };
 // kalabalık takıma güç azaltma: (az / çok)^0.55 oranında can ve hasar (1v2: %68, 1v5: %41, 4v5: %88)
 const handicap = (mine, theirs) => mine > theirs ? Math.pow(theirs / mine, .55) : 1;
 const isAlive = f => f.hp > 0;
@@ -1830,8 +1864,8 @@ function newBattle(cfg) {
   const N = Math.max(F.A.length, F.B.length);
   for (const f of list) {
     f.side = f.team === F.me.team ? 'player' : 'enemy';
-    const { x, s } = lineSpot(F[f.team].length, f.slot, N), left = f.side === 'player';
-    f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = GY; f.sc = f.A.sc = s;
+    const { x, y, s } = arcSpot(F[f.team].length, f.slot, N), left = f.side === 'player';
+    f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = y; f.sc = f.A.sc = s;
     const k = handicap(F[f.team].length, F[otherTeam(f.team)].length);
     if (k < 1) { f.hp = f.maxHp = Math.round(f.maxHp * k); f.dmgMul *= k; f.hand = k; }
   }
@@ -1862,25 +1896,36 @@ function pickTarget(t) {
 }
 
 /* ---------- HUD ---------- */
+// her kahramanın başının üstünde tek plaka: portre (basınca ekipman/değerler), can, mana, öfke noktaları
 function buildHUD() {
-  for (const [el, team] of [[$('teamL'), F.me.team], [$('teamR'), otherTeam(F.me.team)]]) {
-    el.innerHTML = ''; const N = Math.max(F.A.length, F.B.length); el.classList.toggle('many', N > 1); el.classList.toggle('crowd', N > 3); // iki taraf hep aynı boyda
-    for (const f of F[team]) {
-      const u = document.createElement('div'); u.className = 'unit' + (el.id === 'teamR' ? ' right' : ''); f.ui = u;
-      u.innerHTML = `<canvas class="portrait" width="96" height="96"></canvas><div class="info"><div class="name"><span class="lv" title="Oyuncu seviyesi ${f.lvl}, ekipman ortalaması ${gearLevel(f.gear)}">Sv ${f.lvl}</span><span class="nm"></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="chips"></div></div>`;
-      u.querySelector('.nm').textContent = f.name;
-      u.setAttribute('role', 'button'); u.tabIndex = 0; u.setAttribute('aria-label', (f.side === 'player' ? 'Takım arkadaşı: ' : 'Rakip: ') + f.name + ' (hedef seç)');
-      const col = f.side === 'player' ? glowOf(f.id) : '#c41a30', pc = u.querySelector('canvas'); pc.style.setProperty('--c', col);
-      Rig.portrait(pc, f.id, el.id === 'teamR' ? -1 : 1, col, f.gear);
-      pc.setAttribute('role', 'button'); pc.tabIndex = 0; pc.title = 'Ekipman ve değerler'; pc.setAttribute('aria-label', f.name + ': ekipman ve değerleri göster'); pc.classList.add('insp-open');
-      pc.addEventListener('click', e => { e.stopPropagation(); openInspect(f); });
-      pc.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openInspect(f); } });
-      u.addEventListener('click', () => pickTarget(f));
-      u.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickTarget(f); } });
-      el.appendChild(u);
-    }
+  $('teamL').innerHTML = $('teamR').innerHTML = '';
+  const box = $('plates'); box.innerHTML = '';
+  for (const f of F.list) {
+    const mine = f.side === 'player', u = document.createElement('div');
+    u.className = 'plate ' + (mine ? 'ally' : 'foe'); f.ui = u; u.style.setProperty('--s', f.sc);
+    u.innerHTML = `<canvas class="portrait" width="72" height="72"></canvas><div class="pb"><div class="pn"><b>Sv ${f.lvl}</b> <span></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i></div><div class="fz">${'<i></i>'.repeat(FURY_HITS)}<em class="st"></em></div></div>`;
+    u.querySelector('.pn span').textContent = f.name.replace(/^(Müttefik|Rakip) /, '');
+    u.title = f.name; u.setAttribute('role', 'button'); u.tabIndex = 0; u.setAttribute('aria-label', (mine ? 'Takım arkadaşı: ' : 'Rakip: ') + f.name + ' (hedef seç)');
+    const col = mine ? glowOf(f.id) : '#c41a30', pc = u.querySelector('canvas'); u.style.setProperty('--pc', mine ? '#f2c14e' : '#c41a30'); pc.style.setProperty('--c', col);
+    Rig.portrait(pc, f.id, mine ? 1 : -1, col, f.gear);
+    pc.setAttribute('role', 'button'); pc.tabIndex = 0; pc.title = 'Ekipman ve değerler'; pc.setAttribute('aria-label', f.name + ': ekipman ve değerleri göster'); pc.classList.add('insp-open');
+    pc.addEventListener('click', e => { e.stopPropagation(); openInspect(f); });
+    pc.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openInspect(f); } });
+    u.addEventListener('click', () => pickTarget(f));
+    u.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickTarget(f); } });
+    box.appendChild(u);
   }
 }
+// plakalar kahramanı izler (yakın dövüşte yürürken de)
+function placePlates() {
+  for (const f of F.list) {
+    const u = f.ui; if (!u) continue;
+    u.style.left = ((f.A.x + f.A.off * f.A.face) / W * 100) + '%';
+    u.style.top = ((f.gy - 362 * f.sc) / H * 100) + '%';
+  }
+}
+const statusChips = f => (f.shield ? `<i style="color:${f.shieldColor}">${f.shield >= 1 ? 'Kaçış' : 'Kalkan'}</i>` : '') + (f.rage ? '<i style="color:#ff5a3a">Öfke</i>' : '')
+  + (f.dot ? `<i style="color:${f.dot.color}">${f.dot.label} ${f.dot.turns}</i>` : '') + (f.stunned ? '<i style="color:#ffd27a">Sersem</i>' : '');
 const skBar = $('skills');
 function buildSkillButtons() {
   const el = $('skills'); el.innerHTML = '';
@@ -1906,9 +1951,10 @@ function updateHUD() {
   const mine = myTurn();
   for (const f of F.list) {
     const u = f.ui; if (!u) continue;
-    u.querySelector('.hp i').style.width = (f.hp / f.maxHp * 100) + '%'; u.querySelector('.hp span').textContent = `${f.hp} / ${f.maxHp}`;
-    u.querySelector('.mp i').style.width = (f.mp / f.maxMp * 100) + '%'; u.querySelector('.mp span').textContent = `${f.mp} / ${f.maxMp}`;
-    u.querySelector('.chips').innerHTML = chips(f);
+    u.querySelector('.hp i').style.width = (f.hp / f.maxHp * 100) + '%'; u.querySelector('.hp span').textContent = f.hp;
+    u.querySelector('.mp i').style.width = (f.mp / f.maxMp * 100) + '%';
+    u.querySelectorAll('.fz > i').forEach((d, i) => d.classList.toggle('on', f.furyReady || i < f.fury));
+    u.querySelector('.st').innerHTML = statusChips(f); u.classList.toggle('fury', f.furyReady);
     u.classList.toggle('dead', !isAlive(f)); u.classList.toggle('cur', S2.cur === f && !S2.over);
     u.classList.toggle('tgt', mine && S2.foe === f); u.classList.toggle('atgt', mine && S2.ally === f);
   }
