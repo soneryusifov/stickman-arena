@@ -770,23 +770,41 @@ const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
   g = c.createRadialGradient(640, 380, 300, 640, 380, 820); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.65)');
   c.fillStyle = g; c.fillRect(0, 0, W, H);
 })();
-// boyalı arena (assets/bg/battle.webp, 1672x941 ≈ 16:9): yüklenirse çizilen kale yerine geçer
+// boyalı arena (assets/bg/battle_unlit.webp, 1672x941 ≈ 16:9, ateşler sönük): yüklenirse çizilen kalenin yerine geçer;
+// ateşleri oyun canlı yakar. Yerler, yanan ve sönük resim karşılaştırılarak bulundu: [orta x, alt y, genişlik, yükseklik] (resim pikseli)
 let bgArt = false;
 (function () {
   const im = new Image();
   im.onload = () => { const c = bg.getContext('2d'); c.drawImage(im, 0, 0, W, H); bgArt = true; };
-  im.src = 'assets/bg/battle.webp?v=1';
+  im.src = 'assets/bg/battle_unlit.webp?v=1';
 })();
-// resimdeki mangalların titreşen ışığı
-const BRAZIER = [[32, 262], [1248, 262]];
-function drawBrazierGlow(t) {
+const FIRES = [
+  [47, 363, 70, 75], [1623, 364, 68, 81],                       // kenar mangalları
+  [707, 358, 38, 70], [975, 348, 40, 66],                        // kapının iki yanı
+  [89, 21, 12, 12], [1587, 21, 11, 12], [325, 69, 15, 16], [1347, 69, 14, 15], [963, 91, 17, 18], [709, 91, 19, 17],
+  [527, 95, 12, 13], [1150, 95, 11, 12], [206, 161, 10, 11], [1468, 161, 9, 10], [426, 185, 8, 11], [1246, 184, 8, 10], // tribün meşaleleri
+].map(([x, y, w, hh]) => [x * W / 1672, y * H / 941, w * W / 1672, hh * H / 941]);
+function drawFires(t) {
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  for (const [x, y] of BRAZIER) {
-    const fl = Math.sin(t / 90 + x) * .5 + Math.sin(t / 37 + x * 2) * .3;
-    const g = ctx.createRadialGradient(x, y, 4, x, y, 150 + fl * 14);
-    g.addColorStop(0, 'rgba(255,150,60,.28)'); g.addColorStop(1, 'rgba(255,90,20,0)');
-    ctx.fillStyle = g; ctx.fillRect(x - 170, y - 170, 340, 340);
-  }
+  FIRES.forEach(([x, y, w, hh], i) => {
+    const fl = Math.sin(t / 90 + i * 1.7) * .5 + Math.sin(t / 37 + i * 3.1) * .3 + Math.sin(t / 151 + i) * .2; // titreme
+    const big = hh > 30, R = (big ? 4.2 : 6) * Math.max(hh, 10) + fl * 6;
+    // çevreye vuran sıcak ışık
+    const g = ctx.createRadialGradient(x, y - hh * .4, 2, x, y - hh * .4, R);
+    g.addColorStop(0, `rgba(255,150,60,${big ? .42 : .3})`); g.addColorStop(.45, 'rgba(255,110,40,.12)'); g.addColorStop(1, 'rgba(255,80,20,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - R, y - hh * .4 - R, R * 2, R * 2);
+    // alev: dıştan içe kırmızı → sarı → beyaz, her katman ayrı salınır
+    const cols = ['rgba(255,70,20,.75)', 'rgba(255,140,30,.8)', 'rgba(255,210,90,.85)', 'rgba(255,248,210,.9)'];
+    for (let k = 0; k < 4; k++) {
+      const s = 1 - k * .22, sway = Math.sin(t / (70 + k * 23) + i * 2 + k) * w * .08, lift = hh * (.55 + .08 * fl) * s;
+      ctx.fillStyle = cols[k]; ctx.beginPath();
+      ctx.moveTo(x - w * .48 * s, y);
+      ctx.quadraticCurveTo(x - w * .5 * s, y - lift * .9, x + sway, y - lift * 1.9);       // sivri uç
+      ctx.quadraticCurveTo(x + w * .5 * s, y - lift * .9, x + w * .48 * s, y);
+      ctx.closePath(); ctx.fill();
+    }
+    if (big && Math.sin(t / 53 + i * 7) > .93) { parts.push({ x: x + rnd(-w * .3, w * .3), y: y - hh, vx: rnd(-20, 20), vy: rnd(-90, -50), life: 0, max: rnd(.4, .8), color: '#ffb347', size: rnd(1.5, 3), g: 0 }); } // kıvılcım
+  });
   ctx.restore();
 }
 function drawTorch(x, t) {
@@ -1015,7 +1033,7 @@ function frame(t) {
   const sk = Math.max(0, 1 - (t - shakeT) / 350) * shakeMag;
   if (sk > 0) ctx.translate(rnd(-sk, sk), rnd(-sk, sk));
   ctx.drawImage(bg, 0, 0);
-  if (bgArt) drawBrazierGlow(t); else for (const x of TORCH_X) drawTorch(x, t);
+  if (bgArt) drawFires(t); else for (const x of TORCH_X) drawTorch(x, t);
   if (F) {
     for (const f of F.list) Rig.update(f.A, dt * SPD);
     // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
