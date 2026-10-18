@@ -190,7 +190,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .unit.cur{background:rgba(242,193,78,.14);box-shadow:inset 0 0 0 1px rgba(242,193,78,.6)}
 .unit.tgt{box-shadow:inset 0 0 0 2px #ff5a5a} .unit.atgt{box-shadow:inset 0 0 0 2px #4be38a}
 .unit.dead{opacity:.4;filter:grayscale(.8)}
-.modes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px} .modes.three{grid-template-columns:repeat(4,1fr)} .modes.three button{font-size:13px;padding:.4em}
+.modes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px} .modes,.modes.three{grid-template-columns:auto repeat(5,1fr);gap:4px;align-items:center} .modes .mlab{font-size:12px;color:var(--muted);font-weight:700;padding-right:4px} .modes button{padding:.3em} .modes.three button{font-size:13px} #mkGo{align-self:flex-end;padding:.35em 1em;font-size:13px}
 .modes button:disabled{opacity:.45;cursor:not-allowed}
 .mlist{display:flex;flex-direction:column;gap:8px}
 .mcard{border:1px solid #2e2840;border-radius:4px;background:#100d17;padding:8px;display:flex;flex-direction:column;gap:6px}
@@ -349,6 +349,8 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   .skills{grid-template-columns:minmax(0,1fr);gap:4px;padding:4px;max-height:calc(100dvh - 50px)}
   .skill{flex-direction:row;justify-content:flex-start;gap:6px;padding:5px 6px;min-height:0} .skill svg{width:22px;height:22px;flex:none}
   .skill .nm{font-size:11.5px;text-align:left} .skill .cost{font-size:10px;margin-left:auto} .skill .key{display:none}
+@media (max-height:520px){#mPanel .mslot{font-size:11px;padding:1px 4px} #mPanel .mteam{gap:2px} #mPanel .mcard{padding:5px;gap:4px} #mPanel .mhead{font-size:12px} #mPanel .mteam b{font-size:11px} #mPanel .mteam .btn,#mPanel .mact .btn{font-size:11px;padding:.2em .6em} #mPanel .lnote{display:none}}
+#mkModes[hidden],#mkGo[hidden]{display:none}
 </style>
 
 <div class="rotate" id="rotate" role="dialog" aria-labelledby="rotT">
@@ -450,7 +452,8 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         </section>
         <section class="opanel players matches" id="mPanel" aria-labelledby="mT" hidden>
           <h3 id="mT">Takım maçı <small>lobidekilerle</small></h3>
-          <div class="modes three" role="group" aria-label="Maç kur"><button type="button" data-mk="1v2">1v2</button><button type="button" data-mk="1v3">1v3</button><button type="button" data-mk="1v4">1v4</button><button type="button" data-mk="1v5">1v5</button><button type="button" data-mk="2v2">2v2</button><button type="button" data-mk="3v3">3v3</button><button type="button" data-mk="4v4">4v4</button><button type="button" data-mk="4v5">4v5</button></div>
+          <div class="modes three" id="mkModes" role="radiogroup" aria-label="Maç kipi"></div>
+          <button class="btn" id="mkGo" type="button">Maç kur</button>
           <div id="mList" class="mlist"></div>
           <p class="lnote">Boş yerlere bot gelir. Kazanan takıma altın, EXP ve lig puanı.</p>
         </section>
@@ -492,7 +495,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         <dl class="stats" id="dStats"></dl>
         <div class="gear smith-only"><div class="gearhead"><span>Ekipman (her sınıfın kendi eşyaları)</span><b id="gold"></b></div><div class="gearlist" id="gearList"></div></div>
         <div class="modes arena-only" id="modes" role="radiogroup" aria-label="Savaş kipi">
-          <button type="button" role="radio" data-mode="1v1">1v1</button><button type="button" role="radio" data-mode="1v2">1v2</button><button type="button" role="radio" data-mode="1v3">1v3</button><button type="button" role="radio" data-mode="1v4">1v4</button><button type="button" role="radio" data-mode="1v5">1v5</button><button type="button" role="radio" data-mode="2v2">2v2</button><button type="button" role="radio" data-mode="3v3">3v3</button><button type="button" role="radio" data-mode="4v4">4v4</button><button type="button" role="radio" data-mode="4v5">4v5</button>
+          
         </div>
         <button class="btn arena-only" id="choose" type="button" disabled>Ekipmanlar hazırlanıyor…</button>
         <p class="loadnote arena-only" id="modeNote"></p>
@@ -1681,20 +1684,20 @@ setInterval(() => { // depo göstergesi
 }, 1000);
 $('choose').addEventListener('click', () => startArena());
 // savaş kipi: 1v1, 1v2, 2v2, 3v3 (takım arkadaşları ve rakipler bot)
-const MODE_TXT = { '1v1': 'Rakibin diğer 14 sınıftan rastgele seçilir ve lig seviyende gelir. Kazanınca lig puanı kazanır, kaybedince kaybedersin.',
-  '1v2': 'Tek başına iki rakibe karşı. Kalabalık takımın canı ve hasarı azaltılır; kazanırsan ödül büyük.',
-  '1v3': 'Tek başına üç rakibe karşı. Rakiplerin canı ve hasarı azaltılır; ödül büyük.',
-  '1v4': 'Tek başına dört rakibe karşı. Zor ama ödülü çok büyük.',
-  '1v5': 'Tek başına beş rakibe karşı. En zor kip; ödülü en büyük.',
-  '4v4': 'Sen ve üç bot arkadaş, dört rakibe karşı.',
-  '4v5': 'Sen ve üç bot arkadaş, beş rakibe karşı. Kalabalık takım biraz zayıflatılır.',
-  '2v2': 'Sen ve bir bot arkadaş, iki rakibe karşı. Hedefini rakibe ya da arkadaşına dokunarak seç.',
-  '3v3': 'Sen ve iki bot arkadaş, üç rakibe karşı. Takım savaşında yenilgi lig puanı düşürmez.' };
+const MODE_TXT = { '1v1': 'Rakibin diğer 14 sınıftan rastgele seçilir ve lig seviyende gelir. Kazanınca lig puanı kazanır, kaybedince kaybedersin.' };
+const modeText = m => {
+  if (MODE_TXT[m]) return MODE_TXT[m];
+  const [a, b] = MODES[m], ally = a > 1 ? `Sen ve ${a - 1} bot arkadaş` : 'Tek başına', foe = `${b} rakibe karşı`;
+  const bal = a === b ? 'Takımlar eşit.' : a < b ? 'Rakipler kalabalık; canları ve hasarları azaltılır, ödül büyük.' : 'Takımın kalabalık; sizin canınız ve hasarınız azaltılır.';
+  return `${ally}, ${foe}. ${bal} Takım savaşında yenilgi lig puanı düşürmez.`;
+};
+let paintModes = null;
 function renderModes() {
-  document.querySelectorAll('#modes [data-mode]').forEach(b => b.setAttribute('aria-checked', b.dataset.mode === battleMode));
-  $('modeNote').textContent = MODE_TXT[battleMode];
+  if (!paintModes) paintModes = sizePicker($('modes'), () => battleMode, m => { battleMode = m; try { localStorage.setItem('sa.mode', battleMode); } catch (e) {} renderModes(); });
+  paintModes();
+  $('modeNote').textContent = modeText(battleMode);
 }
-document.querySelectorAll('#modes [data-mode]').forEach(b => b.addEventListener('click', () => { battleMode = b.dataset.mode; try { localStorage.setItem('sa.mode', battleMode); } catch (e) {} renderModes(); }));
+
 function toSelect() { S2.over = true; S2.waiting = false; S2.gid++; openSelect('arena'); }
 $('backBtn').addEventListener('click', () => {
   if (screen === 'battle' && (pvp || lastDuel)) { pvpQuit(); return; }
@@ -1709,7 +1712,18 @@ $('change').addEventListener('click', toSelect);
    seçmezse en öndeki rakip / en yaralı arkadaş hedeflenir. Boş yerleri botlar doldurur.
    F.list'in sırası her ekranda aynıdır (çok oyunculu eşitleme dizine dayanır); kendi takımın hep solda görünür.
    ===================================================================== */
-const MODES = { '1v1': [1, 1], '1v2': [1, 2], '1v3': [1, 3], '1v4': [1, 4], '1v5': [1, 5], '2v2': [2, 2], '3v3': [3, 3], '4v4': [4, 4], '4v5': [4, 5] };
+const MODES = {}; // 1v1'den 5v5'e her kombinasyon: [benim takımım, rakip takım]
+for (let a = 1; a <= 5; a++) for (let b = 1; b <= 5; b++) MODES[a + 'v' + b] = [a, b];
+// kip seçici: iki satır (senin takımın 1-5, rakip 1-5) → 25 kombinasyonun hepsi
+function sizePicker(el, get, set) {
+  el.innerHTML = [['a', 'Takımın'], ['b', 'Rakip']].map(([k, t]) => `<span class="mlab">${t}</span>` +
+    [1, 2, 3, 4, 5].map(n => `<button type="button" role="radio" data-${k}="${n}">${n}</button>`).join('')).join('');
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.disabled) return;
+    let [a, c] = MODES[get()]; if (b.dataset.a) a = +b.dataset.a; else c = +b.dataset.b; set(a + 'v' + c);
+  });
+  return () => { const [a, c] = MODES[get()]; el.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', b.dataset.a ? +b.dataset.a === a : +b.dataset.b === c)); };
+}
 let battleMode = '1v1';
 try { if (MODES[localStorage.getItem('sa.mode')]) battleMode = localStorage.getItem('sa.mode'); } catch (e) {}
 // dizilim [x (soldaki takım), y kayması, ölçek]: öndeki büyük ve aşağıda, arkadakiler küçük ve yukarıda
@@ -2570,7 +2584,8 @@ function checkMatch() {
 function renderMatches() {
   checkMatch();
   const box = $('mList'); if (!box || $('mPanel').hidden) return;
-  document.querySelectorAll('#mPanel [data-mk]').forEach(b => { b.disabled = !!myMatch || !!pvp || !room; });
+  $('mkGo').disabled = !!myMatch || !!pvp || !room;
+  $('mkModes').hidden = $('mkGo').hidden = !!myMatch; // maçtayken kip seçici gereksiz: yer açılsın
   box.innerHTML = '';
   const list = openMatches();
   if (!list.length) { box.innerHTML = '<p class="lnote">Şu an açık maç yok. Yukarıdan bir kip seçip maç kur; diğerleri katılabilir.</p>'; return; }
@@ -2604,7 +2619,10 @@ function renderMatches() {
     box.appendChild(card);
   }
 }
-document.querySelectorAll('#mPanel [data-mk]').forEach(b => b.addEventListener('click', () => createMatch(b.dataset.mk)));
+let mkMode = '2v2';
+const paintMk = sizePicker($('mkModes'), () => mkMode, m => { mkMode = m; paintMk(); $('mkGo').textContent = mkMode + ' maç kur'; });
+paintMk(); $('mkGo').textContent = mkMode + ' maç kur';
+$('mkGo').addEventListener('click', () => createMatch(mkMode));
 $('mToggle').addEventListener('click', () => { togglePanel('mToggle'); renderMatches(); });
 
 pick(chosen); openLobby(); requestAnimationFrame(frame);
