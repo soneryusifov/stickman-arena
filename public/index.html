@@ -398,7 +398,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 #battleScreen .log li{text-shadow:0 1px 2px #000} #battleScreen .log li:nth-child(2){opacity:.75} #battleScreen .log li:nth-child(3){opacity:.5}
 /* kahraman plakası */
 .plates{position:absolute;inset:0;pointer-events:none;z-index:2}
-.plate{--pc:var(--gold);position:absolute;transform:translate(-50%,-100%);font-size:clamp(7px,calc(var(--s,1) * 1cqw),16px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
+.plate{--pc:var(--gold);position:absolute;transform:translate(-50%,-100%);font-size:clamp(9px,calc((.75 + .35 * var(--s,1)) * 1cqw),17px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
   background:rgba(8,6,12,.8);border:1px solid var(--pc);border-radius:.45em;pointer-events:auto;cursor:pointer;white-space:nowrap;transition:box-shadow .2s}
 .plate .portrait{width:2.9em;height:2.9em;border-width:1px;border-radius:.3em;box-shadow:none;flex:none}
 .plate .pb{display:flex;flex-direction:column;gap:.16em;width:6.6em;min-width:0}
@@ -412,6 +412,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .plate.cur{box-shadow:0 0 0 1px var(--pc),0 0 1em var(--pc)}
 .plate.tgt{outline:2px solid #ff5a5a;outline-offset:1px} .plate.atgt{outline:2px solid #4be38a;outline-offset:1px}
 .plate.dead{display:none}
+.plates.tight .plate .pn{display:none} .plates.tight .plate .portrait{width:2.3em;height:2.3em} .plates.tight .plate .pb{width:4.8em} .plates.tight .plate{gap:.25em;padding:.18em .3em .18em .18em}
 /* savaşta açılan pencereler: ortada, ekranın yarısı */
 html:has(#battleScreen:not([hidden])) .guide.insp .gc.ic{width:max(50vw,min(720px,96vw));height:max(50vh,min(440px,94vh))}
 html:has(#battleScreen:not([hidden])) #inspCv{display:none}
@@ -422,7 +423,7 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
   .bctl .tbtn,.bctl .back{height:30px;min-width:30px;width:auto} .bctl .back{width:30px}
   .bset{min-width:120px;padding:6px;gap:4px} .bset .tbtn{min-height:28px;padding:2px 8px} .bset .tbtn::after{font-size:11px}
   #battleScreen .log{width:56%;font-size:9px} #battleScreen .log li:nth-child(n+3){display:none}
-  .plate{font-size:clamp(6.5px,calc(var(--s,1) * 1.15cqw),12px)}
+  .plate{font-size:clamp(9.5px,calc((.95 + .4 * var(--s,1)) * 1cqw),13px)}
   #battleScreen .overlay .ocard{width:70%;min-height:60%;padding:12px}
 }
 .verbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6);font-weight:700}
@@ -1865,7 +1866,7 @@ function arcSpot(n, slot, N) {
   const [x, y] = pathPoint(CRESCENT_T[n][slot]), lo = 353, hi = 593;
   return { x, y, s: SIZE[N] * (.9 + .1 * (y - lo) / (hi - lo)) }; // en arkadaki %10 küçük
 }
-const SIZE = { 1: 1.15, 2: 1, 3: .9, 4: .82, 5: .76 };
+const SIZE = { 1: .95, 2: .84, 3: .74, 4: .66, 5: .6 };
 // kalabalık takıma güç azaltma: (az / çok)^0.55 oranında can ve hasar (1v2: %68, 1v5: %41, 4v5: %88)
 const handicap = (mine, theirs) => mine > theirs ? Math.pow(theirs / mine, .55) : 1;
 const isAlive = f => f.hp > 0;
@@ -1900,6 +1901,7 @@ function newBattle(cfg) {
   parts.length = texts.length = projs.length = 0; flash = null;
   $('log').innerHTML = ''; $('over').hidden = true;
   buildHUD(); buildSkillButtons();
+  $('plates').classList.toggle('tight', N >= 4); // kalabalıkta plakalar sıkışık: isim satırı yok
   $('skills').classList.remove('low'); // halkanın ortası her kipte boş: yetenekler ortada
 }
 // sıradaki savaşçı: önce karşı takımın sıradaki canlı üyesi; o takımda kimse yoksa kendi takımı
