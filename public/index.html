@@ -2345,7 +2345,7 @@ const myPeer = () => room && (room.peers().find(p => p.sameTab) || {}).peer;
 const cleanGear = g => Object.fromEntries(ITEMS.map(k => [k, Math.max(1, Math.min(10, Math.round(+(g && g[k]) || 1)))]));
 async function onDuelMsg(m) {
   const d = m.data || {}; if (m.isMe || !d.t) return;
-  if (d.t === 'mjoin' || d.t === 'mleave' || d.t === 'mstart') return onMatchLobby(m, d);
+  if (d.t === 'mjoin' || d.t === 'mleave' || d.t === 'mstart' || d.t === 'mswap') return onMatchLobby(m, d);
   if (d.t === 'ask' && d.to === myPeer()) {
     if (pvp || invite || myMatch || !CLASSES[d.cls]) { room.emit('duel', { t: 'no', id: d.id, to: m.peer, busy: true }).catch(() => {}); return; }
     const prof = m.by && user ? await user.profiles([m.by]) : {}, name = (m.by && prof[m.by] && prof[m.by].name) || 'Bir oyuncu';
@@ -2495,6 +2495,17 @@ function leaveMatch() {
   if (!myMatch.host) room.emit('duel', { t: 'mleave', mid: myMatch.id, to: myMatch.hostPeer }).catch(() => {});
   myMatch = null; lobbyPresence(); renderMatches();
 }
+// taraf değiştir: oyuncu karşı takımdaki boş yere geçer (kurucu kendi ilanında, üye kurucuya sorar)
+function moveSlot(M, peer, team) {
+  const to = M[team], k = to.findIndex(s => !s); if (k < 0) return false;
+  const from = team === 'A' ? 'B' : 'A', j = M[from].findIndex(s => s && s.p === peer); if (j < 0) return false;
+  to[k] = M[from][j]; M[from][j] = 0; return true;
+}
+function switchSide(team) {
+  if (!myMatch || pvp) return;
+  if (myMatch.host) { if (moveSlot(myMatch, myPeer(), team)) { lobbyPresence(); renderMatches(); } return; }
+  room.emit('duel', { t: 'mswap', mid: myMatch.id, to: myMatch.hostPeer, team }).catch(() => {});
+}
 function startTeamMatch() {
   if (!myMatch || !myMatch.host) return;
   const M = myMatch, used = new Set([...M.A, ...M.B].filter(Boolean).map(s => s.c));
@@ -2528,11 +2539,13 @@ function onMatchLobby(m, d) {
     arr[k] = { p: m.peer, n: String(d.n || 'Oyuncu').slice(0, 20), c: d.id, l: Math.max(1, Math.min(10, d.l | 0)), v: lv };
     M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id, lv };
     lobbyPresence(); renderMatches();
+  } else if (d.t === 'mswap' && M && M.host && d.to === myPeer() && d.mid === M.id && (d.team === 'A' || d.team === 'B')) {
+    if (moveSlot(M, m.peer, d.team)) { lobbyPresence(); renderMatches(); }
   } else if (d.t === 'mleave' && M && M.host && d.to === myPeer() && d.mid === M.id) {
     for (const t of ['A', 'B']) M[t] = M[t].map(s => s && s.p === m.peer ? 0 : s);
     lobbyPresence(); renderMatches();
   } else if (d.t === 'mstart' && Array.isArray(d.roster) && d.roster.some(r => r.peer === myPeer()) && !pvp) {
-    const roster = d.roster.filter(r => CLASSES[r.id] && (r.team === 'A' || r.team === 'B')).slice(0, 6);
+    const roster = d.roster.filter(r => CLASSES[r.id] && (r.team === 'A' || r.team === 'B')).slice(0, 10);
     startMatch({ id: d.mid, room: 'match-' + d.mid, kind: 'team', mode: d.mode, seed: d.seed >>> 0, roster });
   }
 }
@@ -2563,7 +2576,7 @@ function renderMatches() {
   if (!list.length) { box.innerHTML = '<p class="lnote">Şu an açık maç yok. Yukarıdan bir kip seçip maç kur; diğerleri katılabilir.</p>'; return; }
   for (const mt of list) {
     const card = document.createElement('div'); card.className = 'mcard' + (myMatch && myMatch.id === mt.id ? ' mine' : '');
-    const hostName = (mt.A[0] && mt.A[0].n) || 'Oyuncu';
+    const hs = [...mt.A, ...mt.B].find(s => s && s.p === mt.host), hostName = (hs && hs.n) || 'Oyuncu';
     const head = document.createElement('div'); head.className = 'mhead'; head.textContent = `${mt.md} · kurucu ${hostName}`;
     card.appendChild(head);
     const teams = document.createElement('div'); teams.className = 'mteams';
@@ -2577,6 +2590,8 @@ function renderMatches() {
       });
       const free = mt[t].some(s => !s);
       if (free && !myMatch && !pvp && !mt.isMine) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.textContent = 'Katıl'; b.onclick = () => joinMatch(mt.host, mt.id, t); col.appendChild(b); }
+      const inOther = mt[t === 'A' ? 'B' : 'A'].some(s => s && s.p === myPeer());
+      if (free && inOther && myMatch && myMatch.id === mt.id && !pvp) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.textContent = '⇄ Bu tarafa geç'; b.onclick = () => switchSide(t); col.appendChild(b); }
       teams.appendChild(col);
     }
     card.appendChild(teams);
