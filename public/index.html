@@ -233,17 +233,35 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .guide.insp .gc.ic{max-width:none;width:min(1120px,94vw);height:min(86vh,700px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:16px 18px;position:relative;overflow:hidden}
 .ihead h2{text-align:left;font-size:21px;padding-right:48px} .ihead p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
 .iclose{position:absolute;top:10px;right:10px}
-.ibody{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,2fr) minmax(0,.95fr);gap:14px;min-height:0}
+.ibody{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,2.3fr) minmax(0,.9fr);gap:14px;min-height:0}
 #inspCv{width:100%;height:100%;min-height:0;object-fit:contain;border-radius:6px;background:radial-gradient(60% 55% at 50% 60%,#2a2236,#0f0c16)}
-.iitems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));gap:6px;min-height:0}
-.iitem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:center;min-height:0;overflow:hidden;background:#100d17;border:1px solid #2e2840;border-radius:4px;padding:4px 8px}
-.iitem canvas{width:clamp(26px,6.5vh,54px);height:clamp(26px,6.5vh,54px);background:#0b0910;border-radius:3px}
-.iitem div{min-width:0} .iitem b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.iitem .tier{color:var(--gold);font-size:12px;font-weight:800} .iitem small{display:block;color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iitems{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;min-height:0}
+.iitem{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:0;min-width:0;overflow:hidden;text-align:center}
+.iitem .ifr{--b:#5a3e24;--g:transparent;position:relative;flex:1;min-height:0;width:100%;display:grid;place-items:center;border-radius:6px;border:2px solid var(--b);
+  background:var(--bg);box-shadow:inset 0 0 18px rgba(0,0,0,.55),0 0 12px var(--g);overflow:hidden}
+.iitem canvas{width:100%;height:100%;min-height:0;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
+.iitem .tn{position:absolute;top:4px;left:4px;z-index:2;min-width:1.6em;padding:2px 4px;border-radius:3px;font:800 12px/1 var(--font-body);color:#fff;background:rgba(0,0,0,.6);border:1px solid var(--b);text-align:center}
+.iitem b{display:block;max-width:100%;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iitem small{display:block;max-width:100%;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* seviye çerçeveleri: ahşap → taş → bakır → demir → gümüş → altın → zümrüt → safir → ametist → efsanevi ateş */
+.tr1{--b:#6b4a2b;--bg:repeating-linear-gradient(90deg,#2a1c10 0 9px,#24180d 9px 18px)}
+.tr2{--b:#6c6d74;--bg:radial-gradient(70% 70% at 50% 40%,#3a3a3f,#1c1c20)}
+.tr3{--b:#b06a3c;--bg:radial-gradient(70% 70% at 50% 40%,#4a2a17,#1d110a)}
+.tr4{--b:#7f93a8;--bg:radial-gradient(70% 70% at 50% 40%,#2c3846,#11161d)}
+.tr5{--b:#d3dae4;--g:rgba(210,220,235,.25);--bg:radial-gradient(70% 70% at 50% 40%,#454c57,#171a20)}
+.tr6{--b:#e8b94a;--g:rgba(232,185,74,.35);--bg:radial-gradient(70% 70% at 50% 40%,#5a4314,#1d1607)}
+.tr7{--b:#43d695;--g:rgba(67,214,149,.4);--bg:radial-gradient(70% 70% at 50% 40%,#145a3e,#08190f)}
+.tr8{--b:#5b97ff;--g:rgba(91,151,255,.5);--bg:radial-gradient(70% 70% at 50% 40%,#1b3a7a,#080f22)}
+.tr9{--b:#c06bff;--g:rgba(192,107,255,.55);--bg:radial-gradient(60% 60% at 50% 40%,#5a2088,#170824 75%)}
+.tr10{--b:#ffcf5a;--g:rgba(255,120,40,.7);--bg:radial-gradient(60% 60% at 50% 45%,#ffb347 0%,#c2381a 38%,#3a0a08 80%)}
+.tr9::before,.tr10::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 20%,rgba(255,255,255,.18) 25%,transparent 30% 70%,rgba(255,255,255,.18) 75%,transparent 80%);animation:trspin 6s linear infinite}
+.tr10::before{background:conic-gradient(from 0deg,transparent 0 15%,rgba(255,230,140,.35) 22%,transparent 30% 65%,rgba(255,230,140,.35) 72%,transparent 80%);animation-duration:3.5s}
+@keyframes trspin{to{transform:rotate(1turn)}}
+@media (prefers-reduced-motion:reduce){.tr9::before,.tr10::before{animation:none}}
 .iside{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}
 .istats{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0;font-size:14px} .istats dt{color:var(--muted)} .istats dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .iskills{display:flex;flex-wrap:wrap;gap:4px} .iskills span{font-size:12px;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid currentColor;background:rgba(0,0,0,.35)}
-@media (max-height:520px){ .guide.insp .gc.ic{height:92vh;padding:10px 12px;gap:6px} .ibody{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr)} #inspCv{display:none} .iitem small{display:none} .istats{font-size:12.5px;gap:3px 8px} .ihead h2{font-size:17px} }
+@media (max-height:520px){ .guide.insp .gc.ic{height:92vh;padding:10px 12px;gap:6px} .ibody{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr)} #inspCv{display:none} .iitem small{display:none} .iitem b{font-size:11px} .iitems{gap:5px} .istats{font-size:12.5px;gap:3px 8px} .ihead h2{font-size:17px} }
 /* hesap penceresi */
 .acc .gc{gap:10px}
 .atabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -324,9 +342,15 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .lb li:nth-child(1) .n{color:#ffd56a} .lb li:nth-child(2) .n{color:#d9dee8} .lb li:nth-child(3) .n{color:#e0a46a}
 .lb li.me{outline:1px solid var(--gold)}
 .unread{min-width:20px;padding:0 6px;border-radius:10px;background:var(--blood);color:#fff;font:700 12px/20px var(--font-body);text-align:center} .unread:empty{display:none}
-#battleScreen{--aw:min(100%,calc((100dvh - 250px) * 16 / 9));align-items:center}
+#battleScreen{--aw:min(100%,calc((100dvh - 215px) * 16 / 9));align-items:center}
 #battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{display:none}
-#battleScreen .lower{align-items:stretch} #battleScreen .log{max-height:132px;overflow-y:auto}
+#battleScreen .lower{display:block} #battleScreen .log{height:92px;overflow:hidden;padding:8px 12px} #battleScreen .log ul{font-size:13px}
+html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body{overflow:hidden}
+#battleScreen .skills{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%) scale(.96);z-index:4;width:min(54%,600px);gap:6px;padding:7px;
+  background:rgba(14,11,20,.86);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;font-size:clamp(9px,1vw,13px)}
+#battleScreen .skills.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
+#battleScreen .skills.low{top:90.5%}
+#battleScreen .skill{padding:.6em .3em .5em;gap:.25em} #battleScreen .skill svg{width:2.3em;height:2.3em} #battleScreen .skill .nm{font-size:1em} #battleScreen .skill .cost{font-size:.85em} #battleScreen .skill .key{font-size:.8em}
 .select,.townbar,.town,.quests,.lobby{width:100%;max-width:1400px;margin-inline:auto}
 /* telefon yatay: ekranı doldur, savaşta yetenekler sağda */
 @media (pointer:coarse) and (orientation:landscape) and (max-height:520px){
@@ -342,13 +366,14 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   .chatbox{right:6px;bottom:6px;width:min(280px,40%)}
   .sbox{bottom:8px;padding:6px 8px 6px 12px} .sbox span{font-size:13px} .sbox .btn{font-size:13px}
   .joy{width:92px;height:92px;left:10px;bottom:10px}
-  #battleScreen{display:grid;grid-template-columns:auto 150px;gap:8px;align-items:start;justify-content:center}
-  #battleScreen .arena{width:min(calc((100dvh - 50px) * 16 / 9),calc(100vw - 180px))} #battleScreen .lower{width:150px}
+  #battleScreen{display:flex;justify-content:center}
+  #battleScreen .arena{width:min(calc((100dvh - 64px) * 16 / 9),calc(100vw - 20px))} #battleScreen .lower{display:none}
   .hud{font-size:10px;padding:1% 1.4%} .hud .portrait{width:34px;height:34px}
   .lower{display:block} .log{display:none}
-  .skills{grid-template-columns:minmax(0,1fr);gap:4px;padding:4px;max-height:calc(100dvh - 50px)}
-  .skill{flex-direction:row;justify-content:flex-start;gap:6px;padding:5px 6px;min-height:0} .skill svg{width:22px;height:22px;flex:none}
-  .skill .nm{font-size:11.5px;text-align:left} .skill .cost{font-size:10px;margin-left:auto} .skill .key{display:none}
+  #battleScreen .skills,#battleScreen .skills.low{top:91%;width:62%;gap:3px;padding:3px;font-size:9px}
+  #battleScreen .skill{flex-direction:row;justify-content:center;gap:3px;padding:3px 2px} #battleScreen .skill svg{width:16px;height:16px;flex:none}
+  #battleScreen .skill .nm{font-size:9px;text-align:left} #battleScreen .skill .cost,#battleScreen .skill .key{display:none}
+}
 @media (max-height:520px){#mPanel .mslot{font-size:11px;padding:1px 4px} #mPanel .mteam{gap:2px} #mPanel .mcard{padding:5px;gap:4px} #mPanel .mhead{font-size:12px} #mPanel .mteam b{font-size:11px} #mPanel .mteam .btn,#mPanel .mact .btn{font-size:11px;padding:.2em .6em} #mPanel .lnote{display:none}}
 #mkModes[hidden],#mkGo[hidden]{display:none}
 </style>
@@ -511,6 +536,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         <div class="team right" id="teamR"></div>
       </div>
       <canvas id="cv"></canvas>
+      <div class="skills" id="skills" aria-label="Yetenekler"></div>
       <div class="overlay" id="over" hidden>
         <div class="ocard">
           <h2 id="overT">ZAFER</h2>
@@ -523,7 +549,6 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
       </div>
     </div>
     <div class="lower">
-      <div class="skills" id="skills"></div>
       <div class="log"><h3>SAVAŞ GÜNLÜĞÜ</h3><ul id="log"></ul></div>
     </div>
     <p class="hint">Klavye: 1–5 tuşları yetenekleri kullanır. Her tur 15 saniye sürer; süre biterse sıra rakibe geçer. Sağ üstteki düğme savaşı 2× hızlandırır.</p>
@@ -921,6 +946,7 @@ function frame(t) {
     // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
     const ring = (f, col) => { if (!f || !isAlive(f)) return; ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = .75 + Math.sin(t / 200) * .2; ctx.beginPath(); ctx.ellipse(f.A.x + f.A.off * f.A.face, f.gy + 4, 78 * f.sc, 16 * f.sc, 0, 0, 7); ctx.stroke(); ctx.restore(); };
     if (myTurn() && S2.waiting) { ring(S2.foe, '#ff5a5a'); ring(S2.ally, '#4be38a'); }
+    skBar.classList.toggle('show', myTurn() && S2.waiting && !S2.busy);
     const order = F.list.slice().sort((a, b) => (a.gy - b.gy) || (Math.abs(a.A.off) - Math.abs(b.A.off)));
     for (const f of order) {
       const gy = f.gy, s = S * f.sc, fx0 = f.A.x + f.A.off * f.A.face;
@@ -1726,16 +1752,16 @@ function sizePicker(el, get, set) {
 }
 let battleMode = '1v1';
 try { if (MODES[localStorage.getItem('sa.mode')]) battleMode = localStorage.getItem('sa.mode'); } catch (e) {}
-// dizilim [x (soldaki takım), y kayması, ölçek]: öndeki büyük ve aşağıda, arkadakiler küçük ve yukarıda
-// dizilim [x (soldaki takım), y kayması, arka sıra mı]; boyutu maçtaki EN KALABALIK takım belirler (tek kalan büyük görünmez)
-const LAYOUT = {
-  1: [[260, 0, 0]],
-  2: [[340, 24, 0], [150, -34, 1]],
-  3: [[330, 28, 0], [125, -38, 1], [500, -38, 1]],
-  4: [[430, 30, 0], [235, 30, 0], [340, -40, 1], [135, -40, 1]],
-  5: [[475, 32, 0], [305, 32, 0], [135, 32, 0], [395, -42, 1], [220, -42, 1]],
-};
-const SIZE = { 1: 1, 2: .8, 3: .76, 4: .68, 5: .62 };
+// dizilim: herkes aynı zemin çizgisinde; en arkadaki duvara yakın, öndekiler ortaya doğru.
+// boyutu maçtaki EN KALABALIK takım belirler; en arkadaki en öndekinden yalnızca %10 küçük
+const WALL = 120; // duvardan boşluk (1280 genişlikte)
+function lineSpot(n, slot, N) {
+  const base = SIZE[N], x0 = WALL + 40 * base;           // duvar dibindeki yer
+  const step = n > 1 ? Math.min(205 * base, (545 - x0) / (n - 1)) : 0; // öndeki ortaya en fazla 545'e kadar gelir
+  const d = n - 1 - slot;                                // duvardan kaç sıra ileride (slot 0 en önde)
+  return { x: x0 + d * step, s: base * (n > 1 ? .9 + .1 * d / (n - 1) : 1) }; // duvar dibindeki %10 küçük
+}
+const SIZE = { 1: 1, 2: .86, 3: .74, 4: .64, 5: .52 };
 // kalabalık takıma güç azaltma: (az / çok)^0.55 oranında can ve hasar (1v2: %68, 1v5: %41, 4v5: %88)
 const handicap = (mine, theirs) => mine > theirs ? Math.pow(theirs / mine, .55) : 1;
 const isAlive = f => f.hp > 0;
@@ -1761,8 +1787,8 @@ function newBattle(cfg) {
   const N = Math.max(F.A.length, F.B.length);
   for (const f of list) {
     f.side = f.team === F.me.team ? 'player' : 'enemy';
-    const [x, dy, back] = LAYOUT[F[f.team].length][f.slot], left = f.side === 'player', s = SIZE[N] * (back ? .9 : 1);
-    f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = GY + dy * (N > 3 ? .9 : 1); f.sc = f.A.sc = s;
+    const { x, s } = lineSpot(F[f.team].length, f.slot, N), left = f.side === 'player';
+    f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = GY; f.sc = f.A.sc = s;
     const k = handicap(F[f.team].length, F[otherTeam(f.team)].length);
     if (k < 1) { f.hp = f.maxHp = Math.round(f.maxHp * k); f.dmgMul *= k; f.hand = k; }
   }
@@ -1770,6 +1796,7 @@ function newBattle(cfg) {
   parts.length = texts.length = projs.length = 0; flash = null;
   $('log').innerHTML = ''; $('over').hidden = true;
   buildHUD(); buildSkillButtons();
+  $('skills').classList.toggle('low', N > 2); // kalabalıkta orta dolu: yetenekler ortada ama zeminin üstünde
 }
 // sıradaki savaşçı: önce karşı takımın sıradaki canlı üyesi; o takımda kimse yoksa kendi takımı
 function nextUp(fromTeam) {
@@ -1811,6 +1838,7 @@ function buildHUD() {
     }
   }
 }
+const skBar = $('skills');
 function buildSkillButtons() {
   const el = $('skills'); el.innerHTML = '';
   F.me.skills.forEach((sk, i) => {
@@ -2086,11 +2114,13 @@ function openInspect(f) {
   $('inspSub').textContent = `${f.cls.name} · Sv ${f.lvl} · ekipman ortalaması ${gearLevel(f.gear)} · ${f.side === 'player' ? (f === F.me ? 'sen' : 'takım arkadaşın') : 'rakip'}` + (f.hand ? ` · kalabalık takım: güç %${Math.round(f.hand * 100)}` : '');
   const grid = $('inspItems'); grid.innerHTML = '';
   for (const k of ITEMS) {
-    const n = f.gear[k], it = document.createElement('div'); it.className = 'iitem';
-    const cv = document.createElement('canvas'); cv.width = cv.height = 64; drawIcon(cv, f.id, k, n);
-    const tx = document.createElement('div'), b = document.createElement('b'), t = document.createElement('span'), s = document.createElement('small');
-    b.textContent = names[k] || k; t.className = 'tier'; t.textContent = n + '. seviye'; s.textContent = perkText(k, n);
-    tx.append(b, t, s); it.append(cv, tx); grid.appendChild(it);
+    const n = f.gear[k], it = document.createElement('div'); it.className = 'iitem'; it.title = `${names[k] || k} · ${n}. seviye · ${perkText(k, n)}`;
+    const fr = document.createElement('div'); fr.className = 'ifr tr' + Math.max(1, Math.min(10, n));
+    const cv = document.createElement('canvas'); cv.width = cv.height = 160; drawIcon(cv, f.id, k, n);
+    const tn = document.createElement('span'); tn.className = 'tn'; tn.textContent = n;
+    const b = document.createElement('b'), s = document.createElement('small');
+    b.textContent = names[k] || k; s.textContent = perkText(k, n);
+    fr.append(cv, tn); it.append(fr, b, s); grid.appendChild(it);
   }
   const rows = [['Can', `${f.hp} / ${f.maxHp}`], ['Mana', `${f.mp} / ${f.maxMp}`], ['Yenilenme', `+${f.regen} / tur`], ['Hasar', pct(f.dmgMul - 1)],
     ['Kritik', Math.round(f.crit * 100) + '%'], ['Kaçınma', Math.round(f.dodge * 100) + '%'], ['Zırh', Math.round(f.armor * 100) + '%'], ['İksir', `${f.potions} × +${f.skills[4] ? f.skills[4].heal : 0}`]];
