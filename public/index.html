@@ -347,10 +347,12 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 #battleScreen .arena,#battleScreen .lower{width:var(--aw)} #battleScreen .hint{display:none}
 #battleScreen .lower{display:block} #battleScreen .log{height:92px;overflow:hidden;padding:8px 12px} #battleScreen .log ul{font-size:13px}
 html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body{overflow:hidden}
-#battleScreen .skills{position:absolute;left:50%;top:47%;transform:translate(-50%,-50%) scale(.96);z-index:4;width:min(46%,600px);gap:6px;padding:7px;
+#battleScreen .skills{position:absolute;left:50%;top:66%;transform:translate(-50%,-50%) scale(.96);z-index:4;width:min(46%,600px);gap:6px;padding:7px;
   background:rgba(14,11,20,.86);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;font-size:clamp(9px,1vw,13px)}
 #battleScreen .skills.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
-#battleScreen .skills.low{top:90.5%}
+#battleScreen .skills.low{top:55%;width:13%;grid-template-columns:minmax(0,1fr);gap:4px;padding:5px}
+#battleScreen .skills.low .skill{flex-direction:row;justify-content:flex-start;gap:.4em;padding:.45em .5em} #battleScreen .skills.low .skill svg{width:1.7em;height:1.7em;flex:none}
+#battleScreen .skills.low .skill .nm{text-align:left;font-size:.95em} #battleScreen .skills.low .skill .cost{display:none} #battleScreen .skills.low .skill .key{display:none}
 #battleScreen .skill{padding:.6em .3em .5em;gap:.25em} #battleScreen .skill svg{width:2.3em;height:2.3em} #battleScreen .skill .nm{font-size:1em} #battleScreen .skill .cost{font-size:.85em} #battleScreen .skill .key{font-size:.8em}
 .select,.townbar,.town,.quests,.lobby{width:100%;max-width:1400px;margin-inline:auto}
 /* telefon yatay: ekranı doldur, savaşta yetenekler sağda */
@@ -371,7 +373,7 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
   #battleScreen .lower{display:none}
   .hud{font-size:10px;padding:1% 1.4%} .hud .portrait{width:34px;height:34px}
   .lower{display:block} .log{display:none}
-  #battleScreen .skills,#battleScreen .skills.low{top:91%;width:62%;gap:3px;padding:3px;font-size:9px}
+  #battleScreen .skills{width:52%;gap:3px;padding:3px;font-size:9px} #battleScreen .skills.low{width:17%;top:56%}
   #battleScreen .skill{flex-direction:row;justify-content:center;gap:3px;padding:3px 2px} #battleScreen .skill svg{width:16px;height:16px;flex:none}
   #battleScreen .skill .nm{font-size:9px;text-align:left} #battleScreen .skill .cost,#battleScreen .skill .key{display:none}
 }
@@ -389,10 +391,11 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .bset{position:absolute;top:calc(100% + 6px);right:0;display:flex;flex-direction:column;gap:6px;padding:8px;min-width:170px;background:rgba(14,11,20,.95);border:1px solid var(--line);border-radius:6px}
 .bset[hidden]{display:none}
 .bset .tbtn{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:auto;min-height:34px;padding:4px 10px;text-transform:none} .bset .tbtn::after{content:attr(title);font-size:13px;font-weight:700}
-#battleScreen .log{display:block;position:absolute;left:1.2%;top:calc(1.4% + 50px);width:28%;max-height:24%;overflow:hidden;z-index:3;pointer-events:none;
-  background:linear-gradient(rgba(10,8,16,.55),rgba(10,8,16,0));border:0;border-radius:4px;padding:.4em .6em;font-size:clamp(9px,.95cqw,13px)}
-#battleScreen .log h3{display:none} #battleScreen .log ul{font-size:1em;gap:.2em} #battleScreen .log li:nth-child(n+5){display:none}
-#battleScreen .log li{text-shadow:0 1px 2px #000} #battleScreen .log li:nth-child(3){opacity:.75} #battleScreen .log li:nth-child(4){opacity:.5}
+#battleScreen .log{display:block;position:absolute;left:50%;bottom:1.2%;transform:translateX(-50%);width:44%;max-height:15%;overflow:hidden;z-index:3;pointer-events:none;text-align:center;
+  background:radial-gradient(closest-side,rgba(10,8,16,.6),rgba(10,8,16,0));border:0;border-radius:4px;padding:.4em .6em;font-size:clamp(9px,.95cqw,13px)}
+#battleScreen .log h3{display:none} #battleScreen .log ul{font-size:1em;gap:.2em;flex-direction:column-reverse} #battleScreen .log li:nth-child(n+4){display:none}
+#battleScreen .log li.p,#battleScreen .log li.e{border-left:0;padding-left:0}
+#battleScreen .log li{text-shadow:0 1px 2px #000} #battleScreen .log li:nth-child(2){opacity:.75} #battleScreen .log li:nth-child(3){opacity:.5}
 /* kahraman plakası */
 .plates{position:absolute;inset:0;pointer-events:none;z-index:2}
 .plate{--pc:var(--gold);position:absolute;transform:translate(-50%,-100%);font-size:clamp(7px,calc(var(--s,1) * 1cqw),16px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
@@ -418,7 +421,7 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
 @media (max-height:520px){
   .bctl .tbtn,.bctl .back{height:30px;min-width:30px;width:auto} .bctl .back{width:30px}
   .bset{min-width:120px;padding:6px;gap:4px} .bset .tbtn{min-height:28px;padding:2px 8px} .bset .tbtn::after{font-size:11px}
-  #battleScreen .log{top:calc(1.4% + 36px);font-size:9px} #battleScreen .log li:nth-child(n+3){display:none}
+  #battleScreen .log{width:56%;font-size:9px} #battleScreen .log li:nth-child(n+3){display:none}
   .plate{font-size:clamp(6.5px,calc(var(--s,1) * 1.15cqw),12px)}
   #battleScreen .overlay .ocard{width:70%;min-height:60%;padding:12px}
 }
@@ -766,6 +769,25 @@ const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
   g = c.createRadialGradient(640, 380, 300, 640, 380, 820); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.65)');
   c.fillStyle = g; c.fillRect(0, 0, W, H);
 })();
+// boyalı arena (assets/bg/battle.webp, 1672x941 ≈ 16:9): yüklenirse çizilen kale yerine geçer
+let bgArt = false;
+(function () {
+  const im = new Image();
+  im.onload = () => { const c = bg.getContext('2d'); c.drawImage(im, 0, 0, W, H); bgArt = true; };
+  im.src = 'assets/bg/battle.webp?v=1';
+})();
+// resimdeki mangalların titreşen ışığı
+const BRAZIER = [[32, 262], [1248, 262]];
+function drawBrazierGlow(t) {
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (const [x, y] of BRAZIER) {
+    const fl = Math.sin(t / 90 + x) * .5 + Math.sin(t / 37 + x * 2) * .3;
+    const g = ctx.createRadialGradient(x, y, 4, x, y, 150 + fl * 14);
+    g.addColorStop(0, 'rgba(255,150,60,.28)'); g.addColorStop(1, 'rgba(255,90,20,0)');
+    ctx.fillStyle = g; ctx.fillRect(x - 170, y - 170, 340, 340);
+  }
+  ctx.restore();
+}
 function drawTorch(x, t) {
   const fl = Math.sin(t / 90 + x) * .5 + Math.sin(t / 37 + x * 2) * .3;
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -992,7 +1014,7 @@ function frame(t) {
   const sk = Math.max(0, 1 - (t - shakeT) / 350) * shakeMag;
   if (sk > 0) ctx.translate(rnd(-sk, sk), rnd(-sk, sk));
   ctx.drawImage(bg, 0, 0);
-  for (const x of TORCH_X) drawTorch(x, t);
+  if (bgArt) drawBrazierGlow(t); else for (const x of TORCH_X) drawTorch(x, t);
   if (F) {
     for (const f of F.list) Rig.update(f.A, dt * SPD);
     // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
@@ -1828,18 +1850,20 @@ try { if (MODES[localStorage.getItem('sa.mode')]) battleMode = localStorage.getI
 // dizilim: her takım hilal (ay) şeklinde durur, içi rakibe bakar. Ortadaki duvarın dibinde,
 // uçlar öne (ortaya) doğru; biri biraz arkada (yukarıda), biri önde (aşağıda). Kaç kişi varsa ona göre açılır.
 // boyutu maçtaki EN KALABALIK takım belirler; arkadaki öndekinden en fazla %10 küçük
-// soldaki takım için [x, ayak y] (sağdaki aynası). slot 0 önde-aşağıda; hilal duvara doğru kıvrılıp yukarıda öne açılır.
-// aynı hizaya iki kahraman gelmesin diye hilal hafif eğik
-const CRESCENT = {
-  1: [[200, 592]],
-  2: [[345, 628], [215, 548]],
-  3: [[425, 642], [190, 590], [330, 528]],
-  4: [[470, 648], [250, 612], [195, 552], [410, 522]],
-  5: [[510, 650], [310, 628], [170, 590], [250, 552], [430, 522]],
-};
+// dizilim: arena resmindeki hilal platformu ("(" biçimi). Orta çizgisi alttaki uçtan (rakibe yakın, önde)
+// duvar dibinden geçip üstteki uca (arkada) gider. Kahramanlar takım sayısına göre bu çizgiye dizilir:
+// 1 kişi önde, 2 kişi iki uçta, daha fazlası uçlar arasında eşit aralıkla.
+const CRESCENT_PATH = [[308, 593], [231, 566], [178, 532], [158, 490], [166, 448], [208, 406], [292, 375], [407, 353]];
+const CRESCENT_T = { 1: [.12], 2: [.06, .8], 3: [.04, .44, .84], 4: [.03, .31, .59, .87], 5: [.02, .24, .46, .68, .9] }; // üst uç biraz içeride: plakası ekranın tepesine çarpmasın
+function pathPoint(t) { // t: 0 alttaki uç, 1 üstteki uç (yol boyu)
+  const P = CRESCENT_PATH, seg = []; let tot = 0;
+  for (let i = 1; i < P.length; i++) { const d = Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); seg.push(d); tot += d; }
+  let r = t * tot;
+  for (let i = 0; i < seg.length; i++) { if (r <= seg[i] || i === seg.length - 1) { const k = Math.min(1, r / seg[i]); return [P[i][0] + (P[i + 1][0] - P[i][0]) * k, P[i][1] + (P[i + 1][1] - P[i][1]) * k]; } r -= seg[i]; }
+}
 function arcSpot(n, slot, N) {
-  const pts = CRESCENT[n], [x, y] = pts[slot], ys = pts.map(p => p[1]), lo = Math.min(...ys), hi = Math.max(...ys);
-  return { x, y, s: SIZE[N] * (hi > lo ? .9 + .1 * (y - lo) / (hi - lo) : 1) }; // en arkadaki %10 küçük
+  const [x, y] = pathPoint(CRESCENT_T[n][slot]), lo = 353, hi = 593;
+  return { x, y, s: SIZE[N] * (.9 + .1 * (y - lo) / (hi - lo)) }; // en arkadaki %10 küçük
 }
 const SIZE = { 1: 1.15, 2: 1, 3: .9, 4: .82, 5: .76 };
 // kalabalık takıma güç azaltma: (az / çok)^0.55 oranında can ve hasar (1v2: %68, 1v5: %41, 4v5: %88)
@@ -1876,7 +1900,7 @@ function newBattle(cfg) {
   parts.length = texts.length = projs.length = 0; flash = null;
   $('log').innerHTML = ''; $('over').hidden = true;
   buildHUD(); buildSkillButtons();
-  $('skills').classList.toggle('low', N > 2); // kalabalıkta orta dolu: yetenekler ortada ama zeminin üstünde
+  $('skills').classList.remove('low'); // halkanın ortası her kipte boş: yetenekler ortada
 }
 // sıradaki savaşçı: önce karşı takımın sıradaki canlı üyesi; o takımda kimse yoksa kendi takımı
 function nextUp(fromTeam) {
