@@ -730,14 +730,17 @@ function frame(t) {
    ===================================================================== */
 const SV = $('sv'), sctx = SV.getContext('2d'), SW = 1280, SH = 520, HS = .62;
 const WALK_RATE = 1.8; // yürüme temposu (1 = savaştaki yürüyüş); hız buna göre hesaplanır
-const Y0 = 412, Y1 = 505; // zemin şeridi: arka kenar (kapılar) ve ön kenar
-const scaleAt = y => HS * (.82 + .18 * (y - Y0) / (Y1 - Y0)); // arkadaki küçük görünür
+let Y0 = 412, Y1 = 505; // zemin şeridi: arka kenar (kapılar) ve ön kenar; boyalı sahnede resme göre değişir
+const scaleAt = y => (SCENES[me.sc].hs || HS) * (.82 + .18 * (y - Y0) / (Y1 - Y0)); // arkadaki küçük görünür
 const BNAME = { hall: 'Belediye', mine: 'Altın Madeni', alch: 'Simyacı', smith: 'Demirci', arena: 'Arena' };
 // Sahneler. Kapı: arka kenarda x konumu; NPC: duran karakter (yeni görseller gelene dek çöp adam iskeletiyle çizilir).
-// map: küçük haritadaki yeri. bg: arka plan resmi (şimdilik hepsi aynı geçici resim).
+// map: küçük haritadaki yeri. img: tek ekranlık boyalı sahne (1536x1024 resim, y. satırdan itibaren 624 satır
+// ekrana sığdırılır); y0/y1 zemin şeridi, hs kahraman ölçeği. img'si olmayan sahne geçici kayan sokağı kullanır.
 const SCENES = {
-  square: { name: 'Meydan', w: 2400, map: [0, 0], left: 'market', right: 'arenagate', lamps: [260, 820, 1580, 2140],
-    doors: [{ x: 1200, to: 'hall', name: 'Belediye' }], npcs: [] },
+  // meydan resmi: kaldırım 662-693. satır, zemin 696'dan; Belediye kapısı x 765, 545-660. satır
+  square: { name: 'Meydan', w: 1280, map: [0, 0], left: 'market', right: 'arenagate', lamps: [],
+    img: { src: 'assets/bg/square.webp?v=1', y: 170 }, y0: 442, y1: 512, hs: .5,
+    doors: [{ x: 637, to: 'hall', name: 'Belediye', painted: true, ly: 296 }], npcs: [] },
   hall: { name: 'Belediye', w: 1500, map: [0, -1], lamps: [200, 1300],
     doors: [{ x: 420, to: 'square', name: 'Meydan' }], npcs: [{ k: 'hall', x: 950, y: 440, cls: 'paladin', face: -1, name: 'Kâhya' }] },
   market: { name: 'Çarşı', w: 2400, map: [-1, 0], left: 'mineroad', right: 'square', lamps: [300, 1200, 2100],
@@ -777,10 +780,18 @@ function seamless(im, y0, y1, k, bright, shade, fog) {
 })();
 function tileX(img, off, y) { const w = img.width; for (let x = -(((off % w) + w) % w); x < SW; x += w) sctx.drawImage(img, x, y); }
 
-const me = { sc: 'square', x: 1200, y: 470, face: 1, target: null, door: null, walk: false, A: null, key: '' };
+const me = { sc: 'square', x: 640, y: 480, face: 1, target: null, door: null, walk: false, A: null, key: '' };
 const keys = { l: 0, r: 0, u: 0, d: 0 }, others = new Map(), bubbles = new Map();
 let camX = 0, near = null, sel = null, sendT = 0, sent = '', trans = null, banner = null;
 const scene = () => SCENES[me.sc];
+const sceneImgs = {};
+function sceneImg(S) {
+  if (!S.img) return null;
+  let im = sceneImgs[S.img.src];
+  if (!im) { im = sceneImgs[S.img.src] = new Image(); im.src = S.img.src; }
+  return im.complete && im.naturalWidth ? im : null;
+}
+function setFloor(S) { Y0 = S.y0 || 412; Y1 = S.y1 || 505; me.y = Math.max(Y0, Math.min(Y1, me.y)); sceneImg(S); }
 // kahramanın aktörü: sınıf ya da ekipman değişince yeniden kurulur
 async function streetActor() {
   const g = gearOf(chosen), key = chosen + ITEMS.map(k => g[k]).join('');
@@ -804,7 +815,7 @@ function goScene(to, via) {
 }
 function arrive(tr) {
   const S = SCENES[tr.to];
-  me.sc = tr.to;
+  me.sc = tr.to; setFloor(S);
   if (tr.via === 'left') { me.x = S.w - 90; me.face = -1; }
   else if (tr.via === 'right') { me.x = 90; me.face = 1; }
   else { const back = S.doors.find(d => d.to === tr.from); me.x = back ? back.x : S.w / 2; me.y = Y0 + 34; me.face = 1; }
@@ -866,6 +877,7 @@ const headY = (y, s) => y - 182 * s / HS; // karakterin başının üstü
 // geçici kapı: kaldırımın arkasında taş kemer (sahne görseli gelince resmin kendi kapısı kullanılacak)
 function drawDoor(d, t, hot) {
   const sx = d.x - camX; if (sx < -100 || sx > SW + 100) return;
+  if (d.painted) { drawLabel(sx, d.ly, d.name, hot ? '#1a1205' : '#f2c14e', hot ? '#f2c14e' : null); return; } // kapı resmin içinde
   const b = Y0 - 8, w = 74, h = 116;
   sctx.fillStyle = '#2b2433'; sctx.beginPath(); sctx.moveTo(sx - w / 2 - 10, b); sctx.lineTo(sx - w / 2 - 10, b - h + 20); sctx.arc(sx, b - h + 20, w / 2 + 10, Math.PI, 0); sctx.lineTo(sx + w / 2 + 10, b); sctx.fill();
   sctx.fillStyle = '#120d1a'; sctx.beginPath(); sctx.moveTo(sx - w / 2, b); sctx.lineTo(sx - w / 2, b - h + 20); sctx.arc(sx, b - h + 20, w / 2, Math.PI, 0); sctx.lineTo(sx + w / 2, b); sctx.fill();
@@ -926,7 +938,9 @@ function drawStreet(t, dt) {
   syncOthers();
 
   sctx.fillStyle = '#0b0918'; sctx.fillRect(0, 0, SW, SH);
-  if (bgFar && bgNear) { tileX(bgFar, camX * .5, STREET_Y - bgFar.height); tileX(bgNear, camX, STREET_Y); }
+  const bgi = sceneImg(S);
+  if (bgi) sctx.drawImage(bgi, 0, S.img.y, 1536, 624, 0, 0, SW, SH);
+  else if (!S.img && bgFar && bgNear) { tileX(bgFar, camX * .5, STREET_Y - bgFar.height); tileX(bgNear, camX, STREET_Y); }
   // fener direkleri kaldırımın önünde
   for (const x of S.lamps) {
     const sx = x - camX; if (sx < -40 || sx > SW + 40) continue;
@@ -1061,6 +1075,7 @@ for (const [id, side] of [['padL', 'l'], ['padR', 'r'], ['padU', 'u'], ['padD', 
   for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) b.addEventListener(ev, () => { keys[side] = 0; });
 }
 for (const n of scene().npcs) npcActor(n);
+setFloor(scene());
 
 /* ---------- Karakter seçimi ---------- */
 ORDER.forEach(id => {
