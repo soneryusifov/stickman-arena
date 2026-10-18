@@ -745,8 +745,10 @@ const SCENES = {
   hall: { name: 'Belediye', w: 1280, map: [0, -1], lamps: [],
     img: { src: 'assets/bg/hall.webp?v=1', y: 110 }, y0: 398, y1: 512, hs: .72,
     doors: [{ x: 386, to: 'square', name: 'Meydan', painted: true, ly: 150 }], npcs: [{ k: 'hall', x: 850, y: 440, cls: 'paladin', face: -1, name: 'Kâhya' }] },
-  market: { name: 'Çarşı', w: 2400, map: [-1, 0], left: 'mineroad', right: 'square', lamps: [300, 1200, 2100],
-    doors: [], npcs: [{ k: 'smith', x: 760, y: 440, cls: 'tank', face: 1, name: 'Demirci Usta' }, { k: 'alch', x: 1640, y: 440, cls: 'mage', face: -1, name: 'Simyacı' }] },
+  // çarşı: kaldırım 631. satır, zemin 668'den; ocak/örs x 490, simyacı kazanı x 1015, dükkânı x 1090
+  market: { name: 'Çarşı', w: 1280, map: [-1, 0], left: 'mineroad', right: 'square', lamps: [],
+    img: { src: 'assets/bg/market.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .58,
+    doors: [], npcs: [{ k: 'smith', x: 400, y: 452, cls: 'tank', face: 1, name: 'Demirci Usta' }, { k: 'alch', x: 905, y: 452, cls: 'mage', face: -1, name: 'Simyacı' }] },
   mineroad: { name: 'Maden Yolu', w: 1900, map: [-2, 0], right: 'market', lamps: [400, 1500],
     doors: [], npcs: [{ k: 'mine', x: 760, y: 440, cls: 'berserker', face: 1, name: 'Madenci' }] },
   arenagate: { name: 'Arena Kapısı', w: 1900, map: [1, 0], left: 'square', lamps: [300, 1600],
