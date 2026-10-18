@@ -727,6 +727,7 @@ function frame(t) {
    binaların önünde içeri girer; diğer oyuncular konumlarıyla görünür.
    ===================================================================== */
 const SV = $('sv'), sctx = SV.getContext('2d'), SW = 1280, SH = 520, SGY = 470, WORLD = 3400, HS = .62;
+const WALK_RATE = 1.8; // yürüme temposu (1 = savaştaki yürüyüş); hız buna göre hesaplanır
 const BLD = [
   { k: 'hall', x: 430, name: 'Belediye', img: () => `assets/baked/town_hall_${T.hall}.png?v=1` },
   { k: 'mine', x: 1040, name: 'Altın Madeni', img: () => `assets/baked/town_mine_${T.mine}.png?v=1` },
@@ -813,7 +814,11 @@ function drawBubble(x, y, txt) {
   sctx.fillStyle = '#1a1205'; sctx.fillText(t, x, y - 8, w - 10);
 }
 function drawStreet(t, dt) {
-  const sp = .3 * dt;
+  // yürüme hızı adıma bağlı: yere basan ayak (footF/footB = ±24·sin) ne kadar geri giderse beden o kadar ilerler,
+  // böylece ayak yerde kaymaz; ortalama hız yarım döngüde (450 ms) 48 birimdir
+  const avg = 48 * HS / 450 * WALK_RATE * dt;
+  let sp = avg;
+  if (me.A && me.A.cur === 'walk') { const an = me.A.ANIMS.walk, p = (me.A.at % an.dur) / an.dur; sp = 24 * 2 * Math.PI / an.dur * Math.abs(Math.cos(p * 2 * Math.PI)) * HS * WALK_RATE * dt; }
   let dir = keys.r - keys.l;
   if (dir) me.target = null;
   else if (me.target != null) { const d = me.target - me.x; if (Math.abs(d) < 5) me.target = null; else dir = Math.sign(d); }
@@ -821,7 +826,7 @@ function drawStreet(t, dt) {
   me.walk = !!dir;
   if (me.A) {
     if (me.walk && me.A.cur !== 'walk') Rig.play(me.A, 'walk'); else if (!me.walk && me.A.cur === 'walk') Rig.play(me.A, 'idle');
-    me.A.face = me.face; Rig.update(me.A, dt);
+    me.A.face = me.face; Rig.update(me.A, me.walk ? dt * WALK_RATE : dt);
   }
   camX = Math.max(0, Math.min(WORLD - SW, me.x - SW / 2));
   const st = Math.round(me.x / 8) + ',' + me.face + ',' + (me.walk ? 1 : 0);
@@ -851,11 +856,11 @@ function drawStreet(t, dt) {
   // diğer oyuncular
   const list = [...others.entries()];
   for (const [k, o] of list) {
-    const d = o.tx - o.x; o.x += Math.sign(d) * Math.min(Math.abs(d), sp * 1.15);
+    const d = o.tx - o.x; o.x += Math.sign(d) * Math.min(Math.abs(d), Math.abs(d) > 260 ? Math.abs(d) : avg * 1.08);
     const walking = Math.abs(d) > 3 || o.w;
     if (o.A) {
       if (walking && o.A.cur !== 'walk') Rig.play(o.A, 'walk'); else if (!walking && o.A.cur === 'walk') Rig.play(o.A, 'idle');
-      o.A.face = o.face; Rig.update(o.A, dt);
+      o.A.face = o.face; Rig.update(o.A, walking ? dt * WALK_RATE : dt);
       Rig.draw(sctx, o.A, t, dt, o.x - camX, SGY, HS, null);
     }
     const sx = o.x - camX, pr = o.p.presence || {};
@@ -1668,7 +1673,7 @@ $('again').addEventListener('click', () => { if (lastDuel) { lastDuel = false; o
 pick(chosen); openLobby(); requestAnimationFrame(frame);
 initRoom();
 try { if (!localStorage.getItem('sa.guide')) openGuide(); } catch (e) { openGuide(); }
-window.__game = { track, daily, renderQuests, F: () => F, S: () => S2, act: playerAct, pick, start: () => $('choose').click(), CLASSES, save: () => SAVE, open: openSelect, town: () => showScreen('town'), skillHeal, mkFighter, leagueOf, reward };
+window.__game = { street: () => me, track, daily, renderQuests, F: () => F, S: () => S2, act: playerAct, pick, start: () => $('choose').click(), CLASSES, save: () => SAVE, open: openSelect, town: () => showScreen('town'), skillHeal, mkFighter, leagueOf, reward };
 })();
 </script>
 
