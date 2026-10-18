@@ -180,6 +180,19 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .chips{display:flex;gap:.35em;min-height:1.3em;flex-wrap:wrap}
 .right .chips{justify-content:flex-end}
 .chip{font-size:.72em;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:.1em .5em;border-radius:2px;background:rgba(0,0,0,.55);border:1px solid currentColor}
+/* takım kartları: her takım bir sütun; çok kişide kartlar küçülür; dokununca hedef seçilir */
+.team{display:flex;flex-direction:column;gap:.35em;width:36%;min-width:0}
+.team .unit{width:100%;cursor:pointer;border-radius:4px;padding:.15em;pointer-events:auto}
+.team .unit:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.team.many .portrait{width:2.9em;height:2.9em} .team.many .bar{height:.85em} .team.many .bar span{font-size:.68em}
+.team.many .name{font-size:.88em} .team.many .chips{min-height:0} .team.many .chip{font-size:.62em}
+.unit.cur{background:rgba(242,193,78,.14);box-shadow:inset 0 0 0 1px rgba(242,193,78,.6)}
+.unit.tgt{box-shadow:inset 0 0 0 2px #ff5a5a} .unit.atgt{box-shadow:inset 0 0 0 2px #4be38a}
+.unit.dead{opacity:.4;filter:grayscale(.8)}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.modes button{font:inherit;font-weight:800;font-size:15px;padding:.5em;border-radius:4px;border:1px solid var(--line);background:#100d17;color:var(--muted);cursor:pointer}
+.modes button[aria-checked="true"]{border-color:var(--gold);color:var(--gold);background:#1c1626}
+.modes button:focus-visible{outline:2px solid #fff;outline-offset:1px}
 .turnbox{text-align:center;display:flex;flex-direction:column;align-items:center;flex:none}
 .turnbox small{font-family:var(--font-display);font-weight:600;letter-spacing:.12em;color:var(--muted);font-size:.85em}
 .turnbox b{font-family:var(--font-display);font-weight:800;font-size:2.6em;line-height:1;text-shadow:0 2px 0 #000;font-variant-numeric:tabular-nums}
@@ -275,7 +288,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .chatbox .chat{min-height:0;max-height:max(70px,14cqw);font-size:13px;padding:6px;background:rgba(8,6,12,.7)}
 .chatbox .chatf input{font-size:14px;padding:.4em .6em} .chatbox .chatf button{padding:0 10px;font-size:13px}
 .chatbox.min{width:auto} .chatbox.min .chat,.chatbox.min .chatf{display:none}
-.atabs.three{grid-template-columns:repeat(3,1fr)} .atabs.three button{padding:.4em;font-size:13px}
+.atabs.three{grid-template-columns:repeat(4,1fr)} .atabs.three button{padding:.4em;font-size:13px}
 .lb{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:3px;counter-reset:lb}
 .lb li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 8px;border-radius:4px;background:#100d17;font-size:14px}
 .lb li .n{color:var(--muted);font-weight:700;text-align:right} .lb li .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .lb li .v{font-weight:700;color:var(--gold)}
@@ -397,8 +410,9 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         <section class="opanel players board" id="lbPanel" aria-labelledby="lbT" hidden>
           <h3 id="lbT">Sıralama <small id="lbSub"></small></h3>
           <div class="atabs three" role="tablist">
-            <button type="button" role="tab" data-by="league" aria-pressed="true">Lig</button>
-            <button type="button" role="tab" data-by="wins" aria-pressed="false">Galibiyet</button>
+            <button type="button" role="tab" data-by="week" aria-pressed="true">Haftalık</button>
+            <button type="button" role="tab" data-by="month" aria-pressed="false">Aylık</button>
+            <button type="button" role="tab" data-by="league" aria-pressed="false">Tüm zamanlar</button>
             <button type="button" role="tab" data-by="duels" aria-pressed="false">Düello</button>
           </div>
           <ol class="lb" id="lbList"></ol>
@@ -430,8 +444,11 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         <div class="dskills arena-only" id="dSkills"></div>
         <dl class="stats" id="dStats"></dl>
         <div class="gear smith-only"><div class="gearhead"><span>Ekipman (her sınıfın kendi eşyaları)</span><b id="gold"></b></div><div class="gearlist" id="gearList"></div></div>
+        <div class="modes arena-only" id="modes" role="radiogroup" aria-label="Savaş kipi">
+          <button type="button" role="radio" data-mode="1v1">1v1</button><button type="button" role="radio" data-mode="1v2">1v2</button><button type="button" role="radio" data-mode="2v2">2v2</button><button type="button" role="radio" data-mode="3v3">3v3</button>
+        </div>
         <button class="btn arena-only" id="choose" type="button" disabled>Ekipmanlar hazırlanıyor…</button>
-        <p class="loadnote arena-only">Rakibin her savaşta diğer 14 sınıftan rastgele seçilir ve lig seviyende gelir. Kazandıkça lig ve ödül yükselir, kaybedince düşer.</p>
+        <p class="loadnote arena-only" id="modeNote"></p>
       </aside>
     </div>
   </section>
@@ -439,25 +456,9 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
   <section class="screen" id="battleScreen" hidden>
     <div class="arena">
       <div class="hud">
-        <div class="unit left">
-          <canvas class="portrait" id="pPor" width="96" height="96"></canvas>
-          <div class="info">
-            <div class="name"><span class="lv" id="pLv">Lv 1</span><span id="pName">Sen</span></div>
-            <div class="bar hp"><i id="pHp"></i><span id="pHpT"></span></div>
-            <div class="bar mp"><i id="pMp"></i><span id="pMpT"></span></div>
-            <div class="chips" id="pCh"></div>
-          </div>
-        </div>
+        <div class="team left" id="teamL"></div>
         <div class="turnbox"><small id="turnLbl">TUR 1</small><b id="timer">15</b><em id="whose" class="you">Senin sıran</em></div>
-        <div class="unit right">
-          <canvas class="portrait" id="ePor" width="96" height="96"></canvas>
-          <div class="info">
-            <div class="name"><span class="lv" id="eLv">Lv 1</span><span id="eName">Rakip</span></div>
-            <div class="bar hp"><i id="eHp"></i><span id="eHpT"></span></div>
-            <div class="bar mp"><i id="eMp"></i><span id="eMpT"></span></div>
-            <div class="chips" id="eCh"></div>
-          </div>
-        </div>
+        <div class="team right" id="teamR"></div>
       </div>
       <canvas id="cv"></canvas>
       <div class="overlay" id="over" hidden>
@@ -593,7 +594,7 @@ const fx = { spark: s => parts.push({ ...s, life: 0, size: 2.5, g: 0 }) };
 function burst(x, y, color, n = 24, sp = 260) {
   for (let i = 0; i < n; i++) { const a = Math.random() * 7, s = rnd(.3, 1) * sp; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: rnd(.4, .9), color, size: rnd(2, 5), g: 300 }); }
 }
-function floatText(A, txt, color, size = 36) { texts.push({ x: A.x + A.off * A.face + rnd(-20, 20), y: GY - 330, txt, color, size, life: 0, max: 1.3 }); }
+function floatText(A, txt, color, size = 36) { texts.push({ x: A.x + A.off * A.face + rnd(-20, 20), y: (A.gy || GY) - 330 * (A.sc || 1), txt, color, size, life: 0, max: 1.3 }); }
 function shake(m) { if (!reduceMotion) { shakeT = now(); shakeMag = m; } }
 const bg = document.createElement('canvas'); bg.width = W; bg.height = H;
 (function () {
@@ -825,13 +826,13 @@ function gearStats(c, g) {
 }
 // rakip, oyuncunun ortalama seviyesinde gelir; her eşya ±1 oynar
 function foeGear(L) { const out = {}; ITEMS.forEach(k => out[k] = Math.max(1, Math.min(10, L + Math.round(Math.random() * 2 - 1)))); return out; }
-const mkFighter = (id, side, gear, alch = T.alch) => {
+const mkFighter = (id, team, gear, alch = T.alch, o = {}) => {
   const c = CLASSES[id], st = gearStats(c, gear);
-  return { side, id, cls: c, gear, name: side === 'player' ? c.name : 'Rakip ' + c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
+  return { team, side: 'enemy', ctrl: o.ctrl || 'ai', id, cls: c, gear, name: o.name || c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
     regen: st.regen, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, armor: st.armor, skills: [...c.skills.map((s, i) => ({ ...s, color: s.color || glowOf(id), snd: id + '_' + i })), { ...POTION, heal: potionHeal(alch) }],
     healMul: 1 + (st.hp / c.hp - 1) * .5, heals: 0,
-    shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, potions: potionCount(alch),
-    A: Rig.actor(id, side === 'player' ? 260 : 1020, side === 'player' ? 1 : -1, gear) }; // savaşçılar sahnenin iki ucunda
+    shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, potions: potionCount(alch || 1),
+    A: Rig.actor(id, 260, 1, gear) }; // konum ve yön newBattle'da dizilime göre verilir
 };
 
 /* ---------- Ana döngü ---------- */
@@ -859,22 +860,33 @@ function frame(t) {
   ctx.drawImage(bg, 0, 0);
   drawTorch(150, t); drawTorch(1130, t);
   if (F) {
-    Rig.update(F.player.A, dt * SPD); Rig.update(F.enemy.A, dt * SPD);
-    const order = F.enemy.A.off > F.player.A.off ? [F.player, F.enemy] : [F.enemy, F.player];
+    for (const f of F.list) Rig.update(f.A, dt * SPD);
+    // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
+    const ring = (f, col) => { if (!f || !isAlive(f)) return; ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = .75 + Math.sin(t / 200) * .2; ctx.beginPath(); ctx.ellipse(f.A.x + f.A.off * f.A.face, f.gy + 4, 78 * f.sc, 16 * f.sc, 0, 0, 7); ctx.stroke(); ctx.restore(); };
+    if (myTurn() && S2.waiting) { ring(S2.foe, '#ff5a5a'); ring(S2.ally, '#4be38a'); }
+    const order = F.list.slice().sort((a, b) => (a.gy - b.gy) || (Math.abs(a.A.off) - Math.abs(b.A.off)));
     for (const f of order) {
+      const gy = f.gy, s = S * f.sc, fx0 = f.A.x + f.A.off * f.A.face;
       if (f.shield && !f.A.ANIMS[f.A.cur].hold) {
         const a = .45 + Math.sin(t / 180) * .15;
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = f.shieldColor;
-        ctx.beginPath(); ctx.ellipse(f.A.x + f.A.off * f.A.face, GY - 170, 120, 200, 0, 0, 7);
+        ctx.beginPath(); ctx.ellipse(fx0, gy - 170 * f.sc, 120 * f.sc, 200 * f.sc, 0, 0, 7);
         ctx.globalAlpha = a * .3; ctx.lineWidth = 16; ctx.stroke(); ctx.globalAlpha = a; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
       }
       const fl = Math.max(0, 1 - (t - f.A.hitT) / 220);
       if (fl > 0) { // darbe parlaması: karakter ayrı katmana çizilir, üstüne tek seferde beyaz basılır
         lctx.setTransform(1, 0, 0, 1, 0, 0); lctx.clearRect(0, 0, W, H);
-        Rig.draw(lctx, f.A, t, dt, f.A.x, GY, S, null);
+        Rig.draw(lctx, f.A, t, dt, f.A.x, gy, s, null);
         lctx.globalCompositeOperation = 'source-atop'; lctx.fillStyle = `rgba(255,255,255,${fl * .75})`; lctx.fillRect(0, 0, W, H);
         lctx.globalCompositeOperation = 'source-over'; ctx.drawImage(layer, 0, 0);
-      } else Rig.draw(ctx, f.A, t, dt, f.A.x, GY, S, fx);
+      } else Rig.draw(ctx, f.A, t, dt, f.A.x, gy, s, fx);
+    }
+    // sırası gelenin başının üstünde ok (takım savaşında kimin oynadığı görünsün)
+    const c = S2.cur;
+    if (c && !S2.over && F.list.length > 2) {
+      const x = c.A.x + c.A.off * c.A.face, y = c.gy - 345 * c.sc + Math.sin(t / 160) * 5;
+      ctx.fillStyle = c.side === 'player' ? '#f2c14e' : '#ff5a5a'; ctx.strokeStyle = '#000'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x - 13, y - 14); ctx.lineTo(x + 13, y - 14); ctx.lineTo(x, y + 2); ctx.closePath(); ctx.fill(); ctx.stroke();
     }
   }
   ctx.globalCompositeOperation = 'lighter';
@@ -1467,7 +1479,7 @@ function showScreen(name) {
   $('speedBtn').hidden = name !== 'battle'; $('helpBtn').hidden = name !== 'town' && name !== 'lobby';
   Sfx.music(name === 'battle' ? 'battle' : 'town');
   $('backBtn').setAttribute('aria-label', name === 'battle' ? 'Karakter seçimine dön' : 'Meydana dön');
-  $('plaque').textContent = name === 'town' ? 'KASABA' : name === 'lobby' ? 'KASABA MEYDANI' : name === 'battle' ? (pvp ? 'DÜELLO' : 'SAVAŞ ARENASI (1v1)') : mode === 'smith' ? 'DEMİRCİ' : 'ARENA · KARAKTER SEÇ';
+  $('plaque').textContent = name === 'town' ? 'KASABA' : name === 'lobby' ? 'KASABA MEYDANI' : name === 'battle' ? (pvp ? 'DÜELLO' : 'SAVAŞ ARENASI (' + battleMode + ')') : mode === 'smith' ? 'DEMİRCİ' : 'ARENA · KARAKTER SEÇ';
   if (name === 'town') renderTown();
   lobbyPresence();
   scrollTo({ top: 0 });
@@ -1613,13 +1625,17 @@ setInterval(() => { // depo göstergesi
   $('mineTxt').textContent = st + ' / ' + cap; $('mineBar').style.width = Math.round(st / cap * 100) + '%';
   b.textContent = 'Topla · +' + st; b.disabled = st < 1;
 }, 1000);
-$('choose').addEventListener('click', async () => {
-  const b = $('choose'); b.disabled = true; b.textContent = 'Rakip hazırlanıyor…';
-  const pool = ORDER.filter(k => k !== chosen), foe = pool[Math.floor(Math.random() * pool.length)];
-  try { await Promise.all([Rig.load(foe), Rig.loadTiers(foe)]); } catch (e) { b.textContent = 'Rakip yüklenemedi'; b.disabled = false; return; }
-  b.disabled = false; b.textContent = 'Seç ve Savaş';
-  showScreen('battle'); reset(foe);
-});
+$('choose').addEventListener('click', () => startArena());
+// savaş kipi: 1v1, 1v2, 2v2, 3v3 (takım arkadaşları ve rakipler bot)
+const MODE_TXT = { '1v1': 'Rakibin diğer 14 sınıftan rastgele seçilir ve lig seviyende gelir. Kazanınca lig puanı kazanır, kaybedince kaybedersin.',
+  '1v2': 'Tek başına iki rakibe karşı. Rakipler bir kademe zayıf gelir; kazanırsan ödül büyük.',
+  '2v2': 'Sen ve bir bot arkadaş, iki rakibe karşı. Hedefini rakibe ya da arkadaşına dokunarak seç.',
+  '3v3': 'Sen ve iki bot arkadaş, üç rakibe karşı. Takım savaşında yenilgi lig puanı düşürmez.' };
+function renderModes() {
+  document.querySelectorAll('#modes [data-mode]').forEach(b => b.setAttribute('aria-checked', b.dataset.mode === battleMode));
+  $('modeNote').textContent = MODE_TXT[battleMode];
+}
+document.querySelectorAll('#modes [data-mode]').forEach(b => b.addEventListener('click', () => { battleMode = b.dataset.mode; try { localStorage.setItem('sa.mode', battleMode); } catch (e) {} renderModes(); }));
 function toSelect() { S2.over = true; S2.waiting = false; S2.gid++; openSelect('arena'); }
 $('backBtn').addEventListener('click', () => {
   if (screen === 'battle' && (pvp || lastDuel)) { pvpQuit(); return; }
@@ -1627,10 +1643,88 @@ $('backBtn').addEventListener('click', () => {
 });
 $('change').addEventListener('click', toSelect);
 
+/* =====================================================================
+   TAKIM SAVAŞI: 1v1, 1v2, 2v2, 3v3. Her takımda 1-3 savaşçı; takımlar sırayla,
+   her takım kendi canlı üyelerini sırayla oynatır (A1, B1, A2, B2...).
+   Saldırı rakibe, iyileştirme takım arkadaşına gider; oyuncu hedefini dokunarak seçer,
+   seçmezse en öndeki rakip / en yaralı arkadaş hedeflenir. Boş yerleri botlar doldurur.
+   F.list'in sırası her ekranda aynıdır (çok oyunculu eşitleme dizine dayanır); kendi takımın hep solda görünür.
+   ===================================================================== */
+const MODES = { '1v1': [1, 1], '1v2': [1, 2], '2v2': [2, 2], '3v3': [3, 3] };
+let battleMode = '1v1';
+try { if (MODES[localStorage.getItem('sa.mode')]) battleMode = localStorage.getItem('sa.mode'); } catch (e) {}
+// dizilim [x (soldaki takım), y kayması, ölçek]: öndeki büyük ve aşağıda, arkadakiler küçük ve yukarıda
+const LAYOUT = { 1: [[260, 0, 1]], 2: [[340, 24, .8], [150, -34, .72]], 3: [[330, 28, .78], [125, -38, .68], [500, -38, .68]] };
+const isAlive = f => f.hp > 0;
+const otherTeam = t => t === 'A' ? 'B' : 'A';
+const foesOf = f => F[otherTeam(f.team)].filter(isAlive);
+const alliesOf = f => F[f.team].filter(isAlive);
+const autoFoe = f => foesOf(f).sort((a, b) => a.slot - b.slot)[0];
+const autoAlly = f => alliesOf(f).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0] || f;
+const needsFoe = sk => sk.kind === 'melee' || sk.kind === 'ranged';
+const needsAlly = sk => sk.kind === 'heal';
+const myTurn = () => !!(F && F.me && S2.cur === F.me && !S2.over);
+function targetFor(f, sk, t) {
+  if (needsFoe(sk)) return t && isAlive(t) && t.team !== f.team ? t : autoFoe(f);
+  if (needsAlly(sk)) return t && isAlive(t) && t.team === f.team ? t : autoAlly(f);
+  return f;
+}
+// savaşı kur: cfg = { A: [üye], B: [üye] }, üye = { id, gear, alch, ctrl: 'me'|'ai'|'remote', name }
+function newBattle(cfg) {
+  const list = [];
+  for (const team of ['A', 'B']) cfg[team].forEach((m, slot) => { const f = mkFighter(m.id, team, m.gear, m.alch, m); f.slot = slot; f.idx = list.length; list.push(f); });
+  F = { list, A: list.filter(f => f.team === 'A'), B: list.filter(f => f.team === 'B') };
+  F.me = list.find(f => f.ctrl === 'me'); F.player = F.me; F.enemy = F[otherTeam(F.me.team)][0]; // eski adlar (testler, düello)
+  for (const f of list) {
+    f.side = f.team === F.me.team ? 'player' : 'enemy';
+    const [x, dy, s] = LAYOUT[F[f.team].length][f.slot], left = f.side === 'player';
+    f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = GY + dy; f.sc = f.A.sc = s;
+  }
+  S2 = { turn: 1, moves: 0, cur: null, busy: false, over: false, waiting: false, timer: 15, gid: S2.gid + 1, ptr: { A: -1, B: -1 }, foe: null, ally: null };
+  parts.length = texts.length = projs.length = 0; flash = null;
+  $('log').innerHTML = ''; $('over').hidden = true;
+  buildHUD(); buildSkillButtons();
+}
+// sıradaki savaşçı: önce karşı takımın sıradaki canlı üyesi; o takımda kimse yoksa kendi takımı
+function nextUp(fromTeam) {
+  for (const team of [otherTeam(fromTeam), fromTeam]) {
+    const arr = F[team];
+    for (let k = 1; k <= arr.length; k++) {
+      const j = (S2.ptr[team] + k) % arr.length;
+      if (isAlive(arr[j])) { if (team === 'A' && j <= S2.ptr.A) S2.turn++; S2.ptr[team] = j; return arr[j]; } // A takımı başa dönünce yeni tur
+    }
+  }
+  return null;
+}
+const teamDown = t => F[t].every(f => !isAlive(f));
+function checkEnd() { if (teamDown('A')) { end('B'); return true; } if (teamDown('B')) { end('A'); return true; } return false; }
+function nextTurn(from) { const n = nextUp(from.team); if (n) beginTurn(n); }
+function pickTarget(t) {
+  if (!F || S2.over || !t || !isAlive(t)) return;
+  if (t.team === F.me.team) S2.ally = t; else S2.foe = t;
+  updateHUD();
+}
+
 /* ---------- HUD ---------- */
+function buildHUD() {
+  for (const [el, team] of [[$('teamL'), F.me.team], [$('teamR'), otherTeam(F.me.team)]]) {
+    el.innerHTML = ''; el.classList.toggle('many', F[team].length > 1);
+    for (const f of F[team]) {
+      const u = document.createElement('div'); u.className = 'unit' + (el.id === 'teamR' ? ' right' : ''); f.ui = u;
+      u.innerHTML = `<canvas class="portrait" width="96" height="96"></canvas><div class="info"><div class="name"><span class="lv">Lv ${gearLevel(f.gear)}</span><span class="nm"></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="chips"></div></div>`;
+      u.querySelector('.nm').textContent = f.name;
+      u.setAttribute('role', 'button'); u.tabIndex = 0; u.setAttribute('aria-label', (f.side === 'player' ? 'Takım arkadaşı: ' : 'Rakip: ') + f.name + ' (hedef seç)');
+      const col = f.side === 'player' ? glowOf(f.id) : '#c41a30', pc = u.querySelector('canvas'); pc.style.setProperty('--c', col);
+      Rig.portrait(pc, f.id, el.id === 'teamR' ? -1 : 1, col, f.gear);
+      u.addEventListener('click', () => pickTarget(f));
+      u.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickTarget(f); } });
+      el.appendChild(u);
+    }
+  }
+}
 function buildSkillButtons() {
   const el = $('skills'); el.innerHTML = '';
-  F.player.skills.forEach((sk, i) => {
+  F.me.skills.forEach((sk, i) => {
     const b = document.createElement('button'); b.className = 'skill'; b.id = 'sk-' + i; b.type = 'button'; b.title = skillDesc(sk);
     b.style.setProperty('--c', sk.color);
     b.innerHTML = `<span class="key">${i + 1}</span>${svg(sk.icon)}<span class="nm">${sk.name}</span><span class="cost"></span>`;
@@ -1647,20 +1741,26 @@ function chips(f) {
   return h + `<span class="chip" style="color:var(--heal)">İksir ${f.potions}</span>`;
 }
 function updateHUD() {
-  for (const [k, f] of [['p', F.player], ['e', F.enemy]]) {
-    $(k + 'Hp').style.width = (f.hp / f.maxHp * 100) + '%'; $(k + 'HpT').textContent = `${f.hp} / ${f.maxHp}`;
-    $(k + 'Mp').style.width = (f.mp / f.maxMp * 100) + '%'; $(k + 'MpT').textContent = `${f.mp} / ${f.maxMp}`;
-    $(k + 'Ch').innerHTML = chips(f);
+  if (!F) return;
+  const mine = myTurn();
+  for (const f of F.list) {
+    const u = f.ui; if (!u) continue;
+    u.querySelector('.hp i').style.width = (f.hp / f.maxHp * 100) + '%'; u.querySelector('.hp span').textContent = `${f.hp} / ${f.maxHp}`;
+    u.querySelector('.mp i').style.width = (f.mp / f.maxMp * 100) + '%'; u.querySelector('.mp span').textContent = `${f.mp} / ${f.maxMp}`;
+    u.querySelector('.chips').innerHTML = chips(f);
+    u.classList.toggle('dead', !isAlive(f)); u.classList.toggle('cur', S2.cur === f && !S2.over);
+    u.classList.toggle('tgt', mine && S2.foe === f); u.classList.toggle('atgt', mine && S2.ally === f);
   }
   $('turnLbl').textContent = 'TUR ' + S2.turn;
-  const mine = S2.cur === 'player' && !S2.over;
   $('timer').textContent = mine ? S2.timer : '–'; $('timer').classList.toggle('low', mine && S2.timer <= 5);
-  const w = $('whose'); w.textContent = S2.over ? 'Bitti' : mine ? 'Senin sıran' : 'Rakibin sırası'; w.className = mine ? 'you' : 'foe';
-  const p = F.player;
+  const c = S2.cur, w = $('whose');
+  w.textContent = S2.over ? 'Bitti' : mine ? 'Senin sıran' : c ? (c.side === 'player' ? c.name.replace(/^Müttefik /, '') : 'Rakip: ' + c.name.replace(/^Rakip /, '')) : '';
+  w.className = !c || c.side === 'player' ? 'you' : 'foe';
+  const p = F.me;
   p.skills.forEach((sk, i) => {
     const b = $('sk-' + i); if (!b) return;
     b.querySelector('.cost').textContent = sk.kind === 'potion' ? `${p.potions} adet · +${sk.heal}` : sk.cost ? sk.cost + ' Mana' : 'Mana yok';
-    b.disabled = !(S2.waiting && !S2.busy) || p.mp < sk.cost || (sk.kind === 'potion' && (p.potions <= 0 || p.hp >= p.maxHp));
+    b.disabled = !(mine && S2.waiting && !S2.busy) || p.mp < sk.cost || (sk.kind === 'potion' && (p.potions <= 0 || p.hp >= p.maxHp));
   });
 }
 function log(txt, who) {
@@ -1669,7 +1769,7 @@ function log(txt, who) {
 }
 
 /* ---------- Savaş mantığı ---------- */
-const body = f => [f.A.x + f.A.off * f.A.face, GY - 170];
+const body = f => [f.A.x + f.A.off * f.A.face, (f.gy || GY) - 170 * (f.sc || 1)];
 function tweenOff(A, to, ms) {
   const from = A.off, t0 = now(); ms /= SPD;
   return new Promise(res => { const step = () => { const k = Math.min(1, (now() - t0) / ms); A.off = lerp(from, to, ease(k)); k < 1 ? requestAnimationFrame(step) : res(); }; step(); });
@@ -1678,13 +1778,13 @@ function tweenOff(A, to, ms) {
 function skillHeal(f, sk) { return Math.round(sk.heal * f.healMul * HEAL_FATIGUE ** f.heals++); }
 function heal(f, amount, color = '#4be38a') {
   const h = Math.min(amount, f.maxHp - f.hp); if (h <= 0) return 0;
-  f.hp += h; const [x] = body(f);
-  for (let i = 0; i < 24; i++) parts.push({ x: x + rnd(-40, 40), y: GY - rnd(0, 220), vx: rnd(-10, 10), vy: rnd(-120, -50), life: 0, max: rnd(.6, 1.1), color, size: rnd(2, 5), g: 0 });
+  f.hp += h; const [x] = body(f), gy = f.gy || GY, s = f.sc || 1;
+  for (let i = 0; i < 24; i++) parts.push({ x: x + rnd(-40, 40) * s, y: gy - rnd(0, 220) * s, vx: rnd(-10, 10), vy: rnd(-120, -50), life: 0, max: rnd(.6, 1.1), color, size: rnd(2, 5), g: 0 });
   floatText(f.A, '+' + h, '#4be38a', 38);
   return h;
 }
 const sfxSkill = (sk, fallback) => { if (!(sk.snd && Sfx.skill(sk.snd))) Sfx.play(fallback); };
-// savaş zarları: düelloda iki ekran aynı sonucu bulsun diye ortak tohumlu üreteç
+// savaş zarları: çok oyunculu savaşta tüm ekranlar aynı sonucu bulsun diye ortak tohumlu üreteç (botların kararları da)
 let crng = Math.random;
 const seeded = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 function hit(a, d, sk) {
@@ -1704,7 +1804,7 @@ function hit(a, d, sk) {
   burst(hx, hy, sk.color, crit || sk.big ? 44 : 26, crit || sk.big ? 380 : 280);
   shake(sk.big || crit ? 16 : 8); if (sk.big) flash = { t0: now(), color: sk.color };
   floatText(d.A, (crit ? 'KRİTİK -' : '-') + dmg, crit ? '#ffd34a' : '#ff5a5a', crit ? 46 : 38);
-  if (a.side === 'player') { SAVE.stats.dmg += dmg; track('dmg', dmg); if (crit) { SAVE.stats.crits++; track('crit'); } }
+  if (a.ctrl === 'me') { SAVE.stats.dmg += dmg; track('dmg', dmg); if (crit) { SAVE.stats.crits++; track('crit'); } }
   let extra = '';
   if (sk.stun && d.hp > 0) { d.stunned = true; extra += ', sersemledi'; setTimeout(() => { Sfx.play('stun'); floatText(d.A, 'SERSEM', '#ffd27a', 30); }, 250); }
   if (sk.dot && d.hp > 0) { d.dot = { ...sk.dot, dmg: Math.round(sk.dot.dmg * (a.dmgMul || 1)) }; extra += ', ' + sk.dot.label.toLowerCase() + ' etkisi'; }
@@ -1714,42 +1814,43 @@ function hit(a, d, sk) {
 }
 // menzilli görsel: yerinden çıkıp hedefe gider; bitiş süresini döner
 function launch(f, o, sk) {
-  const A = f.A, [tx, ty] = body(o), from = A.wp.tip || A.wp.handS || body(f), spr = Rig.sprites[f.id] || {};
+  const A = f.A, [tx, ty] = body(o), from = A.wp.tip || A.wp.handS || body(f), spr = Rig.sprites[f.id] || {}, og = o.gy || GY, os = o.sc || 1;
   sfxSkill(sk, { meteor: 'meteor', vines: 'vines', arrow: 'arrow', trap: 'arrow' }[sk.fx] || 'bolt');
-  if (sk.fx === 'meteor') { projs.push({ x0: tx - o.A.face * -380, y0: -80, x1: tx, y1: GY - 110, t0: now(), dur: 650 / SPD, color: sk.color, r: 80, arc: 0 }); return 650; }
+  if (sk.fx === 'meteor') { projs.push({ x0: tx - o.A.face * -380, y0: -80, x1: tx, y1: og - 110 * os, t0: now(), dur: 650 / SPD, color: sk.color, r: 80, arc: 0 }); return 650; }
   if (sk.fx === 'vines') {
-    for (let i = 0; i < 30; i++) parts.push({ x: tx + rnd(-60, 60), y: GY - 4, vx: rnd(-30, 30), vy: -rnd(160, 320), life: -i * .01, max: .6, color: i % 3 ? '#7dbf3a' : '#4e8a22', size: rnd(3, 6), g: 300 });
+    for (let i = 0; i < 30; i++) parts.push({ x: tx + rnd(-60, 60), y: og - 4, vx: rnd(-30, 30), vy: -rnd(160, 320), life: -i * .01, max: .6, color: i % 3 ? '#7dbf3a' : '#4e8a22', size: rnd(3, 6), g: 300 });
     return 250;
   }
-  if (sk.fx === 'arrow' && spr.main) { projs.push({ x0: from[0], y0: from[1], x1: tx, y1: ty, t0: now(), dur: 380 / SPD, arc: 20, sprite: spr.main, size: RC[f.id].fit.main.h * S, dir: (A.face > 0 ? 1 : -1) * Math.PI / 2 }); return 380; }
-  if (sk.fx === 'trap' && spr.off) { const h = A.wp.handK || from; projs.push({ x0: h[0], y0: h[1], x1: tx, y1: GY - 30, t0: now(), dur: 560 / SPD, arc: 140, sprite: spr.off, size: RC[f.id].fit.off.h * S, spin: true }); return 560; }
+  if (sk.fx === 'arrow' && spr.main) { projs.push({ x0: from[0], y0: from[1], x1: tx, y1: ty, t0: now(), dur: 380 / SPD, arc: 20, sprite: spr.main, size: RC[f.id].fit.main.h * S * (f.sc || 1), dir: (A.face > 0 ? 1 : -1) * Math.PI / 2 }); return 380; }
+  if (sk.fx === 'trap' && spr.off) { const h = A.wp.handK || from; projs.push({ x0: h[0], y0: h[1], x1: tx, y1: og - 30 * os, t0: now(), dur: 560 / SPD, arc: 140, sprite: spr.off, size: RC[f.id].fit.off.h * S * (f.sc || 1), spin: true }); return 560; }
   projs.push({ x0: from[0], y0: from[1], x1: tx, y1: ty, t0: now(), dur: 420 / SPD, color: sk.color, r: sk.big ? 54 : 38, arc: 30 });
   return 420;
 }
 
-async function act(who, idx) {
-  const f = F[who], o = F[other(who)], sk = f.skills[idx], g = S2.gid, A = f.A;
-  if (S2.busy || S2.over || f.mp < sk.cost) return;
+async function act(f, idx, tgt) {
+  const sk = f.skills[idx], g = S2.gid, A = f.A;
+  if (!sk || S2.busy || S2.over || f.mp < sk.cost) return;
   if (sk.kind === 'potion' && f.potions <= 0) return;
+  const o = targetFor(f, sk, tgt), who = f.side;
   S2.busy = true; S2.waiting = false; f.mp -= sk.cost; updateHUD();
-  const alive = () => g === S2.gid;
+  const live = () => g === S2.gid;
   const anim = sk.anim === undefined ? 'attack' : sk.anim;
   if (sk.kind === 'melee') {
-    const reach = Math.abs(o.A.x - A.x) - 230;
-    Rig.play(A, 'walk'); await tweenOff(A, reach, Math.max(380, reach * 1.3)); // yürüyüş süresi mesafeyle orantılı if (!alive()) return;
-    const end = Rig.play(A, anim); await Rig.waitAct(A); if (!alive()) return;
+    const reach = Math.abs(o.A.x - A.x) - 230 * Math.min(f.sc || 1, o.sc || 1), ms = Math.max(380, reach * 1.3); // yürüyüş süresi mesafeyle orantılı
+    Rig.play(A, 'walk'); await tweenOff(A, reach, ms); if (!live()) return;
+    const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
     hit(f, o, sk);
-    await end; if (!alive()) return;
-    Rig.play(A, 'walk'); await tweenOff(A, 0, Math.max(380, reach * 1.3)); if (!alive()) return;
+    await end; if (!live()) return;
+    Rig.play(A, 'walk'); await tweenOff(A, 0, ms); if (!live()) return;
     Rig.play(A, 'idle');
   } else if (sk.kind === 'ranged') {
-    const end = Rig.play(A, anim); await Rig.waitAct(A); if (!alive()) return;
-    const travel = launch(f, o, sk); await wait(travel); if (!alive()) return;
-    if (sk.fx === 'meteor') burst(body(o)[0], GY - 60, '#ffb04a', 50, 420);
+    const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
+    const travel = launch(f, o, sk); await wait(travel); if (!live()) return;
+    if (sk.fx === 'meteor') burst(body(o)[0], (o.gy || GY) - 60, '#ffb04a', 50, 420);
     hit(f, o, sk);
     await end;
   } else if (sk.kind === 'guard' || sk.kind === 'rage') {
-    const end = Rig.play(A, anim); await Rig.waitAct(A); if (!alive()) return;
+    const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
     if (sk.kind === 'rage') { f.rage = 1.6; sfxSkill(sk, 'rage'); floatText(A, 'ÖFKE', '#ff5a3a', 36); burst(body(f)[0], body(f)[1], '#ff3a2a', 30, 220); log(`${sk.name}: ${f.name} öfkelendi, sonraki saldırısı çok daha sert.`, who); }
     else {
       f.shield = sk.block; f.shieldColor = sk.color; sfxSkill(sk, 'shield');
@@ -1761,93 +1862,135 @@ async function act(who, idx) {
     await end;
   } else if (sk.kind === 'heal') {
     let end = Promise.resolve();
-    if (anim) { end = Rig.play(A, anim); await Rig.waitAct(A); if (!alive()) return; }
-    const h = heal(f, skillHeal(f, sk), sk.color); sfxSkill(sk, 'heal');
-    if (sk.block) { f.shield = sk.block; f.shieldColor = sk.color; }
-    log(`${sk.name}: ${f.name} ${h} can yeniledi.`, who);
+    if (anim) { end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return; }
+    const h = heal(o, skillHeal(f, sk), sk.color); sfxSkill(sk, 'heal');
+    if (sk.block) { o.shield = sk.block; o.shieldColor = sk.color; }
+    log(o === f ? `${sk.name}: ${f.name} ${h} can yeniledi.` : `${sk.name}: ${f.name}, ${o.name} için ${h} can yeniledi.`, who);
     await end; if (!anim) await wait(700);
   } else if (sk.kind === 'potion') {
-    f.potions--; Sfx.play('potion'); if (who === 'player') track('potion'); const h = heal(f, sk.heal); log(`${sk.name}: ${f.name} ${h} can yeniledi.`, who); await wait(700);
+    f.potions--; Sfx.play('potion'); if (f.ctrl === 'me') track('potion'); const h = heal(f, sk.heal); log(`${sk.name}: ${f.name} ${h} can yeniledi.`, who); await wait(700);
   }
-  if (!alive()) return;
+  if (!live()) return;
   S2.busy = false; updateHUD();
-  if (o.hp <= 0) return end(who);
-  beginTurn(other(who));
-  if (pvp) pvpNext();
+  if (checkEnd()) return;
+  nextTurn(f);
 }
 
-async function beginTurn(who, first) {
-  if (S2.over) return;
-  const g = S2.gid, f = F[who];
-  S2.cur = who;
+async function beginTurn(f, first) {
+  if (S2.over || !f) return;
+  const g = S2.gid;
+  S2.cur = f; S2.remote = false;
   if (!first) {
-    if (who === 'player') S2.turn++;
     f.mp = Math.min(f.maxMp, f.mp + f.regen);
     if (f.dot) { // süreli hasar (yanık, zehir, kanama)
       const d = f.dot; f.hp = Math.max(0, f.hp - d.dmg); f.A.hitT = now();
       floatText(f.A, '-' + d.dmg, d.color, 30); burst(body(f)[0], body(f)[1], d.color, 14, 160);
-      log(`${f.name}: ${d.label.toLowerCase()} etkisiyle ${d.dmg} hasar.`, other(who));
+      log(`${f.name}: ${d.label.toLowerCase()} etkisiyle ${d.dmg} hasar.`, f.side === 'player' ? 'enemy' : 'player');
       if (--d.turns <= 0) f.dot = null;
       updateHUD();
-      if (f.hp <= 0) { Rig.play(f.A, 'death'); return end(other(who)); }
+      if (f.hp <= 0) { Rig.play(f.A, 'death'); if (checkEnd()) return; await wait(450); if (g !== S2.gid) return; return nextTurn(f); }
       await wait(450); if (g !== S2.gid) return;
     }
   }
   if (f.stunned) {
     f.stunned = false; updateHUD(); floatText(f.A, 'TUR KAÇTI', '#ffd27a', 30);
-    log(`${f.name} sersem, bu turu kaçırdı.`, other(who));
+    log(`${f.name} sersem, bu turu kaçırdı.`, f.side === 'player' ? 'enemy' : 'player');
     await wait(900); if (g !== S2.gid) return;
-    return beginTurn(other(who));
+    return nextTurn(f);
   }
-  if (who === 'player') { S2.timer = 15; S2.waiting = true; updateHUD(); }
-  else if (pvp) { S2.waiting = false; S2.remote = true; updateHUD(); pvpNext(); } // düello: rakibin hamlesi odadan gelir
-  else { S2.waiting = false; updateHUD(); await wait(800); if (g !== S2.gid || S2.over) return; act('enemy', aiChoose()); }
+  if (f.ctrl === 'me') {
+    S2.timer = 15; S2.waiting = true;
+    if (!S2.foe || !isAlive(S2.foe)) S2.foe = autoFoe(f);
+    if (S2.ally && !isAlive(S2.ally)) S2.ally = null;
+    updateHUD();
+  } else if (f.ctrl === 'remote') { S2.waiting = false; S2.remote = true; updateHUD(); pvpNext(); } // başka oyuncu: hamlesi odadan gelir
+  else { S2.waiting = false; updateHUD(); await wait(800); if (g !== S2.gid || S2.over) return; const c = aiChoose(f); act(f, c.i, c.t); }
 }
-function aiChoose() {
-  const e = F.enemy, p = F.player, s = e.skills, can = i => e.mp >= s[i].cost;
-  if (e.hp < e.maxHp * .35 && e.potions > 0 && Math.random() < .6) return 4;
+// bot: zayıf rakibe yüklenir, yaralı arkadaşını iyileştirir (zarlar ortak üreteçten: her ekranda aynı karar)
+function aiChoose(e) {
+  const s = e.skills, can = i => e.mp >= s[i].cost, R = crng;
+  const foes = foesOf(e), weak = foes.slice().sort((a, b) => a.hp - b.hp)[0];
+  const t = R() < .65 ? weak : foes[Math.floor(R() * foes.length)], hurt = autoAlly(e);
+  if (e.hp < e.maxHp * .35 && e.potions > 0 && R() < .6) return { i: 4 };
   const healI = s.findIndex(x => x.kind === 'heal');
-  if (healI >= 0 && can(healI) && e.hp < e.maxHp * .55 && Math.random() < .6) return healI;
-  if (can(3) && (p.hp <= 110 || Math.random() < .4)) return 3;
+  if (healI >= 0 && can(healI) && hurt.hp < hurt.maxHp * .55 && R() < .6) return { i: healI, t: hurt };
+  if (can(3) && (t.hp <= 110 || R() < .4)) return { i: 3, t };
   const guardI = s.findIndex(x => x.kind === 'guard' || x.kind === 'rage');
-  if (guardI >= 0 && can(guardI) && !e.shield && !e.rage && Math.random() < .22) return guardI;
-  if (can(2) && s[2].kind !== 'guard' && s[2].kind !== 'heal' && Math.random() < .45) return 2;
-  if (can(1) && s[1].kind !== 'guard' && s[1].kind !== 'heal' && s[1].kind !== 'rage' && Math.random() < .5) return 1;
-  return 0;
+  if (guardI >= 0 && can(guardI) && !e.shield && !e.rage && R() < .22) return { i: guardI };
+  if (can(2) && s[2].kind !== 'guard' && s[2].kind !== 'heal' && R() < .45) return { i: 2, t };
+  if (can(1) && s[1].kind !== 'guard' && s[1].kind !== 'heal' && s[1].kind !== 'rage' && R() < .5) return { i: 1, t };
+  return { i: 0, t };
 }
 function playerAct(i) {
-  if (S2.cur !== 'player' || !S2.waiting || S2.busy || S2.over) return;
+  if (!myTurn() || !S2.waiting || S2.busy) return;
   const b = $('sk-' + i); if (!b || b.disabled) return;
-  if (pvp) pvpSend({ t: 'act', i, n: pvp.n++ });
-  act('player', i);
+  const sk = F.me.skills[i], t = needsFoe(sk) ? S2.foe : needsAlly(sk) ? S2.ally : null;
+  if (pvp) pvpSend({ t: 'act', i, tg: t ? t.idx : -1, n: pvp.n++ });
+  act(F.me, i, t);
 }
-async function end(winner) {
+// tecrübe: seviye n'den n+1'e 100 + 50(n-1) EXP
+const xpLevel = x => { let l = 1, need = 100; x = x || 0; while (x >= need) { x -= need; l++; need = 100 + 50 * (l - 1); } return l; };
+async function end(winTeam) {
   S2.over = true; S2.waiting = false; updateHUD();
-  Rig.play(F[winner].A, 'win');
-  log(winner === 'player' ? `${F.enemy.name} yenildi. Zafer senin!` : 'Yenildin. Tekrar dene!', winner);
-  const won = winner === 'player', duel = !!pvp, L0 = leagueOf(SAVE.league), gain = duel ? (won ? 200 : 50) : reward(won, L0);
-  SAVE.gold += gain; if (!duel) SAVE.league = Math.max(0, SAVE.league + (won ? 1 : -1)); // ödül hemen yazılır
+  for (const f of F[winTeam]) if (isAlive(f)) Rig.play(f.A, 'win');
+  const won = winTeam === F.me.team, duel = !!pvp, team = F.A.length + F.B.length > 2, foes = F[otherTeam(F.me.team)].length;
+  log(won ? 'Rakip takım yenildi. Zafer senin!' : 'Yenildin. Tekrar dene!', won ? 'player' : 'enemy');
+  const L0 = leagueOf(SAVE.league);
+  let gain, lp, xp;
+  if (duel) { gain = won ? 200 : 50; lp = won && team ? 1 : 0; xp = won ? 60 + 15 * (foes - 1) : 20; }
+  else if (team) { gain = won ? reward(true, L0) + 60 * (foes - 1) : reward(false, L0); lp = won ? 1 : 0; xp = won ? 40 + 15 * foes : 12; } // takım savaşında yenilgi lig puanı düşürmez
+  else { gain = reward(won, L0); lp = won ? 1 : -1; xp = won ? 40 : 12; }
+  const lv0 = xpLevel(SAVE.xp);
+  SAVE.gold += gain; SAVE.league = Math.max(0, SAVE.league + lp); SAVE.xp = (SAVE.xp || 0) + xp; // ödül hemen yazılır
   if (duel) pvpFinish();
   const St = SAVE.stats; St.battles++; track('play');
-  if (won) { St.wins++; St.won[chosen] = 1; if (duel) St.duelWins = (St.duelWins || 0) + 1; track('win'); track('class', 1, chosen); }
+  if (won) { St.wins++; St.won[chosen] = 1; if (duel) St.duelWins = (St.duelWins || 0) + 1; if (team) St.teamWins = (St.teamWins || 0) + 1; track('win'); track('class', 1, chosen); }
   St.bestLeague = Math.max(St.bestLeague, leagueOf(SAVE.league)); persist();
-  const L1 = leagueOf(SAVE.league), ye = n => ['', "'e", "'ye", "'e", "'e", "'e", "'ya", "'ye", "'e", "'a", "'a"][n]; // 1'e, 2'ye, 6'ya, 9'a, 10'a
-  const lg = duel ? ' · Düello' : L1 > L0 ? ` · Lig ${L1}${ye(L1)} yükseldin!` : L1 < L0 ? ` · Lig ${L1}${ye(L1)} düştün` : ` · Lig ${L1}`;
+  const L1 = leagueOf(SAVE.league), lv1 = xpLevel(SAVE.xp), ye = n => ['', "'e", "'ye", "'e", "'e", "'e", "'ya", "'ye", "'e", "'a", "'a"][n]; // 1'e, 2'ye, 6'ya, 9'a, 10'a
+  const lg = (duel ? ' · Düello' : '') + (L1 > L0 ? ` · Lig ${L1}${ye(L1)} yükseldin!` : L1 < L0 ? ` · Lig ${L1}${ye(L1)} düştün` : lp > 0 ? ' · +1 lig puanı' : duel ? '' : ` · Lig ${L1}`);
   const g = S2.gid; await wait(1500); if (g !== S2.gid) return;
   Sfx.play(won ? 'win' : 'lose');
   const o = $('over'); o.classList.toggle('lose', !won);
   $('overT').textContent = won ? 'ZAFER' : 'YENİLGİ';
-  $('overP').textContent = (won ? `${F.player.name} ile ${S2.turn} turda kazandın` : `${S2.turn} tur dayandın`) + ` · +${gain} Altın (toplam ${SAVE.gold})` + lg;
+  $('overP').textContent = (won ? `${S2.turn} turda kazandın` : `${S2.turn} tur dayandın`) + ` · +${gain} Altın (toplam ${SAVE.gold}) · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}!` : '') + lg;
   $('again').textContent = duel ? 'Lobiye Dön' : 'Tekrar Savaş'; $('change').hidden = duel;
   o.hidden = false; $('again').focus();
 }
 setInterval(() => {
-  // düello: rakip uzun süre hamle göndermezse çekilmiş sayılır
+  // çok oyunculu: sırası gelen oyuncu uzun süre hamle göndermezse çekilmiş sayılır
   if (pvp && screen === 'battle' && S2.remote && !S2.over) { if (++pvp.idle > 60) { pvpSend({ t: 'claim' }); pvpWin('Rakip 1 dakikadır hamle yapmadı.'); } } else if (pvp) pvp.idle = 0;
   if (screen !== 'battle' || !S2.waiting || S2.busy || S2.over || (document.hidden && !pvp)) return;
   S2.timer--; updateHUD();
-  if (S2.timer <= 0) { S2.waiting = false; log('Süre doldu, sıra rakibe geçti.', 'enemy'); if (pvp) pvpSend({ t: 'pass', n: pvp.n++ }); beginTurn('enemy'); }
+  if (S2.timer <= 0) { S2.waiting = false; log('Süre doldu, sıra geçti.', 'enemy'); if (pvp) pvpSend({ t: 'pass', n: pvp.n++ }); nextTurn(F.me); }
 }, 1000);
+// sahnede bir savaşçıya dokunmak da hedef seçer
+$('cv').addEventListener('click', e => {
+  if (!F || S2.over) return;
+  const r = $('cv').getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+  let best = null, bd = 90;
+  for (const f of F.list) { if (!isAlive(f)) continue; const fx = f.A.x + f.A.off * f.A.face, d = Math.abs(fx - x); if (d < bd && y > f.gy - 340 * f.sc && y < f.gy + 20) { bd = d; best = f; } }
+  if (best) pickTarget(best);
+});
+// Arena: kip seç, rakip ve bot arkadaşları rastgele sınıflardan kur
+async function startArena() {
+  const b = $('choose'); b.disabled = true; b.textContent = 'Rakipler hazırlanıyor…';
+  const [na, nb] = MODES[battleMode], L = leagueOf(SAVE.league);
+  const pool = ORDER.filter(k => k !== chosen).sort(() => Math.random() - .5);
+  const allies = pool.slice(0, na - 1), foes = pool.slice(na - 1, na - 1 + nb);
+  try { await Promise.all([chosen, ...allies, ...foes].flatMap(k => [Rig.load(k), Rig.loadTiers(k)])); } catch (e) { b.textContent = 'Rakipler yüklenemedi'; b.disabled = false; return; }
+  b.disabled = false; b.textContent = 'Seç ve Savaş';
+  pvp = null; crng = Math.random; lastDuel = false; $('again').textContent = 'Tekrar Savaş'; $('change').hidden = false;
+  for (const k of [chosen, ...allies, ...foes]) Sfx.loadSkills(k);
+  const foeL = nb > na ? Math.max(1, L - 1) : L; // 1v2'de rakipler bir kademe zayıf gelir
+  showScreen('battle');
+  newBattle({
+    A: [{ id: chosen, gear: gearOf(chosen), ctrl: 'me', name: 'Sen · ' + CLASSES[chosen].name }, ...allies.map(id => ({ id, gear: foeGear(L), name: 'Müttefik ' + CLASSES[id].name }))],
+    B: foes.map(id => ({ id, gear: foeGear(foeL), name: 'Rakip ' + CLASSES[id].name })),
+  });
+  log(battleMode === '1v1' ? `${CLASSES[chosen].name}, ${F.B[0].name} karşısında! İlk hamle senin.` : `${battleMode} takım savaşı başladı! Hedefini seçmek için bir rakibe ya da arkadaşına dokun. İlk hamle senin.`);
+  beginTurn(nextUp('B'), true);
+}
+renderModes();
 let foeId = null;
 
 /* =====================================================================
@@ -2031,9 +2174,9 @@ function setChatMin(m) {
 setChatMin(matchMedia('(hover:none) and (pointer:coarse)').matches);
 $('chToggle').addEventListener('click', () => setChatMin(!$('chatBox').classList.contains('min')));
 // sıralama paneli: yalnızca kendi sunucumuzda (hesaplar oradayken) görünür
-let lbBy = 'league';
-const LB_TXT = { league: 'lig puanı', wins: 'toplam galibiyet', duels: 'düello galibiyeti' };
-const lbVal = (by, v) => by === 'league' ? `Lig ${leagueOf(v)} · ${v} p` : v;
+let lbBy = 'week';
+const LB_TXT = { week: 'bu hafta kazanılan lig puanı', month: 'bu ay kazanılan lig puanı', league: 'toplam lig puanı', wins: 'toplam galibiyet', duels: 'düello galibiyeti' };
+const lbVal = (by, v) => by === 'league' ? `Lig ${leagueOf(v)} · ${v} p` : by === 'week' || by === 'month' ? `+${v} p` : v;
 async function renderBoard() {
   const list = $('lbList'); $('lbSub').textContent = LB_TXT[lbBy];
   document.querySelectorAll('#lbPanel [data-by]').forEach(b => b.setAttribute('aria-pressed', b.dataset.by === lbBy));
@@ -2124,60 +2267,37 @@ async function startDuel(o) {
   try { await Promise.all([Rig.load(chosen), Rig.loadTiers(chosen), Rig.load(o.cls), Rig.loadTiers(o.cls)]); } catch (e) {}
   pvp = { room: dr, id: o.id, opp: o.opp, n: 0, q: [], seen: false, idle: 0 };
   lastDuel = true;
-  dr.on('duel', m => { if (m.isMe || m.peer !== pvp?.opp) return; const d = m.data || {}; if (d.t === 'act' || d.t === 'pass') { pvp.q.push(d); pvpNext(); } else if (d.t === 'quit') pvpWin('Rakip düellodan çekildi.'); else if (d.t === 'claim' && !S2.over) { log('Çok uzun süre hamle yapmadın, düello kaybedildi.', 'enemy'); S2.busy = false; S2.gid++; end('enemy'); } });
+  const oppTeam = () => F.list.find(f => f.ctrl === 'remote').team;
+  dr.on('duel', m => { if (m.isMe || m.peer !== pvp?.opp) return; const d = m.data || {}; if (d.t === 'act' || d.t === 'pass') { pvp.q.push(d); pvpNext(); } else if (d.t === 'quit') pvpWin('Rakip düellodan çekildi.'); else if (d.t === 'claim' && !S2.over) { log('Çok uzun süre hamle yapmadın, düello kaybedildi.', 'enemy'); S2.busy = false; S2.gid++; end(oppTeam()); } });
   dr.onPeers(c => { if (!pvp) return; if (c.peers.some(p => p.peer === pvp.opp)) pvp.seen = true; else if (pvp.seen) pvpWin('Rakip düellodan ayrıldı.'); }, () => {});
-  // savaşı kur: oyuncu solda, rakip sağda; zarlar ortak tohumla
+  // meydan okuyan A takımı, kabul eden B takımı: iki ekranda da aynı sıra; zarlar ortak tohumla
   foeId = o.cls; Sfx.loadSkills(chosen); Sfx.loadSkills(o.cls);
-  const pg = gearOf(chosen);
-  F = { player: mkFighter(chosen, 'player', pg), enemy: mkFighter(o.cls, 'enemy', o.gear, o.alch) };
-  F.enemy.name = o.oppName + ' · ' + CLASSES[o.cls].name;
+  const mine = { id: chosen, gear: gearOf(chosen), ctrl: 'me', name: 'Sen · ' + CLASSES[chosen].name };
+  const theirs = { id: o.cls, gear: o.gear, alch: o.alch, ctrl: 'remote', name: o.oppName + ' · ' + CLASSES[o.cls].name };
   crng = seeded(o.seed);
-  S2 = { turn: 1, cur: o.first ? 'player' : 'enemy', busy: false, over: false, waiting: false, timer: 15, gid: S2.gid + 1 };
-  parts.length = texts.length = projs.length = 0; flash = null;
-  $('log').innerHTML = ''; $('over').hidden = true;
-  $('pName').textContent = 'Sen · ' + CLASSES[chosen].name; $('eName').textContent = F.enemy.name;
-  $('pPor').style.setProperty('--c', glowOf(chosen)); $('ePor').style.setProperty('--c', '#c41a30');
-  Rig.portrait($('pPor'), chosen, 1, glowOf(chosen), pg); Rig.portrait($('ePor'), o.cls, -1, '#c41a30', o.gear);
-  $('pLv').textContent = 'Lv ' + gearLevel(pg); $('eLv').textContent = 'Lv ' + gearLevel(o.gear);
-  showScreen('battle'); buildSkillButtons();
-  log(`Düello: ${CLASSES[chosen].name}, ${F.enemy.name} karşısında! ${o.first ? 'İlk hamle senin.' : 'İlk hamle rakibin.'}`);
-  beginTurn(o.first ? 'player' : 'enemy', true);
+  showScreen('battle');
+  newBattle(o.first ? { A: [mine], B: [theirs] } : { A: [theirs], B: [mine] });
+  log(`Düello: ${CLASSES[chosen].name}, ${theirs.name} karşısında! ${o.first ? 'İlk hamle senin.' : 'İlk hamle rakibin.'}`);
+  beginTurn(nextUp('B'), true);
 }
 const pvpSend = d => { if (pvp) pvp.room.emit('duel', d).catch(() => {}); };
-// sıradaki rakip hamlesini, sıra rakipteyken ve önceki hamle bitmişken oyna
+// sırası başka oyuncudaysa ve önceki hamle bittiyse, kuyruktaki hamlesini oyna
 function pvpNext() {
-  if (!pvp || S2.over || S2.cur !== 'enemy' || !S2.remote || S2.busy) return;
+  if (!pvp || S2.over || !S2.cur || S2.cur.ctrl !== 'remote' || !S2.remote || S2.busy) return;
   const d = pvp.q.shift(); if (!d) return;
   S2.remote = false;
-  if (d.t === 'pass') { log('Rakibin süresi doldu.', 'player'); beginTurn('player'); }
-  else { const i = Math.max(0, Math.min(4, d.i | 0)); act('enemy', i); }
+  if (d.t === 'pass') { log('Rakibin süresi doldu.', 'player'); nextTurn(S2.cur); }
+  else act(S2.cur, Math.max(0, Math.min(4, d.i | 0)), F.list[d.tg]);
 }
 function pvpWin(msg) {
-  if (!pvp || S2.over) return; log(msg, 'player'); S2.busy = false; end('player');
+  if (!pvp || S2.over) return; log(msg, 'player'); S2.busy = false; S2.gid++; end(F.me.team);
 }
 function pvpFinish() { const p = pvp; pvp = null; crng = Math.random; if (p) setTimeout(() => p.room.leave().catch(() => {}), 3000); lobbyPresence(); }
 function pvpQuit() {
   if (pvp && !S2.over) { pvpSend({ t: 'quit' }); const p = pvp; S2.over = true; S2.gid++; pvp = null; crng = Math.random; p.room.leave().catch(() => {}); addChat(null, 'Düellodan çekildin.', null, true); }
   lastDuel = false; openLobby();
 }
-function reset(foe) {
-  if (foe) foeId = foe;
-  pvp = null; crng = Math.random; lastDuel = false; $('again').textContent = 'Tekrar Savaş'; $('change').hidden = false;
-  Sfx.loadSkills(chosen); Sfx.loadSkills(foeId);
-  const pg = gearOf(chosen), eg = foeGear(leagueOf(SAVE.league));
-  F = { player: mkFighter(chosen, 'player', pg), enemy: mkFighter(foeId, 'enemy', eg) };
-  S2 = { turn: 1, cur: 'player', busy: false, over: false, waiting: false, timer: 15, gid: S2.gid + 1 };
-  parts.length = texts.length = projs.length = 0; flash = null;
-  $('log').innerHTML = ''; $('over').hidden = true;
-  $('pName').textContent = 'Sen · ' + CLASSES[chosen].name; $('eName').textContent = F.enemy.name;
-  $('pPor').style.setProperty('--c', glowOf(chosen)); $('ePor').style.setProperty('--c', '#c41a30');
-  Rig.portrait($('pPor'), chosen, 1, glowOf(chosen), pg); Rig.portrait($('ePor'), foeId, -1, '#c41a30', eg);
-  $('pLv').textContent = 'Lv ' + gearLevel(pg); $('eLv').textContent = 'Lv ' + gearLevel(eg);
-  buildSkillButtons();
-  log(`${CLASSES[chosen].name}, ${F.enemy.name} karşısında! İlk hamle senin.`);
-  beginTurn('player', true);
-}
-$('again').addEventListener('click', () => { if (lastDuel) { lastDuel = false; openLobby(); } else reset(); });
+$('again').addEventListener('click', () => { if (lastDuel) { lastDuel = false; openLobby(); } else startArena(); });
 
 pick(chosen); openLobby(); requestAnimationFrame(frame);
 cloudInit().finally(initRoom);

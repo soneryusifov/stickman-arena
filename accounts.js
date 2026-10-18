@@ -30,14 +30,25 @@ function cleanSave(s) {
     gold: int(s.gold, 0, 1e9, 0), gear, league: int(s.league, 0, 10000, 0),
     town: { hall: int(t.hall, 1, 8, 1), mine: int(t.mine, 1, 8, 1), alch: int(t.alch, 1, 8, 1), mineAt: int(t.mineAt, 0, 9e15, Date.now()) },
     stats: s.stats && typeof s.stats === 'object' ? s.stats : {}, ach: s.ach && typeof s.ach === 'object' ? s.ach : {},
-    daily: s.daily && typeof s.daily === 'object' ? s.daily : null, _t: int(s._t, 0, 9e15, Date.now()),
+    daily: s.daily && typeof s.daily === 'object' ? s.daily : null, _t: int(s._t, 0, 9e15, Date.now()), xp: int(s.xp, 0, 1e9, 0),
   };
-  if (out.stats) for (const k of ['wins', 'battles', 'duelWins']) if (k in out.stats) out.stats[k] = int(out.stats[k], 0, 1e7, 0);
+  if (out.stats) for (const k of ['wins', 'battles', 'duelWins', 'teamWins']) if (k in out.stats) out.stats[k] = int(out.stats[k], 0, 1e7, 0);
   return JSON.stringify(out).length > 32 * 1024 ? null : out;
 }
-// sıralama değerleri (her kayıtta belgeye yazılır, sıralama bunlardan yapılır)
-const RANKS = ['league', 'wins', 'duels'];
-const rankOf = s => ({ league: (s && s.league) || 0, wins: (s && s.stats && s.stats.wins) || 0, duels: (s && s.stats && s.stats.duelWins) || 0 });
+// sıralama değerleri (her kayıtta belgeye yazılır, sıralama bunlardan yapılır).
+// Haftalık/aylık: o dönemde KAZANILAN lig puanı (wk/mo dönem anahtarı, wkv/mov puan); dönem değişince sıfırdan başlar.
+const RANKS = ['league', 'wins', 'duels', 'week', 'month'];
+const weekKey = (d = new Date()) => { const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())), day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y = t.getUTCFullYear(); return y + '-H' + Math.ceil(((t - Date.UTC(y, 0, 1)) / 864e5 + 1) / 7); };
+const monthKey = (d = new Date()) => d.getUTCFullYear() + '-' + (d.getUTCMonth() + 1);
+function rankOf(s, prevRank, gained = 0) {
+  const r = { league: (s && s.league) || 0, wins: (s && s.stats && s.stats.wins) || 0, duels: (s && s.stats && s.stats.duelWins) || 0 };
+  const p = prevRank || {}, wk = weekKey(), mo = monthKey();
+  r.wk = wk; r.wkv = (p.wk === wk ? p.wkv || 0 : 0) + gained;
+  r.mo = mo; r.mov = (p.mo === mo ? p.mov || 0 : 0) + gained;
+  return r;
+}
+// sıralama sorgusu: hangi alan, hangi dönem
+const BOARD = { league: ['league', null], wins: ['wins', null], duels: ['duels', null], week: ['wkv', () => ({ wk: weekKey() })], month: ['mov', () => ({ mo: monthKey() })] };
 // eskiden yeniye geçerken yükseltmelere harcanması gereken altın
 function spent(a, b) {
   let sum = 0;
@@ -89,7 +100,8 @@ function makeApi(store) {
           save.gold = Math.min(save.gold, 20000); save.league = Math.min(save.league, 27);
           save.town.hall = Math.min(save.town.hall, 4); save.town.mine = Math.min(save.town.mine, save.town.hall); save.town.alch = Math.min(save.town.alch, save.town.hall);
           for (const g of Object.values(save.gear)) for (const k of ITEMS) g[k] = Math.min(g[k], save.town.hall + 2);
-          if (save.stats) { save.stats.wins = Math.min(save.stats.wins || 0, 300); save.stats.duelWins = 0; }
+          if (save.stats) { save.stats.wins = Math.min(save.stats.wins || 0, 300); save.stats.duelWins = 0; save.stats.teamWins = 0; }
+          save.xp = Math.min(save.xp || 0, 3000);
         }
         const u = { _id: nameKey(name), name, pass: { salt, hash: await scrypt(pass, salt) }, tokens: [], save, rank: rankOf(save), savedAt: Date.now(), created: Date.now() };
         if (!(await store.insert(u))) return send(409, { error: 'Bu kullanıcı adı alınmış.' });
@@ -106,10 +118,13 @@ function makeApi(store) {
       // sıralama herkese açık; giriş yapan kendi sırasını da görür. İlk 20 kısa süre önbellekte tutulur.
       if (p === '/api/leaderboard') {
         const q = new URL(req.url, 'http://x').searchParams.get('by'), by = RANKS.includes(q) ? q : 'league';
-        const c = board[by];
-        if (!c || Date.now() - c.t > 15000) board[by] = { t: Date.now(), top: (await store.top(by, 20)).map(x => ({ name: x.name, v: x.rank[by] })) };
+        const [field, per] = BOARD[by], filter = per ? per() : null, c = board[by];
+        if (!c || Date.now() - c.t > 15000) board[by] = { t: Date.now(), top: (await store.top(field, 20, filter)).map(x => ({ name: x.name, v: x.rank[field] })) };
         const me = await auth(req), out = { by, top: board[by].top };
-        if (me) { const v = (me.rank || rankOf(me.save))[by]; out.me = { name: me.name, v, pos: v > 0 ? (await store.above(by, v)) + 1 : null }; }
+        if (me) {
+          const r = me.rank || rankOf(me.save), inPer = !filter || Object.entries(filter).every(([k, v]) => r[k] === v), v = inPer ? r[field] || 0 : 0;
+          out.me = { name: me.name, v, pos: v > 0 ? (await store.above(field, v, filter)) + 1 : null };
+        }
         return send(200, out);
       }
 
@@ -129,10 +144,11 @@ function makeApi(store) {
           const allowed = Math.min(250000, 8000 + mins * 1500);
           // sıralama değerleri de oynanan süreyle sınırlı: bir savaş en az ~15 sn sürer
           const a = rankOf(prev), b = rankOf(next);
-          const badRank = b.wins - a.wins > 5 + mins * 4 || b.duels - a.duels > 2 + mins * 2 || b.league - a.league > b.wins - a.wins + 1;
+          const badRank = b.wins - a.wins > 5 + mins * 4 || b.duels - a.duels > 2 + mins * 2 || b.league - a.league > b.wins - a.wins + 1 || (next.xp || 0) - (prev.xp || 0) > 200 + mins * 150;
           if (next.gold + spent(prev, next) - prev.gold > allowed || badRank) return send(422, { error: 'Kayıt sunucudakiyle uyuşmuyor.', save: u.save });
         }
-        u.save = next; u.rank = rankOf(next); u.savedAt = Date.now(); await store.put(u);
+        const gained = Math.max(0, (next.league || 0) - ((prev && prev.league) || 0)); // bu kayıtta kazanılan lig puanı
+        u.save = next; u.rank = rankOf(next, u.rank, gained); u.savedAt = Date.now(); await store.put(u);
         return send(200, { ok: true, savedAt: u.savedAt });
       }
       return send(404, { error: 'Bulunamadı' });
