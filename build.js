@@ -31,5 +31,6 @@ for (const f of list('assets/baked')) if (/\.png$/.test(f) && !/_t\d+\.png$/.tes
 for (const f of ['mage_common_set.webp', 'mage_common_cape.webp', 'tank_common_set.webp', 'tank_common_cape.webp']) copy('assets/' + f);
 for (const f of list('assets/sfx')) if (/\.mp3$/.test(f)) copy('assets/sfx/' + f);
 for (const f of list('assets/sfx/skills')) if (/\.mp3$/.test(f)) copy('assets/sfx/skills/' + f);
+for (const f of list('assets/bg')) if (/\.(webp|png)$/.test(f)) copy('assets/bg/' + f);
 
 console.log(`public/ hazır: ${count} dosya, ${(bytes / 1048576).toFixed(1)} MB`);

@@ -735,7 +735,33 @@ const BLD = [
   { k: 'smith', x: 2260, name: 'Demirci', img: () => 'assets/baked/town_smith.png?v=1' },
   { k: 'arena', x: 2920, name: 'Arena', img: () => 'assets/baked/town_arena.png?v=1' },
 ];
-const LAMPS = [140, 735, 1345, 1955, 2590, 3260];
+const LAMPS = [140, 735, 1345, 1955, 2590, 3260], LAMP_Y = 262;
+/* Arka plan resmi (assets/bg/town_night.webp, 1536x1024): kaldırım 704. satırda başlar.
+   Üstü (gök + kasaba) yarı hızda kayan uzak katman, altı (sokak) dünya ile kayan yakın katman olur.
+   Resim kenarları birbirini tutmadığı için her katmanın son BG_FADE sütunu başına eritilir: dikişsiz döşenir. */
+const BG_SPLIT = 704, BG_FADE = 170, FAR_K = .8, NEAR_K = .62, STREET_Y = 374;
+let bgFar = null, bgNear = null;
+function seamless(im, y0, y1, k, bright, shade, fog) {
+  const w = im.naturalWidth, h = y1 - y0, N = BG_FADE, tw = w - N;
+  const t = document.createElement('canvas'); t.width = tw; t.height = h; const tx = t.getContext('2d');
+  tx.drawImage(im, 0, y0, tw, h, 0, 0, tw, h);
+  const m = document.createElement('canvas'); m.width = N; m.height = h; const mx = m.getContext('2d');
+  mx.drawImage(im, tw, y0, N, h, 0, 0, N, h);
+  const g = mx.createLinearGradient(0, 0, N, 0); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)');
+  mx.globalCompositeOperation = 'destination-in'; mx.fillStyle = g; mx.fillRect(0, 0, N, h);
+  tx.drawImage(m, 0, 0);
+  const c = document.createElement('canvas'); c.width = Math.round(tw * k); c.height = Math.round(h * k);
+  const cx = c.getContext('2d'); cx.filter = `brightness(${bright})`; cx.drawImage(t, 0, 0, c.width, c.height); cx.filter = 'none';
+  if (shade) { const s = cx.createLinearGradient(0, 0, 0, c.height); s.addColorStop(0, 'rgba(8,8,24,0)'); s.addColorStop(1, `rgba(8,8,24,${shade})`); cx.fillStyle = s; cx.fillRect(0, 0, c.width, c.height); }
+  if (fog) { const f = cx.createLinearGradient(0, c.height * .45, 0, c.height); f.addColorStop(0, 'rgba(46,58,120,0)'); f.addColorStop(1, `rgba(46,58,120,${fog})`); cx.fillStyle = f; cx.fillRect(0, 0, c.width, c.height); }
+  return c;
+}
+(function () {
+  const im = new Image();
+  im.onload = () => { bgFar = seamless(im, 0, BG_SPLIT, FAR_K, .68, 0, .42); bgNear = seamless(im, BG_SPLIT, 1024, NEAR_K, .62, .55); };
+  im.src = 'assets/bg/town_night.webp?v=1';
+})();
+function tileX(img, off, y) { const w = img.width; for (let x = -(((off % w) + w) % w); x < SW; x += w) sctx.drawImage(img, x, y); }
 const imgs = {};
 const imgOf = src => { if (!imgs[src]) { const i = new Image(); i.src = src; imgs[src] = i; } return imgs[src]; };
 // gündüz çizilmiş bina resmini geceye çevirir (bir kez, önbellekli): renk soluklaşıp maviye kayar ve kararır;
@@ -792,7 +818,6 @@ const sbg = document.createElement('canvas'); sbg.width = WORLD; sbg.height = SH
   c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 2;
   for (let i = 0, y = 395; y < SH; i++, y += 9 + i * 5) { c.beginPath(); c.moveTo(0, y); c.lineTo(WORLD, y); c.stroke(); }
   for (let y = 395, r = 0; y < SH; r++, y += 9 + r * 5) for (let x = (r % 2) * 30; x < WORLD; x += 60) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 9 + (r + 1) * 5); c.stroke(); }
-  for (const x of LAMPS) { c.fillStyle = '#0f0c16'; c.fillRect(x - 4, 300, 8, SGY - 300); c.fillRect(x - 14, 296, 28, 8); c.fillStyle = '#2a2230'; c.fillRect(x - 10, 274, 20, 24); }
 })();
 // kahramanın aktörü: sınıf ya da ekipman değişince yeniden kurulur
 async function streetActor() {
@@ -872,7 +897,18 @@ function drawStreet(t, dt) {
   if (st !== sent && t - sendT > 180) { sent = st; sendT = t; lobbyPresence(); }
   syncOthers();
 
-  sctx.drawImage(sbg, camX, 0, SW, SH, 0, 0, SW, SH);
+  if (bgFar && bgNear) {
+    tileX(bgFar, camX * .5, STREET_Y - bgFar.height);
+    tileX(bgNear, camX, STREET_Y);
+  } else sctx.drawImage(sbg, camX, 0, SW, SH, 0, 0, SW, SH);
+  // fener direkleri kaldırımın önünde
+  for (const x of LAMPS) {
+    const sx = x - camX; if (sx < -40 || sx > SW + 40) continue;
+    sctx.fillStyle = '#0f0c16'; sctx.fillRect(sx - 4, LAMP_Y + 20, 8, 412 - LAMP_Y - 20); sctx.fillRect(sx - 10, 406, 20, 8);
+    sctx.fillRect(sx - 13, LAMP_Y + 16, 26, 6); sctx.beginPath(); sctx.moveTo(sx - 11, LAMP_Y - 4); sctx.lineTo(sx + 11, LAMP_Y - 4); sctx.lineTo(sx, LAMP_Y - 16); sctx.fill();
+    sctx.fillStyle = '#ffc06a'; sctx.fillRect(sx - 8, LAMP_Y - 3, 16, 19);
+    sctx.strokeStyle = '#0f0c16'; sctx.lineWidth = 2; sctx.strokeRect(sx - 8, LAMP_Y - 3, 16, 19); sctx.beginPath(); sctx.moveTo(sx, LAMP_Y - 3); sctx.lineTo(sx, LAMP_Y + 16); sctx.stroke();
+  }
   // binalar: gece renginde, yere gölgeli; ateş, pencere ve iksir kendi ışığıyla parlar
   const BH = 270, BY = 414;
   for (const b of BLD) {
@@ -891,9 +927,13 @@ function drawStreet(t, dt) {
   sctx.save(); sctx.globalCompositeOperation = 'lighter';
   for (const x of LAMPS) {
     const sx = x - camX; if (sx < -200 || sx > SW + 200) continue;
-    const fl = .85 + Math.sin(t / 120 + x) * .08, g = sctx.createRadialGradient(sx, 286, 4, sx, 286, 150);
-    g.addColorStop(0, `rgba(255,170,70,${.45 * fl})`); g.addColorStop(1, 'rgba(255,120,40,0)');
-    sctx.fillStyle = g; sctx.fillRect(sx - 160, 130, 320, 360);
+    const fl = .85 + Math.sin(t / 120 + x) * .08, g = sctx.createRadialGradient(sx, LAMP_Y + 6, 4, sx, LAMP_Y + 6, 170);
+    g.addColorStop(0, `rgba(255,170,70,${.42 * fl})`); g.addColorStop(1, 'rgba(255,120,40,0)');
+    sctx.fillStyle = g; sctx.fillRect(sx - 180, LAMP_Y - 170, 360, 340);
+    // yere düşen ışık havuzu
+    sctx.save(); sctx.translate(sx, 440); sctx.scale(1, .22);
+    const pg = sctx.createRadialGradient(0, 0, 4, 0, 0, 200); pg.addColorStop(0, `rgba(255,160,70,${.3 * fl})`); pg.addColorStop(1, 'rgba(255,120,40,0)');
+    sctx.fillStyle = pg; sctx.fillRect(-200, -200, 400, 400); sctx.restore();
   }
   sctx.restore();
   // bina tabelaları
