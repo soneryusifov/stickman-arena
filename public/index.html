@@ -1177,10 +1177,11 @@ const SCENES = {
   mineroad: { name: 'Maden Yolu', w: 1280, map: [-2, 0], left: 'forest', right: 'market', lamps: [],
     img: { src: 'assets/bg/mineroad.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
     doors: [], npcs: [{ k: 'mine', x: 470, y: 452, cls: 'berserker', face: 1, name: 'Madenci' }] },
-  // orman kenarı: orman aşamalarına açılan taş kemer ortada (resmi gelene kadar geçici olarak maden yolu resmi)
+  // orman kenarı (1536x1024): toprak yol 650. satırdan; runlu taş kemer x 590-980 (190-640. satır), tabela x 1080;
+  // üç çıkış: sağ kenar maden yolu, ortada kemer (orman aşamaları), sol üstte derin ormana giden patika (ileride yeni bölge)
   forest: { name: 'Orman Kenarı', w: 1280, map: [-3, 0], right: 'mineroad', lamps: [],
-    img: { src: 'assets/bg/mineroad.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
-    doors: [{ x: 640, to: '@forest', name: 'Orman Yolu · 10 aşama', painted: true, ly: 300 }], npcs: [] },
+    img: { src: 'assets/bg/forest.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
+    doors: [{ x: 640, to: '@forest', name: 'Orman Yolu · 10 aşama', painted: true, ly: 100 }], npcs: [] },
   // arena kapısı: kaldırım 631. satır, zemin 668'den; demir kapı x 800-1120, sol direk x 760
   arenagate: { name: 'Arena Kapısı', w: 1280, map: [1, 0], left: 'square', lamps: [],
     img: { src: 'assets/bg/arenagate.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .6,
