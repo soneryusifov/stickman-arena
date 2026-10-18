@@ -98,7 +98,7 @@ function markDirty(room) {
 function join(c, r) {
   if (!rooms.has(r)) rooms.set(r, new Set());
   const set = rooms.get(r);
-  const cap = r.startsWith('match-') ? 6 : 2; // düello odası 2, takım maçı en çok 6 kişilik
+  const cap = r.startsWith('match-') ? 10 : 2; // düello odası 2, takım maçı en çok 10 kişilik (4v5 = 9)
   if (r !== 'lobby' && set.size >= cap && !set.has(c.peer)) return false;
   set.add(c.peer); c.rooms.add(r); markDirty(r); return true;
 }

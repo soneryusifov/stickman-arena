@@ -184,12 +184,13 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .team{display:flex;flex-direction:column;gap:.35em;width:36%;min-width:0}
 .team .unit{width:100%;cursor:pointer;border-radius:4px;padding:.15em;pointer-events:auto}
 .team .unit:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.team.crowd{gap:.15em} .team.crowd .unit{gap:.4em;padding:.05em .15em} .team.crowd .info{gap:.1em} .team.crowd .portrait{width:1.75em;height:1.75em;border-width:1px} .team.crowd .bar{height:.55em} .team.crowd .bar span,.team.crowd .bar.mp,.team.crowd .chips{display:none} .team.crowd .name{font-size:.74em}
 .team.many .portrait{width:2.9em;height:2.9em} .team.many .bar{height:.85em} .team.many .bar span{font-size:.68em}
 .team.many .name{font-size:.88em} .team.many .chips{min-height:0} .team.many .chip{font-size:.62em}
 .unit.cur{background:rgba(242,193,78,.14);box-shadow:inset 0 0 0 1px rgba(242,193,78,.6)}
 .unit.tgt{box-shadow:inset 0 0 0 2px #ff5a5a} .unit.atgt{box-shadow:inset 0 0 0 2px #4be38a}
 .unit.dead{opacity:.4;filter:grayscale(.8)}
-.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px} .modes.three{grid-template-columns:repeat(3,1fr)} .modes.three button{font-size:13px}
+.modes{display:grid;grid-template-columns:repeat(5,1fr);gap:6px} .modes.three{grid-template-columns:repeat(4,1fr)} .modes.three button{font-size:13px;padding:.4em}
 .modes button:disabled{opacity:.45;cursor:not-allowed}
 .mlist{display:flex;flex-direction:column;gap:8px}
 .mcard{border:1px solid #2e2840;border-radius:4px;background:#100d17;padding:8px;display:flex;flex-direction:column;gap:6px}
@@ -227,6 +228,22 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .guide ol{margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:8px;color:#cfc8de;font-size:15px;line-height:1.4}
 .guide b{color:var(--text)}
 .guide .btn{align-self:center}
+/* savaşçı bilgi penceresi: ekranın büyük kısmı, kaydırmasız */
+.portrait.insp-open{cursor:zoom-in;pointer-events:auto}
+.guide.insp .gc.ic{max-width:none;width:min(1120px,94vw);height:min(86vh,700px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:16px 18px;position:relative;overflow:hidden}
+.ihead h2{text-align:left;font-size:21px;padding-right:48px} .ihead p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+.iclose{position:absolute;top:10px;right:10px}
+.ibody{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,2fr) minmax(0,.95fr);gap:14px;min-height:0}
+#inspCv{width:100%;height:100%;min-height:0;object-fit:contain;border-radius:6px;background:radial-gradient(60% 55% at 50% 60%,#2a2236,#0f0c16)}
+.iitems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));gap:6px;min-height:0}
+.iitem{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:center;min-height:0;overflow:hidden;background:#100d17;border:1px solid #2e2840;border-radius:4px;padding:4px 8px}
+.iitem canvas{width:clamp(26px,6.5vh,54px);height:clamp(26px,6.5vh,54px);background:#0b0910;border-radius:3px}
+.iitem div{min-width:0} .iitem b{display:block;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iitem .tier{color:var(--gold);font-size:12px;font-weight:800} .iitem small{display:block;color:var(--muted);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iside{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}
+.istats{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0;font-size:14px} .istats dt{color:var(--muted)} .istats dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.iskills{display:flex;flex-wrap:wrap;gap:4px} .iskills span{font-size:12px;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid currentColor;background:rgba(0,0,0,.35)}
+@media (max-height:520px){ .guide.insp .gc.ic{height:92vh;padding:10px 12px;gap:6px} .ibody{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr)} #inspCv{display:none} .iitem small{display:none} .istats{font-size:12.5px;gap:3px 8px} .ihead h2{font-size:17px} }
 /* hesap penceresi */
 .acc .gc{gap:10px}
 .atabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -374,6 +391,17 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
       </div>
     </div>
   </div>
+  <div class="guide insp" id="insp" role="dialog" aria-modal="true" aria-labelledby="inspT" hidden>
+    <div class="gc ic">
+      <button class="tbtn iclose" id="inspClose" type="button" aria-label="Kapat">✕</button>
+      <div class="ihead"><h2 id="inspT"></h2><p id="inspSub"></p></div>
+      <div class="ibody">
+        <canvas id="inspCv" width="320" height="400" aria-hidden="true"></canvas>
+        <div class="iitems" id="inspItems"></div>
+        <div class="iside"><dl class="istats" id="inspStats"></dl><div class="iskills" id="inspSkills"></div></div>
+      </div>
+    </div>
+  </div>
   <div class="guide" id="guide" role="dialog" aria-modal="true" aria-labelledby="guideT" hidden>
     <div class="gc">
       <h2 id="guideT">Hoş geldin, kahraman</h2>
@@ -422,7 +450,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         </section>
         <section class="opanel players matches" id="mPanel" aria-labelledby="mT" hidden>
           <h3 id="mT">Takım maçı <small>lobidekilerle</small></h3>
-          <div class="modes three" role="group" aria-label="Maç kur"><button type="button" data-mk="1v2">1v2 kur</button><button type="button" data-mk="2v2">2v2 kur</button><button type="button" data-mk="3v3">3v3 kur</button></div>
+          <div class="modes three" role="group" aria-label="Maç kur"><button type="button" data-mk="1v2">1v2</button><button type="button" data-mk="1v3">1v3</button><button type="button" data-mk="1v4">1v4</button><button type="button" data-mk="1v5">1v5</button><button type="button" data-mk="2v2">2v2</button><button type="button" data-mk="3v3">3v3</button><button type="button" data-mk="4v4">4v4</button><button type="button" data-mk="4v5">4v5</button></div>
           <div id="mList" class="mlist"></div>
           <p class="lnote">Boş yerlere bot gelir. Kazanan takıma altın, EXP ve lig puanı.</p>
         </section>
@@ -464,7 +492,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
         <dl class="stats" id="dStats"></dl>
         <div class="gear smith-only"><div class="gearhead"><span>Ekipman (her sınıfın kendi eşyaları)</span><b id="gold"></b></div><div class="gearlist" id="gearList"></div></div>
         <div class="modes arena-only" id="modes" role="radiogroup" aria-label="Savaş kipi">
-          <button type="button" role="radio" data-mode="1v1">1v1</button><button type="button" role="radio" data-mode="1v2">1v2</button><button type="button" role="radio" data-mode="2v2">2v2</button><button type="button" role="radio" data-mode="3v3">3v3</button>
+          <button type="button" role="radio" data-mode="1v1">1v1</button><button type="button" role="radio" data-mode="1v2">1v2</button><button type="button" role="radio" data-mode="1v3">1v3</button><button type="button" role="radio" data-mode="1v4">1v4</button><button type="button" role="radio" data-mode="1v5">1v5</button><button type="button" role="radio" data-mode="2v2">2v2</button><button type="button" role="radio" data-mode="3v3">3v3</button><button type="button" role="radio" data-mode="4v4">4v4</button><button type="button" role="radio" data-mode="4v5">4v5</button>
         </div>
         <button class="btn arena-only" id="choose" type="button" disabled>Ekipmanlar hazırlanıyor…</button>
         <p class="loadnote arena-only" id="modeNote"></p>
@@ -1654,7 +1682,12 @@ setInterval(() => { // depo göstergesi
 $('choose').addEventListener('click', () => startArena());
 // savaş kipi: 1v1, 1v2, 2v2, 3v3 (takım arkadaşları ve rakipler bot)
 const MODE_TXT = { '1v1': 'Rakibin diğer 14 sınıftan rastgele seçilir ve lig seviyende gelir. Kazanınca lig puanı kazanır, kaybedince kaybedersin.',
-  '1v2': 'Tek başına iki rakibe karşı. Rakipler bir kademe zayıf gelir; kazanırsan ödül büyük.',
+  '1v2': 'Tek başına iki rakibe karşı. Kalabalık takımın canı ve hasarı azaltılır; kazanırsan ödül büyük.',
+  '1v3': 'Tek başına üç rakibe karşı. Rakiplerin canı ve hasarı azaltılır; ödül büyük.',
+  '1v4': 'Tek başına dört rakibe karşı. Zor ama ödülü çok büyük.',
+  '1v5': 'Tek başına beş rakibe karşı. En zor kip; ödülü en büyük.',
+  '4v4': 'Sen ve üç bot arkadaş, dört rakibe karşı.',
+  '4v5': 'Sen ve üç bot arkadaş, beş rakibe karşı. Kalabalık takım biraz zayıflatılır.',
   '2v2': 'Sen ve bir bot arkadaş, iki rakibe karşı. Hedefini rakibe ya da arkadaşına dokunarak seç.',
   '3v3': 'Sen ve iki bot arkadaş, üç rakibe karşı. Takım savaşında yenilgi lig puanı düşürmez.' };
 function renderModes() {
@@ -1676,11 +1709,21 @@ $('change').addEventListener('click', toSelect);
    seçmezse en öndeki rakip / en yaralı arkadaş hedeflenir. Boş yerleri botlar doldurur.
    F.list'in sırası her ekranda aynıdır (çok oyunculu eşitleme dizine dayanır); kendi takımın hep solda görünür.
    ===================================================================== */
-const MODES = { '1v1': [1, 1], '1v2': [1, 2], '2v2': [2, 2], '3v3': [3, 3] };
+const MODES = { '1v1': [1, 1], '1v2': [1, 2], '1v3': [1, 3], '1v4': [1, 4], '1v5': [1, 5], '2v2': [2, 2], '3v3': [3, 3], '4v4': [4, 4], '4v5': [4, 5] };
 let battleMode = '1v1';
 try { if (MODES[localStorage.getItem('sa.mode')]) battleMode = localStorage.getItem('sa.mode'); } catch (e) {}
 // dizilim [x (soldaki takım), y kayması, ölçek]: öndeki büyük ve aşağıda, arkadakiler küçük ve yukarıda
-const LAYOUT = { 1: [[260, 0, 1]], 2: [[340, 24, .8], [150, -34, .72]], 3: [[330, 28, .78], [125, -38, .68], [500, -38, .68]] };
+// dizilim [x (soldaki takım), y kayması, arka sıra mı]; boyutu maçtaki EN KALABALIK takım belirler (tek kalan büyük görünmez)
+const LAYOUT = {
+  1: [[260, 0, 0]],
+  2: [[340, 24, 0], [150, -34, 1]],
+  3: [[330, 28, 0], [125, -38, 1], [500, -38, 1]],
+  4: [[430, 30, 0], [235, 30, 0], [340, -40, 1], [135, -40, 1]],
+  5: [[475, 32, 0], [305, 32, 0], [135, 32, 0], [395, -42, 1], [220, -42, 1]],
+};
+const SIZE = { 1: 1, 2: .8, 3: .76, 4: .68, 5: .62 };
+// kalabalık takıma güç azaltma: (az / çok)^0.55 oranında can ve hasar (1v2: %68, 1v5: %41, 4v5: %88)
+const handicap = (mine, theirs) => mine > theirs ? Math.pow(theirs / mine, .55) : 1;
 const isAlive = f => f.hp > 0;
 const otherTeam = t => t === 'A' ? 'B' : 'A';
 const foesOf = f => F[otherTeam(f.team)].filter(isAlive);
@@ -1701,10 +1744,13 @@ function newBattle(cfg) {
   for (const team of ['A', 'B']) cfg[team].forEach((m, slot) => { const f = mkFighter(m.id, team, m.gear, m.alch, m); f.slot = slot; f.idx = list.length; f.peer = m.peer || null; list.push(f); });
   F = { list, A: list.filter(f => f.team === 'A'), B: list.filter(f => f.team === 'B') };
   F.me = list.find(f => f.ctrl === 'me'); F.player = F.me; F.enemy = F[otherTeam(F.me.team)][0]; // eski adlar (testler, düello)
+  const N = Math.max(F.A.length, F.B.length);
   for (const f of list) {
     f.side = f.team === F.me.team ? 'player' : 'enemy';
-    const [x, dy, s] = LAYOUT[F[f.team].length][f.slot], left = f.side === 'player';
-    f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = GY + dy; f.sc = f.A.sc = s;
+    const [x, dy, back] = LAYOUT[F[f.team].length][f.slot], left = f.side === 'player', s = SIZE[N] * (back ? .9 : 1);
+    f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = GY + dy * (N > 3 ? .9 : 1); f.sc = f.A.sc = s;
+    const k = handicap(F[f.team].length, F[otherTeam(f.team)].length);
+    if (k < 1) { f.hp = f.maxHp = Math.round(f.maxHp * k); f.dmgMul *= k; f.hand = k; }
   }
   S2 = { turn: 1, moves: 0, cur: null, busy: false, over: false, waiting: false, timer: 15, gid: S2.gid + 1, ptr: { A: -1, B: -1 }, foe: null, ally: null, mv: 0 };
   parts.length = texts.length = projs.length = 0; flash = null;
@@ -1734,7 +1780,7 @@ function pickTarget(t) {
 /* ---------- HUD ---------- */
 function buildHUD() {
   for (const [el, team] of [[$('teamL'), F.me.team], [$('teamR'), otherTeam(F.me.team)]]) {
-    el.innerHTML = ''; el.classList.toggle('many', F[team].length > 1);
+    el.innerHTML = ''; el.classList.toggle('many', F[team].length > 1); el.classList.toggle('crowd', F[team].length > 3);
     for (const f of F[team]) {
       const u = document.createElement('div'); u.className = 'unit' + (el.id === 'teamR' ? ' right' : ''); f.ui = u;
       u.innerHTML = `<canvas class="portrait" width="96" height="96"></canvas><div class="info"><div class="name"><span class="lv" title="Oyuncu seviyesi ${f.lvl}, ekipman ortalaması ${gearLevel(f.gear)}">Sv ${f.lvl}</span><span class="nm"></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="chips"></div></div>`;
@@ -1742,6 +1788,9 @@ function buildHUD() {
       u.setAttribute('role', 'button'); u.tabIndex = 0; u.setAttribute('aria-label', (f.side === 'player' ? 'Takım arkadaşı: ' : 'Rakip: ') + f.name + ' (hedef seç)');
       const col = f.side === 'player' ? glowOf(f.id) : '#c41a30', pc = u.querySelector('canvas'); pc.style.setProperty('--c', col);
       Rig.portrait(pc, f.id, el.id === 'teamR' ? -1 : 1, col, f.gear);
+      pc.setAttribute('role', 'button'); pc.tabIndex = 0; pc.title = 'Ekipman ve değerler'; pc.setAttribute('aria-label', f.name + ': ekipman ve değerleri göster'); pc.classList.add('insp-open');
+      pc.addEventListener('click', e => { e.stopPropagation(); openInspect(f); });
+      pc.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openInspect(f); } });
       u.addEventListener('click', () => pickTarget(f));
       u.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickTarget(f); } });
       el.appendChild(u);
@@ -2005,16 +2054,48 @@ async function startArena() {
   b.disabled = false; b.textContent = 'Seç ve Savaş';
   pvp = null; crng = Math.random; lastDuel = false; $('again').textContent = 'Tekrar Savaş'; $('change').hidden = false;
   for (const k of [chosen, ...allies, ...foes]) Sfx.loadSkills(k);
-  const foeL = nb > na ? Math.max(1, L - 1) : L; // 1v2'de rakipler bir kademe zayıf gelir
+  const foeL = L; // sayıca üstün takımın gücü handicap ile azalır
   showScreen('battle');
   newBattle({
     A: [{ id: chosen, gear: gearOf(chosen), ctrl: 'me', lvl: myLevel(), name: 'Sen · ' + CLASSES[chosen].name }, ...allies.map(id => ({ id, gear: foeGear(L), lvl: myLevel(), name: 'Müttefik ' + CLASSES[id].name }))],
-    B: foes.map(id => ({ id, gear: foeGear(foeL), lvl: nb > na ? Math.max(1, myLevel() - 1) : myLevel(), name: 'Rakip ' + CLASSES[id].name })),
+    B: foes.map(id => ({ id, gear: foeGear(foeL), lvl: myLevel(), name: 'Rakip ' + CLASSES[id].name })),
   });
   log(battleMode === '1v1' ? `${CLASSES[chosen].name}, ${F.B[0].name} karşısında! İlk hamle senin.` : `${battleMode} takım savaşı başladı! Hedefini seçmek için bir rakibe ya da arkadaşına dokun. İlk hamle senin.`);
   beginTurn(nextUp('B'), true);
 }
 renderModes();
+/* ---------- savaşçı bilgi penceresi: ekipmanlar (seviye, bonus) ve değerler ---------- */
+let inspA = null;
+function openInspect(f) {
+  const names = Object.fromEntries(RC[f.id].items), pct = v => (v >= 0 ? '+' : '') + Math.round(v * 100) + '%';
+  $('inspT').textContent = f.name;
+  $('inspSub').textContent = `${f.cls.name} · Sv ${f.lvl} · ekipman ortalaması ${gearLevel(f.gear)} · ${f.side === 'player' ? (f === F.me ? 'sen' : 'takım arkadaşın') : 'rakip'}` + (f.hand ? ` · kalabalık takım: güç %${Math.round(f.hand * 100)}` : '');
+  const grid = $('inspItems'); grid.innerHTML = '';
+  for (const k of ITEMS) {
+    const n = f.gear[k], it = document.createElement('div'); it.className = 'iitem';
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64; drawIcon(cv, f.id, k, n);
+    const tx = document.createElement('div'), b = document.createElement('b'), t = document.createElement('span'), s = document.createElement('small');
+    b.textContent = names[k] || k; t.className = 'tier'; t.textContent = n + '. seviye'; s.textContent = perkText(k, n);
+    tx.append(b, t, s); it.append(cv, tx); grid.appendChild(it);
+  }
+  const rows = [['Can', `${f.hp} / ${f.maxHp}`], ['Mana', `${f.mp} / ${f.maxMp}`], ['Yenilenme', `+${f.regen} / tur`], ['Hasar', pct(f.dmgMul - 1)],
+    ['Kritik', Math.round(f.crit * 100) + '%'], ['Kaçınma', Math.round(f.dodge * 100) + '%'], ['Zırh', Math.round(f.armor * 100) + '%'], ['İksir', `${f.potions} × +${f.skills[4] ? f.skills[4].heal : 0}`]];
+  $('inspStats').innerHTML = ''; for (const [a, v] of rows) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = a; dd.textContent = v; $('inspStats').append(dt, dd); }
+  $('inspSkills').innerHTML = ''; for (const sk of f.skills.slice(0, 4)) { const sp = document.createElement('span'); sp.style.color = sk.color; sp.textContent = sk.name; sp.title = skillDesc(sk); $('inspSkills').appendChild(sp); }
+  inspA = Rig.actor(f.id, 0, 1, f.gear);
+  $('insp').hidden = false; $('inspClose').focus();
+  requestAnimationFrame(drawInspect);
+}
+function drawInspect(t) {
+  if (!inspA || $('insp').hidden) return;
+  const c = $('inspCv'), x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height);
+  Rig.update(inspA, 16); Rig.draw(x, inspA, t, 16, c.width / 2 - 10, c.height - 26, .95, null);
+  requestAnimationFrame(drawInspect);
+}
+function closeInspect() { $('insp').hidden = true; inspA = null; }
+$('inspClose').addEventListener('click', closeInspect);
+$('insp').addEventListener('click', e => { if (e.target === $('insp')) closeInspect(); });
+$('insp').addEventListener('keydown', e => { if (e.key === 'Escape') closeInspect(); });
 let foeId = null;
 
 /* =====================================================================
