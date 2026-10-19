@@ -389,6 +389,18 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
 }
 @media (max-height:520px){#mPanel .mslot{font-size:11px;padding:1px 4px} #mPanel .mteam{gap:2px} #mPanel .mcard{padding:5px;gap:4px} #mPanel .mhead{font-size:12px} #mPanel .mteam b{font-size:11px} #mPanel .mteam .btn,#mPanel .mact .btn{font-size:11px;padding:.2em .6em} #mPanel .lnote{display:none}}
 #mkModes[hidden],#mkGo[hidden]{display:none}
+/* ===== meydan ve bölgeler: tam pencere, boşluksuz; üst şerit oyunun üstünde durur ===== */
+html:has(#lobbyScreen:not([hidden])),html:has(#lobbyScreen:not([hidden])) body{overflow:hidden}
+html:has(#lobbyScreen:not([hidden])) .wrap{padding:0;gap:0}
+html:has(#lobbyScreen:not([hidden])) .topbar{position:fixed;top:0;left:0;right:0;z-index:30;min-height:0;pointer-events:none;
+  padding:8px max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px))}
+html:has(#lobbyScreen:not([hidden])) .topbar .plaque{display:none}
+html:has(#lobbyScreen:not([hidden])) .topbar :is(button,select){pointer-events:auto}
+#lobbyScreen:not([hidden]){position:fixed;inset:0;z-index:10;display:block;margin:0}
+#lobbyScreen .street{position:absolute;inset:0;margin:0;border:0;border-radius:0;display:block}
+#lobbyScreen .stage{position:absolute;inset:0;width:auto}
+#lobbyScreen .stage #sv{position:absolute;inset:0;width:100%;height:100%}
+#lobbyScreen .ohud{top:8px;left:max(10px, env(safe-area-inset-left, 0px));max-width:calc(100% - 300px)} /* sağdaki üst düğmelerin altına girmesin, sığmazsa alt satıra geçsin */
 /* ===== savaş: tam ekran arena, her şey içinde ===== */
 html:has(#battleScreen:not([hidden])) .topbar{display:none}
 html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
@@ -408,6 +420,23 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 #battleScreen .log h3{display:none} #battleScreen .log ul{font-size:1em;gap:.2em;flex-direction:column-reverse} #battleScreen .log li:nth-child(n+4){display:none}
 #battleScreen .log li.p,#battleScreen .log li.e{border-left:0;padding-left:0}
 #battleScreen .log li{text-shadow:0 1px 2px #000} #battleScreen .log li:nth-child(2){opacity:.75} #battleScreen .log li:nth-child(3){opacity:.5}
+/* ekran 16:9'dan genişse (telefon yatay) arena yanlarda boşluk bırakmadan kaplar; üstten ve alttan --crop kadar kırpılır,
+   üst düğmeler, sıra göstergesi ve savaş günlüğü kırpılan payın içine kayar */
+@media (min-aspect-ratio: 16/9){
+  #battleScreen .arena{width:100vw;--crop:calc((100vw * 9 / 16 - 100dvh) / 2)}
+  #battleScreen .hud{top:var(--crop)} #battleScreen .bctl{top:calc(var(--crop) + 1.4%)} #battleScreen .log{bottom:calc(var(--crop) + 1.2%)}
+}
+/* yetenek düğmeleri kare ve biraz daha büyük: simge üstte, ad altta (telefonda da) */
+#battleScreen .skills{width:min(56%,700px)}
+#battleScreen .skills .skill{aspect-ratio:1;flex-direction:column;justify-content:center;gap:.3em;padding:.4em .3em;min-width:0}
+#battleScreen .skills .skill svg{width:2.8em;height:2.8em}
+#battleScreen .skills .skill .nm{font-size:1.05em;text-align:center}
+@media (pointer:coarse) and (orientation:landscape) and (max-height:520px){
+  #battleScreen .skills{width:62%;gap:5px;padding:5px;font-size:10px}
+  #battleScreen .skills .skill{gap:.25em;padding:.3em .2em}
+  #battleScreen .skills .skill svg{width:2.5em;height:2.5em}
+  #battleScreen .skills .skill .nm{font-size:1em}
+}
 /* kahraman plakası */
 .plates{position:absolute;inset:0;pointer-events:none;z-index:2}
 .plate{--pc:var(--gold);position:absolute;transform:translate(0,-50%);font-size:clamp(9px,calc((.75 + .35 * var(--s,1)) * 1cqw),17px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
@@ -1407,8 +1436,26 @@ function frame(t) {
    Sahnenin sağ/sol sınırı yan sahneye, arka kenardaki kapılar başka sahneye açılır.
    Binaların işini önlerindeki karakterler (NPC) görür; karakterle konuşunca ekranı açılır.
    ===================================================================== */
-const SV = $('sv'), sctx = SV.getContext('2d'), SW = 1280, SH = 520, HS = .62;
-SV.width = SW * HR; SV.height = SH * HR; // yüksek çözünürlük (HR: savaş tuvaliyle aynı kat)
+const SV = $('sv'), sctx = SV.getContext('2d'), SH = 520, HS = .62; // dünya 1280×520 birim (kapılar, yürüme şeridi bu ölçüde)
+SV.width = 1280 * HR; SV.height = SH * HR; // yüksek çözünürlük (HR: savaş tuvaliyle aynı kat)
+// tam pencere görünüm: tuval kutusunu boşluksuz doldurur. Pencere sahneden daha uzunsa resmin üstünden ve altından daha çok satır
+// gösterilir (VT: ekranın tepesindeki dünya y'si, SHV: görünen yükseklik); resim de yetmezse görünüm daralır ve kamera kahramanı
+// yatayda izler (SW < 1280). Pencere daha genişse üstten kırpılır, yürüme şeridi görünür kalır. PXW: dünya birimi başına CSS pikseli
+let SW = 1280, SHV = SH, VT = 0, PXW = 1, viewKey = '';
+function fitView(S, bgi) {
+  const cw = SV.clientWidth, ch = SV.clientHeight;
+  if (!cw || !ch) return;
+  const key = cw + 'x' + ch + me.sc + (bgi ? 1 : 0);
+  if (key === viewKey) return; viewKey = key;
+  let top = 0, bot = 0; // resmin dünya şeridinin (0-520) üstünde ve altında kalan payı, dünya biriminde
+  if (bgi && S.img) { const nw = bgi.naturalWidth, u = nw / S.w, y0 = S.img.y * nw / (S.img.w || 1536) / u; top = Math.max(0, y0); bot = Math.max(0, bgi.naturalHeight / u - y0 - SH); }
+  const need = 1280 * ch / cw;
+  if (need <= SH) { SW = 1280; SHV = need; VT = Math.max(0, Math.min(SH - SHV, Y1 + 50 - SHV)); }
+  else if (need - SH <= top + bot) { const ex = need - SH; SW = 1280; SHV = need; VT = -Math.min(top, Math.max(ex - bot, ex / 2)); }
+  else { SHV = SH + top + bot; SW = SHV * cw / ch; VT = -top; }
+  SV.width = Math.round(SW * HR); SV.height = Math.round(SHV * HR); PXW = cw / SW;
+}
+const mmTop = () => Math.round(56 / PXW); // küçük harita üst şeridin düğmelerinin altında
 // yürüme: tempo (1 = savaştaki yürüyüş) ve adım boyu; hız ikisinden hesaplanır (2 kat hız = 1.4 adım × 2.57 tempo)
 const WALK_RATE = 2.57, STRIDE = 1.4;
 let Y0 = 412, Y1 = 505; // zemin şeridi: arka kenar (kapılar) ve ön kenar; boyalı sahnede resme göre değişir
@@ -1741,7 +1788,7 @@ function drawBubble(x, y, txt) {
   sctx.fillStyle = '#1a1205'; sctx.fillText(t, x, y - 8, w - 10);
 }
 // karakter gece ışığında: ayrı katmana çizilir, üstüne yalnız kendi piksellerine mavi-koyu bir ton basılır
-const hl = document.createElement('canvas'); hl.width = SW * HR; hl.height = SH * HR; const hctx = hl.getContext('2d');
+const hl = document.createElement('canvas'); hl.width = 1280 * HR; hl.height = SH * HR; const hctx = hl.getContext('2d');
 function drawHero(A, t, dt, x, y, s, alpha = 1) {
   const r = 170 * s / HS, x0 = Math.max(0, Math.floor(x - r)), w = Math.min(SW, Math.ceil(x + r)) - x0, y0 = Math.max(0, Math.floor(y - 330 * s / HS)), h = SH - y0;
   if (w <= 0) return;
@@ -1883,11 +1930,12 @@ function drawTpFx(t, front) {
   }
 }
 function drawMinimap() {
-  const cx = SW - 104, cy = 58, gx = 40, gy = 30;
-  sctx.fillStyle = 'rgba(10,8,16,.72)'; sctx.beginPath(); sctx.roundRect(SW - 214, 12, 202, 96, 6); sctx.fill();
+  const MY = mmTop(), cx = SW - 104, cy = MY + 46, gx = 40, gy = 30;
+  sctx.save(); sctx.setTransform(HR, 0, 0, HR, 0, 0); // ekran koordinatı (görünümün kaydırması yok)
+  sctx.fillStyle = 'rgba(10,8,16,.72)'; sctx.beginPath(); sctx.roundRect(SW - 214, MY, 202, 96, 6); sctx.fill();
   sctx.strokeStyle = 'rgba(242,193,78,.5)'; sctx.lineWidth = 2;
   const c0 = SCENES[me.sc].map, pos = id => [cx + (SCENES[id].map[0] - c0[0]) * gx, cy + (SCENES[id].map[1] - c0[1]) * gy];
-  sctx.save(); sctx.beginPath(); sctx.roundRect(SW - 214, 12, 202, 76, 6); sctx.clip();
+  sctx.save(); sctx.beginPath(); sctx.roundRect(SW - 214, MY, 202, 76, 6); sctx.clip();
   for (const [id, S] of Object.entries(SCENES)) {
     const [x, y] = pos(id);
     for (const to of [S.right, ...S.doors.map(d => d.to), ...(S.downs || []).map(d => d.to)]) if (SCENES[to]) { const [x2, y2] = pos(to); sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x2, y2); sctx.stroke(); }
@@ -1899,12 +1947,14 @@ function drawMinimap() {
     if (n) { sctx.fillStyle = '#7db4ff'; sctx.beginPath(); sctx.arc(x + 8, y - 7, 6, 0, 7); sctx.fill(); sctx.fillStyle = '#0b0918'; sctx.font = '700 10px sans-serif'; sctx.textAlign = 'center'; sctx.fillText(n, x + 8, y - 3.5); }
   }
   sctx.restore();
-  sctx.fillStyle = '#e9e4f5'; sctx.font = '700 13px "Barlow Semi Condensed", sans-serif'; sctx.textAlign = 'center'; sctx.fillText(scene().name, cx, 102);
-  sctx.fillStyle = 'rgba(242,193,78,.85)'; sctx.font = '700 15px sans-serif'; sctx.fillText('⤢', SW - 26, 32); // dokununca büyür
+  sctx.fillStyle = '#e9e4f5'; sctx.font = '700 13px "Barlow Semi Condensed", sans-serif'; sctx.textAlign = 'center'; sctx.fillText(scene().name, cx, MY + 90);
+  sctx.fillStyle = 'rgba(242,193,78,.85)'; sctx.font = '700 15px sans-serif'; sctx.fillText('⤢', SW - 26, MY + 20); // dokununca büyür
+  sctx.restore();
 }
 function drawStreet(t, dt) {
-  sctx.setTransform(HR, 0, 0, HR, 0, 0);
   const S = scene();
+  fitView(S, sceneImg(S));
+  sctx.setTransform(HR, 0, 0, HR, 0, -VT * HR); // dünya koordinatı; ekranın tepesi dünya y = VT
   // yürüme hızı adıma bağlı: yere basan ayak (footF/footB = ±24·sin) ne kadar geri giderse beden o kadar ilerler,
   // böylece ayak yerde kaymaz; ortalama hız yarım döngüde (450 ms) 48 birimdir. Arkada (küçük) adım da kısalır.
   const avg = 48 * STRIDE * HS / 450 * WALK_RATE * dt;
@@ -1940,9 +1990,9 @@ function drawStreet(t, dt) {
   if (st !== sent && t - sendT > 180) { sent = st; sendT = t; lobbyPresence(); }
   syncOthers();
 
-  sctx.fillStyle = '#0b0918'; sctx.fillRect(0, 0, SW, SH);
+  sctx.fillStyle = '#0b0918'; sctx.fillRect(0, VT, SW, SHV);
   const bgi = sceneImg(S);
-  if (bgi) { const nw = bgi.naturalWidth, f = nw / (S.img.w || 1536); sctx.drawImage(bgi, 0, S.img.y * f, nw, nw * SH / SW, 0, 0, SW, SH); } // resmin tam genişliği, ekran oranında yükseklik (1536 → 624 satır)
+  if (bgi) { const nw = bgi.naturalWidth, f = nw / (S.img.w || 1536), u = nw / S.w; sctx.drawImage(bgi, camX * u, S.img.y * f + VT * u, SW * u, SHV * u, 0, VT, SW, SHV); } // resmin kamera penceresi (u: dünya birimi başına resim pikseli)
   else if (!S.img && bgFar && bgNear) { tileX(bgFar, camX * .5, STREET_Y - bgFar.height); tileX(bgNear, camX, STREET_Y); }
   if (bgi) drawSceneLights(S, t);
   // fener direkleri kaldırımın önünde
@@ -1974,7 +2024,7 @@ function drawStreet(t, dt) {
     sctx.save(); sctx.globalCompositeOperation = 'lighter'; sctx.translate(sx, Y1 + 4); sctx.scale(1, .25);
     const g = sctx.createRadialGradient(0, 0, 4, 0, 0, 90); g.addColorStop(0, `rgba(242,193,78,${hot ? .5 : .28})`); g.addColorStop(1, 'rgba(242,193,78,0)');
     sctx.fillStyle = g; sctx.fillRect(-90, -90, 180, 180); sctx.restore();
-    drawLabel(sx, SH - 8, '↓ ' + d.name, hot ? '#1a1205' : '#e9e4f5', hot ? '#f2c14e' : null); }
+    drawLabel(sx, VT + SHV - 8, '↓ ' + d.name, hot ? '#1a1205' : '#e9e4f5', hot ? '#f2c14e' : null); }
   // kenar çıkışlarının tabelaları
   if (S.left) drawLabel(110 - camX, Y0 - 24, '← ' + SCENES[S.left].name, '#e9e4f5');
   if (S.right) drawLabel(S.w - 110 - camX, Y0 - 24, SCENES[S.right].name + ' →', '#e9e4f5');
@@ -2030,7 +2080,7 @@ function drawStreet(t, dt) {
     if (k >= 1 && !trans.done) { trans.done = true; trans.t1 = now(); arrive(trans); }
     const a = trans.done ? 1 - (now() - trans.t1) / 240 : k;
     if (trans.done && a <= 0) trans = null;
-    else { sctx.fillStyle = `rgba(0,0,0,${Math.max(0, Math.min(1, a))})`; sctx.fillRect(0, 0, SW, SH); }
+    else { sctx.fillStyle = `rgba(0,0,0,${Math.max(0, Math.min(1, a))})`; sctx.fillRect(0, VT, SW, SHV); }
   }
   if (sel && (!others.has(sel) || Math.abs(others.get(sel).x - me.x) > 700)) sel = null;
   streetBox();
@@ -2075,9 +2125,9 @@ $('sboxB').addEventListener('click', () => {
 $('openTown').addEventListener('click', () => showScreen('town'));
 SV.addEventListener('click', e => {
   if (trans) return;
-  const r = SV.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * SW, y = (e.clientY - r.top) / r.height * SH, wx = x + camX, S = scene();
+  const r = SV.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * SW, sy = (e.clientY - r.top) / r.height * SHV, y = sy + VT, wx = x + camX, S = scene();
   const hitAt = (ox, oy) => { const s = scaleAt(oy); return Math.abs(ox - wx) < 55 * s / HS && y > headY(oy, s) && y < oy + 12; };
-  if (x > SW - 214 && x < SW - 12 && y > 12 && y < 108) return openWorldMap(); // küçük harita
+  if (x > SW - 214 && x < SW - 12 && sy > mmTop() && sy < mmTop() + 96) return openWorldMap(); // küçük harita
   // oyuncu seç
   for (const [k, o] of others) if (hitAt(o.x, o.y)) { sel = k; boxKey = ''; return; }
   sel = null; boxKey = ''; me.door = null;
@@ -2127,7 +2177,15 @@ async function goLandscape() {
 }
 $('rotBtn').addEventListener('click', goLandscape);
 const coarse = matchMedia('(pointer:coarse)');
-addEventListener('pointerdown', () => { if (coarse.matches && canFs && !document.fullscreenElement && (screen === 'battle' || !goLandscape.once)) { goLandscape.once = true; goLandscape(); } }, true);
+// ilk tıklamada, dokunuşta ya da tuşta tarayıcı tam ekrana geçer (PC ve telefon). Oyuncu Esc ile çıkarsa zorlanmaz (⛶ geri açar);
+// telefonda savaşta dokununca ve savaşa girerken (autoFs) yine açılır
+const fsFirst = e => {
+  if (goLandscape.once || !canFs || document.fullscreenElement) return;
+  if (e.type === 'keydown' && (e.key === 'Escape' || e.key === 'F11' || e.repeat)) return;
+  goLandscape.once = true; goLandscape();
+};
+addEventListener('pointerdown', fsFirst, true); addEventListener('keydown', fsFirst, true);
+addEventListener('pointerdown', () => { if (coarse.matches && canFs && !document.fullscreenElement && screen === 'battle') goLandscape(); }, true);
 if (!canFs) $('rotBtn').hidden = true;
 if (canFs) $('fsBtn').hidden = false; // tam ekran düğmesi PC'de de var
 document.addEventListener('fullscreenchange', () => $('fsBtn').setAttribute('aria-pressed', !!document.fullscreenElement));
@@ -2783,7 +2841,8 @@ function hit(a, d, sk) {
   const [hx, hy] = body(d), nm = sk.name;
   if (d.shield >= 1) { d.shield = 0; Sfx.play('miss'); floatText(d.A, 'KAÇTI', '#cfd6ff'); burst(hx, hy, d.shieldColor, 18, 200); log(`${nm}: ${d.name} saldırıdan tamamen kaçtı!`, d.side); return; }
   if (crng() < d.dodge) { Sfx.play('miss'); floatText(d.A, 'ISKA', '#cfd6ff'); log(`${nm}: ${d.name} saldırıdan kaçtı!`, d.side); return; }
-  let dmg = Math.round((Math.round(sk.dmg[0] + crng() * (sk.dmg[1] - sk.dmg[0])) + (a.dmgAdd || 0)) * (a.dmgMul || 1)); // ekipmanın ek hasarı zara eklenir const crit = crng() < a.crit; if (crit) dmg = Math.round(dmg * 1.6);
+  let dmg = Math.round((Math.round(sk.dmg[0] + crng() * (sk.dmg[1] - sk.dmg[0])) + (a.dmgAdd || 0)) * (a.dmgMul || 1)); // ekipmanın ek hasarı zara eklenir
+  const crit = crng() < a.crit; if (crit) dmg = Math.round(dmg * 1.6);
   if (a.rage) { dmg = Math.round(dmg * a.rage); a.rage = 0; }
   const furyHit = a.furyReady; if (furyHit) { dmg = Math.round(dmg * FURY_MUL); a.furyReady = false; } // öfke modu: tek seferlik büyük vuruş
   let blocked = false;
