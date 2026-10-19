@@ -535,7 +535,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .fgbtn:hover:not(:disabled){transform:translateY(-2px)} .fgbtn:disabled{opacity:.45;cursor:not-allowed}
 .fgbtn svg{width:38px;height:38px;color:var(--gold);stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px currentColor)}
 .fgbtn b{font:800 15px var(--font-display);color:var(--gold);letter-spacing:.03em} .fgbtn small{color:var(--muted);font-size:12px;line-height:1.3} .fgbtn em{font-style:normal;font-weight:800;color:#ffd77a;font-size:13px}
-.fgodds{display:grid;grid-template-columns:auto repeat(10,minmax(0,1fr));gap:2px;font-size:11px;text-align:center;align-items:center}
+.fgodds{display:grid;grid-template-columns:auto repeat(9,minmax(0,1fr));gap:2px;font-size:11px;text-align:center;align-items:center}
 .fgodds .h{font:800 11px var(--font-display);color:var(--muted)} .fgodds .l{text-align:left;color:var(--muted);padding-right:6px;white-space:nowrap;font-weight:700}
 .fgodds .c{padding:3px 0;border-radius:3px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;background:color-mix(in srgb,var(--b) calc(var(--a) * 100%),#100d17);text-shadow:0 1px 2px #000}
 .fgodds .c::before{display:none}
@@ -868,7 +868,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=15"></script>
+<script src="i18n-dict.js?v=16"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
@@ -1205,25 +1205,24 @@ const T = SAVE.town = { hall: 1, mine: 1, alch: 1, mineAt: Date.now(), ...(SAVE.
 const ALCH_COST = [0, 250, 500, 850, 1300, 1900, 2600, 3500];
 const potionCount = a => 2 + Math.floor((a - 1) / 3);   // 1: 2 iksir, 4: 3, 7: 4
 const potionHeal = a => 130 + 20 * (a - 1);             // 1: 130, 8: 270
-// çekiç: demircide 1 eşya dövdürür (oyun başı 1; eski kayıtlara da). Parça: parçalanan eşyadan, 5 parça = 1 çekiç.
+// çekiç: demircide 1 eşya dövdürür (oyun başı 1; eski kayıtlara da).
 // items: takılmamış ekipman ({ c: sınıf, k: yuva, n: kademe }). T.forge: demirci seviyesi (Belediye seviyesini geçemez).
 if (typeof SAVE.hammers !== 'number') SAVE.hammers = 1;
-SAVE.shards = SAVE.shards || 0; SAVE.items = Array.isArray(SAVE.items) ? SAVE.items : [];
+delete SAVE.shards; SAVE.items = Array.isArray(SAVE.items) ? SAVE.items : []; // eşya parçalama kalktı: eski kayıtlardaki parçalar silinir
 T.forge = T.forge || 1;
-const SHARDS_PER_HAMMER = 5, FORGE_CLS_DIV = 5;
-// dövme ihtimali: 2. kademe a, her üst kademe bir öncekinin r katı (1. seviyede yarısı), kalan ihtimal 1. kademe.
+const FORGE_CLS_DIV = 5;
+// dövme ihtimali: 2. kademe a, her üst kademe bir öncekinin r katı; kalan ihtimal de 2. kademenin (1. kademe herkeste var, dövmeden çıkmaz).
 // Sınıfa özel kipte 2-10. kademeler 5 kat düşük. Demirci seviyesi a'yı ve r'yi büyütür (Sv1: %25 / 0,5 → Sv8: %42,5 / 0,55).
 function forgeOdds(L, own) {
   const a = .25 + .025 * (L - 1), r = .5 + .0071 * (L - 1), p = [0]; let s = 0;
   for (let n = 2; n <= 10; n++) { const v = a * r ** (n - 2) / (own ? FORGE_CLS_DIV : 1); p.push(v); s += v; }
-  p[0] = 1 - s; return p;
+  p[1] += 1 - s; return p; // p[0] (1. kademe) hep 0
 }
 // demirci seviye atlama (indeks: şimdiki seviye): altın + ormandan düşen malzeme
 const FORGE_UP = [null, { g: 600, m: { pelt: 3 } }, { g: 1200, m: { pelt: 3, silk: 2 } }, { g: 2000, m: { silk: 3, ess: 2 } }, { g: 3200, m: { ess: 4, relic: 1 } },
   { g: 5000, m: { ess: 6, relic: 2 } }, { g: 7500, m: { ess: 8, relic: 3 } }, { g: 11000, m: { ess: 10, relic: 4 } }];
 // geçici etkinlik: kazanılan her savaşta (arena, düello, takım maçı, orman) bu kadar çekiç. Kapatmak için 0 yap.
 const WIN_HAMMERS = 1000;
-function addShards(n) { SAVE.shards += n; while (SAVE.shards >= SHARDS_PER_HAMMER) { SAVE.shards -= SHARDS_PER_HAMMER; SAVE.hammers++; } }
 const mineStored = () => Math.min(mineCap(T.mine), Math.floor(mineRate(T.mine) * Math.max(0, Date.now() - T.mineAt) / 3600000));
 /* Hesap ve bulut kaydı: yalnızca kendi sunucumuzda (/api) çalışır; claude.ai'de ve misafirken kayıt tarayıcıda kalır.
    Yerel kayıt bir önbellektir: her değişiklikten kısa süre sonra sunucuya da yazılır; sunucudaki daha yeniyse o alınır. */
@@ -2299,15 +2298,14 @@ function buyItem(k, to) {
 }
 /* ---------- Demirci: çekiçle ekipman dövme ----------
    1 çekiç = 1 eşya. Rastgele kipte herhangi bir sınıfın herhangi bir eşyası çıkar; sınıfa özel kipte kadroda seçili sınıfın eşyası
-   (üst kademe ihtimali 5 kat düşük). Yuva her iki kipte de rastgeledir. Sonuç: tak, envantere koy ya da parçala (kademe kadar parça). */
+   (üst kademe ihtimali 5 kat düşük). Yuva her iki kipte de rastgeledir. Sonuç: tak, envantere koy ya da sat (tüccar fiyatının yarısı); 1. kademe eşyanın değeri yoktur, atılır. */
 const fmtPct = v => { const p = v * 100; return (p >= 10 ? Math.round(p) : p >= 1 ? +p.toFixed(1) : +p.toFixed(2)) + '%'; };
 function renderForge() {
   const key = chosen, L = T.forge, list = $('gearList'); list.innerHTML = ''; list.className = 'gearlist forgebox';
   $('gearHint').textContent = 'Çekiçle ekipman döv'; $('gold').textContent = `${SAVE.gold} Altın`;
   const top = document.createElement('div'); top.className = 'fgtop';
-  top.innerHTML = `<span>${svg('hammer')}<b></b></span><span class="sh"></span><span class="lv"></span>`;
+  top.innerHTML = `<span>${svg('hammer')}<b></b></span><span class="lv"></span>`;
   top.querySelector('b').textContent = `${SAVE.hammers} çekiç`;
-  top.querySelector('.sh').textContent = `Parça ${SAVE.shards}/${SHARDS_PER_HAMMER}`;
   top.querySelector('.lv').textContent = `Demirci Sv ${L}`;
   const room = invFree() > 0, can = SAVE.hammers > 0;
   const modes = document.createElement('div'); modes.className = 'fgmodes';
@@ -2320,13 +2318,13 @@ function renderForge() {
     b.addEventListener('click', () => doForge(own));
     modes.appendChild(b);
   }
-  // ihtimal tablosu: kademe 1-10, iki kip
+  // ihtimal tablosu: kademe 2-10, iki kip
   const odds = document.createElement('div'); odds.className = 'fgodds';
   odds.appendChild(document.createElement('span'));
-  for (let n = 1; n <= 10; n++) { const h = document.createElement('span'); h.className = 'h'; h.textContent = n; odds.appendChild(h); }
+  for (let n = 2; n <= 10; n++) { const h = document.createElement('span'); h.className = 'h'; h.textContent = n; odds.appendChild(h); }
   for (const own of [false, true]) {
     const p = forgeOdds(L, own), l = document.createElement('span'); l.className = 'l'; l.textContent = own ? CLASSES[key].name : 'Rastgele'; odds.appendChild(l);
-    p.forEach((v, i) => { const c = document.createElement('span'); c.className = 'c tr' + (i + 1); c.textContent = fmtPct(v); c.style.setProperty('--a', Math.min(.55, .08 + v)); odds.appendChild(c); });
+    p.slice(1).forEach((v, i) => { const c = document.createElement('span'); c.className = 'c tr' + (i + 2); c.textContent = fmtPct(v); c.style.setProperty('--a', Math.min(.55, .08 + v)); odds.appendChild(c); });
   }
   // demirci seviyesi: altın + malzeme, Belediye seviyesini geçemez
   const up = document.createElement('div'); up.className = 'fgup';
@@ -2337,7 +2335,7 @@ function renderForge() {
   ub.addEventListener('click', forgeUp);
   up.append(ut, ub);
   const note = document.createElement('p'); note.className = 'fgnote';
-  note.textContent = room ? 'Elindekinden iyi çıkarsa takabilirsin; değilse envantere koy ya da parçala (kademe kadar parça, 5 parça = 1 çekiç).' : 'Envanter dolu: dövülen eşyayı ya takman ya da parçalaman gerekecek.';
+  note.textContent = room ? 'Elindekinden iyi çıkarsa takabilirsin; değilse envantere koy ya da sat (tüccar fiyatının yarısı).' : 'Envanter dolu: dövülen eşyayı ya takman ya da satman gerekecek.';
   list.append(top, modes, odds, up, note);
 }
 function forgeUp() {
@@ -2370,11 +2368,10 @@ function showForged() {
   const first = better ? add(`Tak (${CLASSES[it.c].name})`, '', () => forgedTo('equip')) : null;
   const keep = add(room ? 'Envantere koy' : 'Envanter dolu', 'ghost', () => forgedTo('keep'), !room);
   const sp = SELL_PRICE(it.k, it.n);
-  add(sp ? `Sat · +${sp} altın` : 'Satılmaz (1. kademe)', 'ghost', () => forgedTo('sell'), !sp);
-  add(`Parçala · +${it.n} parça`, 'ghost', () => forgedTo('break'));
+  add(sp ? `Sat · +${sp} altın` : 'At (değeri yok)', 'ghost', () => forgedTo(sp ? 'sell' : 'drop'));
   $('fres').hidden = false; (first || (room ? keep : row.lastChild)).focus();
 }
-// dövülen eşyanın sonu: tak (eskisi 2. kademe ve üstüyse envantere), envantere koy, sat (yarı fiyat) ya da parçala.
+// dövülen eşyanın sonu: tak (eskisi 2. kademe ve üstüyse envantere), envantere koy, sat (yarı fiyat) ya da at (1. kademe, değeri yok).
 // Pencere kapanmaz: ne olduğu yazılır ve çekiç kaldıysa aynı kiple "Tekrar döv" çıkar
 function forgedTo(how) {
   const it = forged; if (!it) return;
@@ -2382,7 +2379,7 @@ function forgedTo(how) {
   if (how === 'equip') { equipItem(it); msg = 'Takıldı'; }
   else if (how === 'keep' && invFree() > 0) { SAVE.items.push({ ...it, new: 1 }); msg = 'Envantere kondu'; }
   else if (how === 'sell' && SELL_PRICE(it.k, it.n) > 0) { const v = SELL_PRICE(it.k, it.n); SAVE.gold += v; Sfx.play('coin'); msg = `Satıldı · +${v} altın`; }
-  else { addShards(it.n); Sfx.play('coin'); msg = `Parçalandı · +${it.n} parça`; }
+  else msg = 'Atıldı';
   forged = null; persist(); invBadge();
   if (screen === 'select') { renderGear(); renderStats(); }
   forgeNext(msg);
@@ -2399,7 +2396,7 @@ function forgeNext(msg) {
 function equipItem(it) {
   const g = gearOf(it.c), old = g[it.k];
   g[it.k] = it.n;
-  if (old >= 2) { if (invFree() > 0) SAVE.items.push({ c: it.c, k: it.k, n: old }); else addShards(old); } // 1. kademe başlangıç eşyası atılır
+  if (old >= 2) { if (invFree() > 0) SAVE.items.push({ c: it.c, k: it.k, n: old }); else SAVE.gold += SELL_PRICE(it.k, old); } // envanter doluysa eskisi yarı fiyatına satılır; 1. kademe başlangıç eşyası atılır
   Sfx.play('upgrade');
   if (it.c === chosen) { if (pA && Rig.sprites[chosen]) { pA = Rig.actor(chosen, 0, 1, g); pNext = now() + 600; } streetActor(); lobbyPresence(); }
 }
@@ -2521,7 +2518,7 @@ function renderTown() {
     <img class="bimg" src="assets/baked/town_smith.png?v=1" alt="Demirci">
     <div class="bh">${svg('anvil')}<div><h3>Demirci</h3><div class="lvl">Seviye ${T.forge} / ${HALL_MAX}</div></div></div>
     <p>Çekiçle ekipman döver: rastgele ya da sınıfına özel. Yükseldikçe üst kademe çıkma ihtimali artar.</p>
-    <ul><li>Çekiç: <b>${SAVE.hammers}</b></li><li>Parça: <b>${SAVE.shards} / ${SHARDS_PER_HAMMER}</b></li></ul>
+    <ul><li>Çekiç: <b>${SAVE.hammers}</b></li></ul>
     <div class="acts"><button class="btn" id="goSmith" type="button">Demirciye git</button></div>
   </article>
   <article class="bld" style="--c:#7db4ff">
@@ -3734,8 +3731,8 @@ const stageBg = () => forestRun && STAGES[forestRun.k - 1] && STAGE_BG[STAGES[fo
 let forestRun = null; // { k, size } orman savaşındayken
 let forestSize = 1; try { forestSize = Math.max(1, Math.min(5, +localStorage.getItem('sa.fsize') || 1)); } catch (e) {}
 /* ---------- Envanter ----------
-   Yuvalar: çekiç, çekiç parçası, ormandan düşen malzemeler (yığın) ve takılmamış ekipman (her biri bir yuva).
-   Ekipman: dövmeden ya da takılınca yerinden çıkan eşya; kendi sınıfına takılır ya da parçalanır (kademe kadar parça, 5 parça = 1 çekiç).
+   Yuvalar: çekiç, ormandan düşen malzemeler (yığın) ve takılmamış ekipman (her biri bir yuva).
+   Ekipman: dövmeden ya da takılınca yerinden çıkan eşya; kendi sınıfına takılır ya da satılır (tüccar fiyatının yarısı; 1. kademe atılır).
    Malzemenin nereden düştüğü canavar listesinden, nerede kullanıldığı demirci yükseltmesinden (FORGE_UP) hesaplanır.
    invSeen: pencere en son kapandığında her malzemeden kaç tane vardı (fazlası "yeni"); yeni ekipmanın üstünde new işareti. */
 const INV_SLOTS = 30;
@@ -3745,19 +3742,17 @@ const INV_INFO = {
   ess: { icon: '<path d="M12 2.5c3.5 4.5 6.5 7.5 6.5 11.5a6.5 6.5 0 0 1-13 0c0-4 3-7 6.5-11.5z"/><path d="M12 10.5c-2.2 2.2-2.2 5.3 0 7.5M12 14l2.5-2"/>', desc: 'Ormanın büyülü özü; eşyalara güç katar.' },
   relic: { icon: '<path d="M8 3h8l4.5 6L12 21 3.5 9z"/><path d="M3.5 9h17M9 9l3 12 3-12M8 3l1 6M16 3l-1 6"/>', desc: 'Bossların koruduğu kadim bir kalıntı; en yüksek kademeler için gerekir.' },
   ham: { icon: '<path d="M14 10 4 20"/><path d="m11 5 4-3 7 7-3 4z"/>', color: '#f2c14e', name: 'Çekiç', desc: 'Demircide bir eşya dövmeye yarar. Orman ilk geçişlerinden, lig atlayınca, günün sandığından ve tüccardan gelir.' },
-  shard: { icon: '<path d="m6 14 4-9 3 6 5-2-3 10H7z"/><path d="m10 5 1 9 4 6"/>', color: '#c9a86a', name: 'Çekiç parçası', desc: 'Parçalanan eşyalardan çıkar. 5 parça kendiliğinden 1 çekiç olur.' },
 };
 SAVE.invSeen = SAVE.invSeen || { ...SAVE.forest.mats }; // eski kayıtta var olanlar yeni sayılmaz
-// yuvalardaki girişler sırayla: çekiç, parça, malzemeler, ekipman (yüksek kademe önce)
+// yuvalardaki girişler sırayla: çekiç, malzemeler, ekipman (yüksek kademe önce)
 function invEntries() {
   const out = [];
   if (SAVE.hammers > 0) out.push({ t: 'ham' });
-  if (SAVE.shards > 0) out.push({ t: 'shard' });
   for (const m of Object.keys(MATS)) if ((SAVE.forest.mats[m] || 0) > 0) out.push({ t: 'mat', m });
   SAVE.items.map((it, i) => ({ t: 'gear', it, i })).sort((a, b) => b.it.n - a.it.n).forEach(e => out.push(e));
   return out;
 }
-const invFree = () => INV_SLOTS - invEntries().length - (SAVE.hammers > 0 ? 0 : 1) - (SAVE.shards > 0 ? 0 : 1); // çekiç ve parçaya yer ayrılır
+const invFree = () => INV_SLOTS - invEntries().length - (SAVE.hammers > 0 ? 0 : 1); // çekice yer ayrılır
 const invNewOf = m => Math.max(0, (SAVE.forest.mats[m] || 0) - (SAVE.invSeen[m] || 0));
 function invBadge() {
   const n = Object.keys(MATS).reduce((s, m) => s + invNewOf(m), 0) + SAVE.items.filter(it => it.new).length;
@@ -3791,9 +3786,9 @@ function renderInventory() {
       label = `${nm} · ${CLASSES[it.c].name} · ${it.n}. kademe`;
     } else {
       const inf = INV_INFO[e.t === 'mat' ? e.m : e.t], name = e.t === 'mat' ? MATS[e.m][0] : inf.name, col = e.t === 'mat' ? MATS[e.m][1] : inf.color;
-      const n = e.t === 'mat' ? SAVE.forest.mats[e.m] : e.t === 'ham' ? SAVE.hammers : SAVE.shards, nw = e.t === 'mat' ? invNewOf(e.m) : 0;
+      const n = e.t === 'mat' ? SAVE.forest.mats[e.m] : SAVE.hammers, nw = e.t === 'mat' ? invNewOf(e.m) : 0;
       b.style.setProperty('--c', col);
-      b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${inf.icon}</svg><span class="cnt">${e.t === 'shard' ? n + '/' + SHARDS_PER_HAMMER : n}</span>` + (nw ? `<span class="new">+${nw}</span>` : '');
+      b.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${inf.icon}</svg><span class="cnt">${n}</span>` + (nw ? `<span class="new">+${nw}</span>` : '');
       label = `${name} ×${n}`;
     }
     b.title = label; b.setAttribute('aria-label', label);
@@ -3818,12 +3813,10 @@ function invInfo() {
     const acts = document.createElement('div'); acts.className = 'ivacts';
     const eq = document.createElement('button'); eq.type = 'button'; eq.className = 'btn'; eq.textContent = it.n > cur ? `Tak (${CLASSES[it.c].name})` : 'Takılı olan daha iyi'; eq.disabled = it.n <= cur;
     eq.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); delete it.new; equipItem(it); persist(); invSel = null; renderInventory(); invBadge(); });
-    const br = document.createElement('button'); br.type = 'button'; br.className = 'btn ghost'; br.textContent = `Parçala · +${it.n} parça`;
-    br.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); addShards(it.n); Sfx.play('coin'); persist(); invSel = null; renderInventory(); invBadge(); });
     const sp = SELL_PRICE(it.k, it.n), sl = document.createElement('button'); sl.type = 'button'; sl.className = 'btn ghost';
-    sl.textContent = sp ? `Sat · +${sp} altın` : 'Satılmaz (1. kademe)'; sl.disabled = !sp;
-    sl.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); SAVE.gold += sp; Sfx.play('coin'); persist(); invSel = null; renderInventory(); invBadge(); if (screen === 'select') { renderGear(); renderStats(); } });
-    acts.append(eq, sl, br); box.append(big, b, p, dl, acts); return;
+    sl.textContent = sp ? `Sat · +${sp} altın` : 'At (değeri yok)';
+    sl.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); if (sp) { SAVE.gold += sp; Sfx.play('coin'); } persist(); invSel = null; renderInventory(); invBadge(); if (screen === 'select') { renderGear(); renderStats(); } });
+    acts.append(eq, sl); box.append(big, b, p, dl, acts); return;
   }
   const key = e.t === 'mat' ? e.m : e.t, inf = INV_INFO[key], name = e.t === 'mat' ? MATS[key][0] : inf.name;
   box.style.setProperty('--c', e.t === 'mat' ? MATS[key][1] : inf.color);
@@ -3833,10 +3826,10 @@ function invInfo() {
     if (key === 'relic') from.push(...Object.values(MONSTERS).filter(d => d.boss).map(d => d.name), 'İlk geçiş sandıkları');
     const use = FORGE_UP.map((c, L) => c && c.m[key] ? `Sv ${L + 1} (${c.m[key]} adet)` : '').filter(Boolean);
     row('Adet', String(SAVE.forest.mats[key])); row('Nereden düşer', [...new Set(from)].join(', ')); row('Demirci yükseltmesi', use.join(', ') || '—');
-  } else row('Adet', key === 'ham' ? String(SAVE.hammers) : `${SAVE.shards}/${SHARDS_PER_HAMMER}`);
+  } else row('Adet', String(SAVE.hammers));
   box.append(big, b, p, dl);
 }
-$('fres').addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (forged) forgedTo(invFree() > 0 ? 'keep' : 'break'); $('fres').hidden = true; }); // kapatınca: yer varsa envantere, yoksa parçala
+$('fres').addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (forged) forgedTo(invFree() > 0 ? 'keep' : SELL_PRICE(forged.k, forged.n) ? 'sell' : 'drop'); $('fres').hidden = true; }); // kapatınca: yer varsa envantere, yoksa satılır (değeri yoksa atılır)
 $('invBtn').addEventListener('click', openInventory);
 $('invClose').addEventListener('click', closeInventory);
 $('inv').addEventListener('click', e => { if (e.target === $('inv')) closeInventory(); });
