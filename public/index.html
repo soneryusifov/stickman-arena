@@ -56,6 +56,18 @@ body{font-family:var(--font-body);font-size:15px;background:radial-gradient(120%
 .stats .sb i{display:block;height:100%;background:var(--c);box-shadow:0 0 8px var(--c)}
 .stats .sv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
 .stats .sv em{font-style:normal;color:#6dff95;margin-left:.3em} /* eşyadan gelen */
+/* beceri puanı: başlık satırı, "+" düğmeleri, değere verilen puan sayısı, yetenek seviyesi */
+#selectScreen .stats.ed{grid-template-columns:auto minmax(0,1fr) auto 1.7em}
+/* demirci/tüccar kipinde sütun dar: çubuk satırın altına iner (dense yerleşim: ad, değer, düğme üstte; çubuk altta tam genişlik) */
+#selectScreen:not([data-mode="arena"]) .stats.ed{grid-template-columns:minmax(0,1fr) auto 1.6em;grid-auto-flow:row dense;row-gap:3px}
+#selectScreen:not([data-mode="arena"]) .stats.ed .sbw{grid-column:1/-1;margin-bottom:4px}
+.sphead{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:8px;color:var(--muted);font-weight:700}
+.sphead b{color:var(--gold);font-family:var(--font-display);font-size:1.15em}
+.spr{background:none;border:1px solid var(--line);color:var(--muted);border-radius:4px;padding:.15em .6em;font:inherit;font-size:.85em;cursor:pointer} .spr:hover{color:var(--text);border-color:var(--gold-deep)}
+.spb{width:1.6em;height:1.6em;padding:0;border-radius:4px;border:1px solid var(--gold);background:rgba(242,193,78,.14);color:var(--gold);font:800 1em/1 var(--font-body);cursor:pointer}
+.spb:hover:not(:disabled){background:var(--gold);color:#1a1208} .spb:disabled{opacity:.25;cursor:default;border-color:var(--line);color:var(--muted);background:none}
+.spn{display:inline-block;min-width:1.4em;padding:0 .3em;margin-left:.2em;border-radius:3px;background:rgba(242,193,78,.18);color:var(--gold);font-size:.78em;font-weight:800;text-align:center}
+.ds{position:relative} .ds .slv{position:absolute;left:4px;top:3px;font-size:10px;font-weight:800;color:var(--gold)} .ds .spb{position:absolute;right:3px;top:3px;width:20px;height:20px;font-size:13px}
 .loadnote{font-size:13px;color:var(--muted);text-align:center;margin:0}
 .gear{display:flex;flex-direction:column;gap:6px}
 .gearhead{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}
@@ -660,7 +672,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   #selectScreen .detail h2{font-size:18px}
   #selectScreen .detail .role{font-size:10px;margin-top:-3px;letter-spacing:.1em}
   #selectScreen #dDesc{display:none}
-  #selectScreen .dskills{gap:4px} #selectScreen .ds{padding:3px 2px;gap:1px} #selectScreen .ds svg{width:18px;height:18px} #selectScreen .ds b{font-size:10.5px} #selectScreen .ds small{display:none}
+  #selectScreen .dskills{gap:4px} #selectScreen .ds{padding:12px 2px 3px;gap:1px} #selectScreen .ds .slv{font-size:8.5px;left:3px;top:1px} #selectScreen .ds .spb{width:14px;height:14px;font-size:10px;right:1px;top:1px;border-radius:3px} #selectScreen .ds svg{width:18px;height:18px} #selectScreen .ds b{font-size:10.5px} #selectScreen .ds small{display:none}
   #selectScreen .stats{font-size:11px;gap:2px 8px}
   #selectScreen .gear{gap:4px} #selectScreen .gearhead{font-size:11px} #selectScreen .gearhead b{font-size:12px}
   #selectScreen .gearlist{gap:4px} #selectScreen .gi{grid-template-columns:26px minmax(0,1fr) auto;padding:2px 4px;gap:4px} #selectScreen .gi canvas{width:26px;height:26px}
@@ -888,12 +900,12 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=19"></script>
+<script src="i18n-dict.js?v=20"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
 <script src="tiers.js"></script>
-<script src="rig.js?v=3"></script>
+<script src="rig.js?v=4"></script>
 <script src="audio.js?v=2"></script>
 <script src="monsters.js?v=19"></script>
 <script>
@@ -961,57 +973,57 @@ const BURN = { turns: 2, dmg: 12, label: 'Yanık', color: '#ff9a4a' }, POISON = 
 // hr: can yenileme; her tur, seviyeyle büyüyen temel canın bu oranı kadar can gelir (eşya canı sayılmaz). Tank ve şifacılarda yüksek.
 // hp ve hpg (seviye başına can artışı) düello simülasyonuyla ayarlandı: eşit seviye ve ekipmanda her sınıf ~%50 kazanır.
 const CLASSES = {
-  tank:       { name: 'Tank', role: 'Koruyucu (tank)', desc: 'En çok canı olan ön saf. Hasarı düşük ama dayanıklı; kalkanıyla rakibini sersemletir.', hp: 861, mp: 100, regen: 12, crit: .05, dodge: .03,
-    cm: .1, dm: .06, pow: .7, hr: .02, hpg: .0415, hpe: 1.053,
+  tank:       { name: 'Tank', role: 'Koruyucu (tank)', desc: 'En çok canı olan ön saf. Hasarı düşük ama dayanıklı; kalkanıyla rakibini sersemletir.', hp: 855, mp: 100, regen: 12, crit: .05, dodge: .03,
+    cm: .1, dm: .06, pow: .7, hr: .02, hpg: .0394, hpe: 1.0518,
     skills: [M('Kılıç Darbesi', 0, [38, 48], 'sword'), G('Kalkan Duruşu', 20, .75, 'shield'), M('Kalkan Vuruşu', 25, [28, 36], 'bash', { stun: true }), M('Öfke Darbesi', 50, [72, 92], 'whirl', { big: true })] },
-  mage:       { name: 'Mage', role: 'Büyücü (uzak hasar)', desc: 'Uzaktan büyü yağdırır. Canı az ama büyü hasarı çok yüksek.', hp: 419, mp: 200, regen: 18, crit: .12, dodge: .04,
-    cm: .26, dm: .1, pow: 1.1, hr: .01, hpg: .0359, hpe: 1.0376,
+  mage:       { name: 'Mage', role: 'Büyücü (uzak hasar)', desc: 'Uzaktan büyü yağdırır. Canı az ama büyü hasarı çok yüksek.', hp: 409, mp: 200, regen: 18, crit: .12, dodge: .04,
+    cm: .26, dm: .1, pow: 1.1, hr: .01, hpg: .0373, hpe: 1.0023,
     skills: [Rg('Büyü Oku', 0, [26, 34], 'arcane', 'bolt'), Rg('Gizem Patlaması', 30, [50, 62], 'arcane', 'bolt', { big: true }), G('Büyü Kalkanı', 20, .5, 'shield'), Rg('Meteor', 70, [100, 125], 'meteor', 'meteor', { big: true, color: '#ff7a2a' })] },
-  warrior:    { name: 'Warrior', role: 'Savaşçı (yakın hasar)', desc: 'Kılıç ve baltayla sert vurur, rakibini kanatır. Hasarı yüksek.', hp: 463, mp: 110, regen: 12, crit: .12, dodge: .06,
-    cm: .26, dm: .12, pow: 1.12, hr: .012, hpg: .0298, hpe: .9687,
+  warrior:    { name: 'Warrior', role: 'Savaşçı (yakın hasar)', desc: 'Kılıç ve baltayla sert vurur, rakibini kanatır. Hasarı yüksek.', hp: 459, mp: 110, regen: 12, crit: .12, dodge: .06,
+    cm: .26, dm: .12, pow: 1.12, hr: .012, hpg: .0307, hpe: 1.0289,
     skills: [M('Çift Darbe', 0, [40, 50], 'sword'), M('Yarık Açan', 25, [34, 42], 'axe', { dot: BLEED }), G('Çapraz Savunma', 20, .6, 'shield'), M('Kasırga', 55, [80, 98], 'whirl', { big: true })] },
-  vampire:    { name: 'Vampire', role: 'Kan düellocusu', desc: 'Hızlı saplamalarla vurur, verdiği hasarın bir kısmını can olarak emer. Çeviktir.', hp: 381, mp: 140, regen: 14, crit: .15, dodge: .1,
-    cm: .3, dm: .22, pow: 1, hr: .01, hpg: .0095, hpe: .736,
+  vampire:    { name: 'Vampire', role: 'Kan düellocusu', desc: 'Hızlı saplamalarla vurur, verdiği hasarın bir kısmını can olarak emer. Çeviktir.', hp: 364, mp: 140, regen: 14, crit: .15, dodge: .1,
+    cm: .3, dm: .22, pow: 1, hr: .01, hpg: .0178, hpe: .9035,
     skills: [M('Saplama', 0, [32, 40], 'sword'), M('Kan Emme', 30, [40, 50], 'fang', { drain: .5 }), G('Savuşturma', 20, .6, 'shield'), M('Kan Hasadı', 60, [80, 100], 'fang', { drain: .4, big: true })] },
-  elf:        { name: 'Elf', role: 'Okçu (uzak hasar)', desc: 'Uzaktan isabetli oklar atar; kritiği yüksek, çevik. Zehirli oklarla eritir.', hp: 412, mp: 140, regen: 14, crit: .2, dodge: .12,
-    cm: .38, dm: .26, pow: 1.05, hr: .01, hpg: .0168, hpe: .7696,
+  elf:        { name: 'Elf', role: 'Okçu (uzak hasar)', desc: 'Uzaktan isabetli oklar atar; kritiği yüksek, çevik. Zehirli oklarla eritir.', hp: 421, mp: 140, regen: 14, crit: .2, dodge: .12,
+    cm: .38, dm: .26, pow: 1.05, hr: .01, hpg: .0179, hpe: .7546,
     skills: [Rg('Ok At', 0, [30, 38], 'bow', 'arrow'), Rg('Zehirli Ok', 25, [30, 40], 'drop', 'arrow', { dot: POISON }), G('Kaçın', 25, 1, 'moon'), Rg('Delici Ok', 60, [85, 105], 'arrow', 'arrow', { big: true })] },
-  support:    { name: 'Support', role: 'Şifacı (destek)', desc: 'Hasarı düşük, canı yüksek; güçlü iyileştirmesiyle savaşı uzatır.', hp: 1026, mp: 180, regen: 18, crit: .05, dodge: .05,
-    cm: .1, dm: .1, pow: .72, hr: .02, hpg: .0563, hpe: 1.0689,
+  support:    { name: 'Support', role: 'Şifacı (destek)', desc: 'Hasarı düşük, canı yüksek; güçlü iyileştirmesiyle savaşı uzatır.', hp: 985, mp: 180, regen: 18, crit: .05, dodge: .05,
+    cm: .1, dm: .1, pow: .72, hr: .02, hpg: .0518, hpe: 1.0416,
     skills: [M('Topuz', 0, [26, 34], 'hammer'), Rg('Kutsal Işık', 25, [40, 50], 'sun', 'bolt', { color: '#ffe08a', anim: 'block' }), HL('İyileştir', 30, 140, 'heart'), M('Kutsal Ceza', 60, [80, 100], 'sun', { big: true })] },
-  assassin:   { name: 'Assassin', role: 'Suikastçı', desc: 'Kritiği ve kaçınması en yüksek sınıf; zehirli hançerlerle saldırır.', hp: 350, mp: 130, regen: 14, crit: .25, dodge: .18,
-    cm: .45, dm: .3, pow: 1.08, hr: .01, hpg: .0109, hpe: .5305,
+  assassin:   { name: 'Assassin', role: 'Suikastçı', desc: 'Kritiği ve kaçınması en yüksek sınıf; zehirli hançerlerle saldırır.', hp: 358, mp: 130, regen: 14, crit: .25, dodge: .18,
+    cm: .45, dm: .3, pow: 1.08, hr: .01, hpg: .0128, hpe: .5915,
     skills: [M('Çift Saplama', 0, [30, 38], 'dagger'), M('Zehirli Bıçak', 25, [26, 34], 'drop', { dot: POISON }), G('Gölge Adımı', 30, 1, 'moon'), M('Ölüm İşareti', 55, [85, 105], 'target', { big: true })] },
-  ranger:     { name: 'Ranger', role: 'Avcı (kontrol)', desc: 'Uzun mızrağıyla vurur, kapan fırlatıp rakibini kıstırır.', hp: 658, mp: 120, regen: 12, crit: .13, dodge: .1,
-    cm: .28, dm: .2, pow: .98, hr: .015, hpg: .0265, hpe: .9014,
+  ranger:     { name: 'Ranger', role: 'Avcı (kontrol)', desc: 'Uzun mızrağıyla vurur, kapan fırlatıp rakibini kıstırır.', hp: 653, mp: 120, regen: 12, crit: .13, dodge: .1,
+    cm: .28, dm: .2, pow: .98, hr: .015, hpg: .0242, hpe: .8938,
     skills: [M('Mızrak', 0, [34, 44], 'arrow'), Rg('Kapan At', 30, [22, 30], 'trap', 'trap', { stun: true, anim: 'block' }), HL('Bandaj', 25, 100, 'heart', { anim: null }), M('Ölümcül Mızrak', 55, [80, 100], 'target', { big: true })] },
-  paladin:    { name: 'Paladin', role: 'Kutsal şövalye (yarı tank)', desc: 'Sağlam ve dengeli; kutsal kalkanı hem korur hem iyileştirir. Hasarı orta.', hp: 618, mp: 140, regen: 14, crit: .07, dodge: .04,
-    cm: .14, dm: .08, pow: .82, hr: .015, hpg: .0381, hpe: 1.0813,
+  paladin:    { name: 'Paladin', role: 'Kutsal şövalye (yarı tank)', desc: 'Sağlam ve dengeli; kutsal kalkanı hem korur hem iyileştirir. Hasarı orta.', hp: 610, mp: 140, regen: 14, crit: .07, dodge: .04,
+    cm: .14, dm: .08, pow: .82, hr: .015, hpg: .0371, hpe: 1.0754,
     skills: [M('Çekiç', 0, [36, 46], 'hammer'), G('Kutsal Kalkan', 25, .6, 'shield', { heal: 40 }), M('Sersemleten Çekiç', 30, [34, 44], 'bash', { stun: true }), M('Yargı Çekici', 60, [85, 105], 'sun', { big: true })] },
-  berserker:  { name: 'Berserker', role: 'Yıkıcı (en yüksek hasar)', desc: 'Savunması zayıf ama en sert vuran sınıf; öfkelenince ezer geçer.', hp: 402, mp: 90, regen: 12, crit: .15, dodge: .03,
-    cm: .3, dm: .08, pow: 1.18, hr: .012, hpg: .0275, hpe: 1.0993,
+  berserker:  { name: 'Berserker', role: 'Yıkıcı (en yüksek hasar)', desc: 'Savunması zayıf ama en sert vuran sınıf; öfkelenince ezer geçer.', hp: 401, mp: 90, regen: 12, crit: .15, dodge: .03,
+    cm: .3, dm: .08, pow: 1.18, hr: .012, hpg: .0297, hpe: 1.1258,
     skills: [M('Yarma', 0, [42, 54], 'axe'), { name: 'Öfke', kind: 'rage', anim: 'block', cost: 20, icon: 'rage' }, M('Kan Çılgınlığı', 25, [36, 46], 'axe', { dot: BLEED }), M('Kıyım', 50, [90, 115], 'whirl', { big: true })] },
-  druid:      { name: 'Druid', role: 'Doğa şifacısı (destek)', desc: 'Sarmaşıklarla rakibini bağlar, doğanın gücüyle iyileşir. Hasarı düşük.', hp: 714, mp: 170, regen: 18, crit: .07, dodge: .07,
-    cm: .14, dm: .14, pow: .78, hr: .02, hpg: .0437, hpe: 1.0576,
+  druid:      { name: 'Druid', role: 'Doğa şifacısı (destek)', desc: 'Sarmaşıklarla rakibini bağlar, doğanın gücüyle iyileşir. Hasarı düşük.', hp: 703, mp: 170, regen: 18, crit: .07, dodge: .07,
+    cm: .14, dm: .14, pow: .78, hr: .02, hpg: .04, hpe: 1.0412,
     skills: [Rg('Sarmaşık', 0, [26, 34], 'leaf', 'vines'), Rg('Diken Ağı', 30, [30, 40], 'leaf', 'vines', { stun: true }), HL('Doğanın Şifası', 30, 140, 'heart'), Rg('Doğanın Gazabı', 65, [90, 110], 'leaf', 'vines', { big: true })] },
-  necromancer:{ name: 'Necromancer', role: 'Can emici büyücü', desc: 'Ruh oklarıyla vurur, rakibinin canını emip kendine aktarır.', hp: 448, mp: 180, regen: 18, crit: .1, dodge: .05,
-    cm: .22, dm: .1, pow: 1, hr: .01, hpg: .0376, hpe: 1.0612,
+  necromancer:{ name: 'Necromancer', role: 'Can emici büyücü', desc: 'Ruh oklarıyla vurur, rakibinin canını emip kendine aktarır.', hp: 455, mp: 180, regen: 18, crit: .1, dodge: .05,
+    cm: .22, dm: .1, pow: 1, hr: .01, hpg: .0381, hpe: .9375,
     skills: [Rg('Ruh Oku', 0, [26, 34], 'skull', 'bolt'), Rg('Can Emme', 30, [36, 46], 'skull', 'bolt', { drain: 1, anim: 'block' }), Rg('Lanet', 25, [20, 28], 'skull', 'bolt', { dot: POISON }), Rg('Ölüm Dalgası', 65, [95, 115], 'skull', 'bolt', { big: true })] },
-  monk:       { name: 'Monk', role: 'Dövüş ustası (çevik)', desc: 'Bo sopasıyla hızlı vurur, darbelerden kolayca kaçar, odaklanarak toparlanır.', hp: 528, mp: 120, regen: 14, crit: .12, dodge: .14,
-    cm: .26, dm: .28, pow: .95, hr: .015, hpg: .0234, hpe: .8216,
+  monk:       { name: 'Monk', role: 'Dövüş ustası (çevik)', desc: 'Bo sopasıyla hızlı vurur, darbelerden kolayca kaçar, odaklanarak toparlanır.', hp: 520, mp: 120, regen: 14, crit: .12, dodge: .14,
+    cm: .26, dm: .28, pow: .95, hr: .015, hpg: .019, hpe: .7494,
     skills: [M('Sopa Dalgası', 0, [32, 42], 'fist'), HL('Odak', 25, 70, 'heart', { block: .4 }), M('Sersemletici Darbe', 25, [28, 36], 'fist', { stun: true }), M('Yüz Darbe', 55, [80, 100], 'whirl', { big: true })] },
-  inquisitor: { name: 'Inquisitor', role: 'Avcı yargıç (uzak kontrol)', desc: 'Arbaletiyle uzaktan vurur, gümüş kazığıyla rakibini sersemletir.', hp: 423, mp: 130, regen: 14, crit: .15, dodge: .07,
-    cm: .3, dm: .14, pow: 1, hr: .01, hpg: .0209, hpe: .9924,
+  inquisitor: { name: 'Inquisitor', role: 'Avcı yargıç (uzak kontrol)', desc: 'Arbaletiyle uzaktan vurur, gümüş kazığıyla rakibini sersemletir.', hp: 430, mp: 130, regen: 14, crit: .15, dodge: .07,
+    cm: .3, dm: .14, pow: 1, hr: .01, hpg: .0215, hpe: .9654,
     skills: [Rg('Arbalet', 0, [30, 38], 'crossbow', 'bolt'), Rg('Kutsal Ok', 25, [40, 50], 'crossbow', 'bolt', { dot: BURN }), M('Gümüş Kazık', 30, [36, 46], 'dagger', { stun: true, anim: 'block' }), Rg('Arınma', 60, [85, 105], 'sun', 'bolt', { big: true })] },
-  shadow:     { name: 'Shadow', role: 'Gölge savaşçısı (çevik)', desc: 'Dumana dönüşüp rakibinin önünde belirir, iki orakla keser. Kaçınması yüksek.', hp: 404, mp: 140, regen: 14, crit: .2, dodge: .16,
-    cm: .4, dm: .3, pow: 1.05, hr: .01, hpg: .0123, hpe: .5712,
+  shadow:     { name: 'Shadow', role: 'Gölge savaşçısı (çevik)', desc: 'Dumana dönüşüp rakibinin önünde belirir, iki orakla keser. Kaçınması yüksek.', hp: 412, mp: 140, regen: 14, crit: .2, dodge: .16,
+    cm: .4, dm: .3, pow: 1.05, hr: .01, hpg: .0142, hpe: .6858,
     skills: [M('Gölge Kesiği', 0, [34, 44], 'moon'), G('Gölgeye Karış', 25, 1, 'moon'), M('Karanlık Yara', 30, [30, 38], 'dagger', { dot: BLEED }), M('Gölge Fırtınası', 60, [85, 105], 'whirl', { big: true })] }
 };
 const ORDER = ['tank', 'warrior', 'mage', 'vampire', 'elf', 'support', 'assassin', 'ranger', 'paladin', 'berserker', 'druid', 'necromancer', 'monk', 'inquisitor', 'shadow'];
 const POTION = { name: 'Can İksiri', kind: 'potion', cost: 0, heal: 130, color: '#4be38a', icon: 'flask' };
 const glowOf = id => RC[id].glow;
-const skillDesc = s => s.kind === 'guard' ? (s.block >= 1 ? 'Sonraki saldırıdan kaçar' : `Sonraki hasar −%${s.block * 100}`) + (s.heal ? ` · +${s.heal} can` : '')
-  : s.kind === 'heal' ? `+${s.heal} can` + (s.block ? ` · hasar −%${s.block * 100}` : '') : s.kind === 'rage' ? 'Sonraki saldırı +%60' : s.kind === 'potion' ? `+${s.heal} can`
+const skillDesc = s => s.kind === 'guard' ? (s.block >= 1 ? 'Sonraki saldırıdan kaçar' : `Sonraki hasar −%${Math.round(s.block * 100)}`) + (s.heal ? ` · +${s.heal} can` : '')
+  : s.kind === 'heal' ? `+${s.heal} can` + (s.block ? ` · hasar −%${Math.round(s.block * 100)}` : '') : s.kind === 'rage' ? `Sonraki saldırı +%${Math.round(((s.rage || 1.6) - 1) * 100)}` : s.kind === 'potion' ? `+${s.heal} can`
   : `${s.dmg[0] * DMG_SCALE}–${s.dmg[1] * DMG_SCALE}` + (s.stun ? ' · sersem' : '') + (s.dot ? ' · ' + s.dot.label.toLowerCase() : '') + (s.drain ? ' · can emer' : '');
 
 /* =====================================================================
@@ -1174,6 +1186,7 @@ const mineCap = m => mineRate(m) * 4;   // en çok 4 saatlik birikim
 SAVE.league = SAVE.league || 0;
 /* ---------- Görevler ve başarımlar ---------- */
 // istatistikler (başarımlar buradan okunur)
+SAVE.sp = SAVE.sp && typeof SAVE.sp === 'object' ? SAVE.sp : {}; // sınıf başına beceri puanı dağılımı
 SAVE.stats = { battles: 0, wins: 0, crits: 0, dmg: 0, upgrades: 0, mines: 0, bestLeague: 1, won: {}, ...(SAVE.stats || {}) };
 SAVE.ach = SAVE.ach || {};
 const DAILY_POOL = [
@@ -1326,26 +1339,59 @@ $('accForm').addEventListener('submit', async e => {
 });
 const gearOf = id => { const g = SAVE.gear[id] = SAVE.gear[id] || {}; ITEMS.forEach(k => { if (!(g[k] >= 1 && g[k] <= 10)) g[k] = 1; }); return g; };
 const gearLevel = g => Math.round(ITEMS.reduce((s, k) => s + g[k], 0) / ITEMS.length);
-// tecrübe: seviye n'den n+1'e 100 + 50(n-1) EXP
-const xpLevel = x => { let l = 1, need = 100; x = x || 0; while (x >= need) { x -= need; l++; need = 100 + 50 * (l - 1); } return l; };
-const xpProgress = x => { let l = 1, need = 100; x = x || 0; while (x >= need) { x -= need; l++; need = 100 + 50 * (l - 1); } return { lvl: l, cur: x, need }; };
+// tecrübe: seviye n'den n+1'e 100 + 50(n-1) EXP; en yüksek seviye MAX_LVL (99)
+const xpLevel = x => { let l = 1, need = 100; x = x || 0; while (x >= need && l < MAX_LVL) { x -= need; l++; need = 100 + 50 * (l - 1); } return l; };
+const xpProgress = x => { let l = 1, need = 100; x = x || 0; while (x >= need && l < MAX_LVL) { x -= need; l++; need = 100 + 50 * (l - 1); } return { lvl: l, cur: x, need }; };
 const myLevel = () => xpLevel(SAVE.xp);
 // oyuncu seviyesi temel değerleri büyütür; ekipmanın sabit can/mana/hasarı bunun üstüne eklenir (hasar: zar + ek hasar, sonra güç çarpanı).
 // Can sınıfa göre büyür (hpg hız, hpe eğri: 1 doğrusal, küçükse erken, büyükse geç büyür), mana ve hasar herkes için aynı oranda büyür; kritik ve kaçınma 50. seviyeye dek sınıfın üst değerine yürür.
 const LV_BONUS = { mp: .02, dmg: .015 }, LV_TOP = 50, DODGE_CAP = .30;
-function gearStats(c, g, lvl = 1) {
+// beceri puanı: her seviye atlayışta 1, her 5. seviyede (5, 10 … 95) 1 yerine 3 puan; seviye sınırı 99 (toplam 136 puan).
+// Her sınıf kendi puanını dağıtır: 4 savaş yeteneğinin her biri 1-15. seviye (her seviye %3 güç), 5 değerin her biri 0-15 puan (her puan %3).
+// Kritik ve kaçınmaya puan verilmez (onlar sınıfa ve seviyeye bağlı). sp = [yetenek 1-4 seviyesi, can, mana, mana yenileme, can yenileme, hasar puanı]
+const MAX_LVL = 99, SK_MAX = 15, ST_MAX = 15, SK_STEP = .03, ST_STEP = .03, SP_STATS = ['hp', 'mp', 'regen', 'hregen', 'dmg'], SP0 = [1, 1, 1, 1, 0, 0, 0, 0, 0];
+const spOf = lvl => { let p = 0; for (let l = 2; l <= Math.min(MAX_LVL, lvl); l++) p += l % 5 ? 1 : 3; return p; };
+const spUsed = sp => sp.slice(0, 4).reduce((s, v) => s + v - 1, 0) + sp.slice(4).reduce((s, v) => s + v, 0);
+// bozuk ya da seviyesine göre fazla harcanmış puanlar sıfırlanır
+function cleanSp(a, lvl) {
+  if (!Array.isArray(a) || a.length !== 9) return SP0.slice();
+  const s = a.map((v, i) => Math.max(i < 4 ? 1 : 0, Math.min(i < 4 ? SK_MAX : ST_MAX, v | 0)));
+  return spUsed(s) > spOf(lvl) ? SP0.slice() : s;
+}
+// botlar: puanlar sırayla yeteneklere ve değerlere eşit dağılır
+const SP_ORDER = [0, 4, 3, 8, 1, 5, 2, 7, 6];
+function autoSp(lvl) {
+  const s = SP0.slice(); let p = spOf(lvl);
+  for (let i = 0; p > 0 && i < 400; i++) { const k = SP_ORDER[i % 9]; if (s[k] < (k < 4 ? SK_MAX : ST_MAX)) { s[k]++; p--; } }
+  return s;
+}
+// yetenek seviyesi: hasar (zar ve süreli hasar), iyileştirme ve kalkan güçlenir; kaçış yeteneği (tam kaçınma) güçlenemez, manası azalır
+function skillAt(sk, n) {
+  n = Math.max(1, Math.min(SK_MAX, n | 0 || 1)); const m = 1 + SK_STEP * (n - 1), s = { ...sk, lv: n }; if (n === 1) return s;
+  if (s.dmg) s.dmg = [Math.round(s.dmg[0] * m), Math.round(s.dmg[1] * m)];
+  if (s.dot) s.dot = { ...s.dot, dmg: Math.round(s.dot.dmg * m) };
+  if (s.heal) s.heal = Math.round(s.heal * m);
+  if (s.block && s.block < 1) s.block = Math.round((1 - (1 - s.block) / m) * 100) / 100; // aldığı hasar m kat azalır
+  if (s.kind === 'guard' && s.block >= 1) s.cost = Math.round(s.cost / m);
+  if (s.kind === 'rage') s.rage = Math.round((1 + .6 * m) * 100) / 100;
+  return s;
+}
+function gearStats(c, g, lvl = 1, sp = SP0) {
   const b = { hp: 0, dmg: 0, mp: 0, regen: 0 }, L = Math.max(0, (lvl | 0) - 1), t = Math.min(1, L / (LV_TOP - 1));
+  const P = k => 1 + ST_STEP * (sp[4 + SP_STATS.indexOf(k)] || 0); // beceri puanı: kendi değerin yüzdesi (eşya payı büyümez)
   for (const k of ITEMS) for (const s of Object.keys(PERK[k])) b[s] += perkVal(k, s, g[k]);
-  const hp0 = c.hp * (1 + c.hpg * (LV_TOP - 1) * (L / (LV_TOP - 1)) ** c.hpe), mp0 = c.mp * (1 + LV_BONUS.mp * L);
-  return { hp: Math.round(hp0 + b.hp), mp: Math.round(mp0 + b.mp), regen: c.regen + b.regen, hregen: Math.round(hp0 * (c.hr || 0)), dmgAdd: b.dmg, gb: b, // gb: eşyalardan gelen
-    crit: c.crit + (c.cm - c.crit) * t, dodge: Math.min(DODGE_CAP, c.dodge + (c.dm - c.dodge) * t), dmgMul: c.pow * (1 + LV_BONUS.dmg * L) };
+  const hp0 = c.hp * (1 + c.hpg * (LV_TOP - 1) * (L / (LV_TOP - 1)) ** c.hpe) * P('hp'), mp0 = c.mp * (1 + LV_BONUS.mp * L) * P('mp');
+  return { hp: Math.round(hp0 + b.hp), mp: Math.round(mp0 + b.mp), regen: Math.round(c.regen * P('regen')) + b.regen, hregen: Math.round(hp0 * (c.hr || 0) * P('hregen')), dmgAdd: b.dmg, gb: b, // gb: eşyalardan gelen
+    crit: c.crit + (c.cm - c.crit) * t, dodge: Math.min(DODGE_CAP, c.dodge + (c.dm - c.dodge) * t), dmgMul: c.pow * (1 + LV_BONUS.dmg * L) * P('dmg') };
 }
 // rakip, oyuncunun ortalama seviyesinde gelir; her eşya ±1 oynar
 function foeGear(L) { const out = {}; ITEMS.forEach(k => out[k] = Math.max(1, Math.min(10, L + Math.round(Math.random() * 2 - 1)))); return out; }
+// beceri puanları: gelen (çevrimiçi rakip/arkadaş) ya da benimki; botlar eşit dağıtır
+const mySp = id => cleanSp((SAVE.sp || {})[id], myLevel());
 const mkFighter = (id, team, gear, alch = T.alch, o = {}) => {
-  const c = CLASSES[id], lvl = Math.max(1, Math.min(99, o.lvl | 0 || 1)), st = gearStats(c, gear, lvl);
+  const c = CLASSES[id], lvl = Math.max(1, Math.min(99, o.lvl | 0 || 1)), sp = o.sp ? cleanSp(o.sp, lvl) : o.ctrl === 'me' ? mySp(id) : autoSp(lvl), st = gearStats(c, gear, lvl, sp);
   return { team, side: 'enemy', ctrl: o.ctrl || 'ai', id, cls: c, gear, lvl, name: o.name || c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
-    regen: st.regen, hregen: st.hregen, gb: st.gb, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd, skills: [...c.skills.map((s, i) => ({ ...s, color: s.color || glowOf(id), snd: id + '_' + i })), { ...POTION, heal: potionHeal(alch) }],
+    regen: st.regen, hregen: st.hregen, gb: st.gb, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd, skills: [...c.skills.map((s, i) => skillAt({ ...s, color: s.color || glowOf(id), snd: id + '_' + i }, sp[i])), { ...POTION, heal: potionHeal(alch) }],
     healMul: 1 + (st.hp / c.hp - 1) * .5, heals: 0,
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: potionCount(alch || 1),
     A: Rig.actor(id, 260, 1, gear) }; // konum ve yön newBattle'da dizilime göre verilir
@@ -2483,17 +2529,47 @@ function renderGear() {
   renderForge();
 }
 function renderStats() {
-  const c = CLASSES[chosen], xp = xpProgress(SAVE.xp), st = gearStats(c, gearOf(chosen), xp.lvl);
-  $('dRole').textContent = `${c.role} · Sv ${xp.lvl} · ${xp.cur}/${xp.need} EXP`;
-  $('dStats').innerHTML = statRows({ ...st, maxHp: st.hp, maxMp: st.mp, skills: c.skills });
+  const c = CLASSES[chosen], xp = xpProgress(SAVE.xp), sp = mySp(chosen), g = gearOf(chosen), st = gearStats(c, g, xp.lvl, sp), free = spOf(xp.lvl) - spUsed(sp);
+  $('dRole').textContent = `${c.role} · Sv ${xp.lvl} · ` + (xp.lvl >= MAX_LVL ? 'MAKS' : `${xp.cur}/${xp.need} EXP`);
+  const sks = c.skills.map((s, i) => skillAt(s, sp[i])), view = (s2, sk) => ({ ...s2, maxHp: s2.hp, maxMp: s2.mp, skills: sk });
+  // "+" düğmesi: bir puan daha verilince değerin kaç artacağı (sayı olarak)
+  const gain = SP_STATS.map((k, j) => { const sp2 = sp.slice(); sp2[4 + j]++; const a = view(st, sks), b = view(gearStats(c, g, xp.lvl, sp2), sks);
+    return k === 'dmg' ? basicHit(b, b.dmgAdd) - basicHit(a, a.dmgAdd) : b[k] - a[k]; });
+  $('dStats').classList.add('ed');
+  $('dStats').innerHTML = `<div class="sphead"><span>Beceri puanı: <b>${free}</b></span>${spUsed(sp) ? '<button type="button" class="spr" data-spr="1">Sıfırla</button>' : ''}</div>`
+    + statRows(view(st, sks), { sp, free, gain });
+  renderSkillTiles(c, sp, free);
 }
+// savaş yetenekleri: seviye (1-15), şimdiki değerler; puan varsa "+" ile yükselir (üstüne gelince sonraki seviyenin değerleri)
+function renderSkillTiles(c, sp, free) {
+  $('dSkills').innerHTML = c.skills.map((s0, i) => {
+    const s = skillAt(s0, sp[i]), nx = sp[i] < SK_MAX ? skillAt(s0, sp[i] + 1) : null, mana = s.cost ? s.cost + ' mana' : 'Mana yok';
+    return `<div class="ds" style="color:${s0.color || glowOf(chosen)}" title="${skillDesc(s)} · ${mana}">${svg(s0.icon)}<b>${s0.name}</b><small>${skillDesc(s)}</small><small>${mana}</small><span class="slv">Sv ${sp[i]}</span>`
+      + (nx ? `<button type="button" class="spb" data-sp="${i}" ${free > 0 ? '' : 'disabled'} title="Sv ${sp[i] + 1}: ${skillDesc(nx)}">+</button>` : '') + '</div>';
+  }).join('');
+}
+function spSpend(k) {
+  const sp = mySp(chosen); if (spOf(myLevel()) - spUsed(sp) < 1 || sp[k] >= (k < 4 ? SK_MAX : ST_MAX)) return;
+  sp[k]++; SAVE.sp[chosen] = sp; Sfx.play('upgrade'); persist(); renderStats(); lobbyPresence();
+}
+for (const el of ['dStats', 'dSkills']) $(el).addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b || b.disabled) return;
+  if (b.dataset.sp) spSpend(+b.dataset.sp);
+  else if (b.dataset.spr) { SAVE.sp[chosen] = SP0.slice(); Sfx.play('click'); persist(); renderStats(); lobbyPresence(); }
+});
 // her kahraman ve canavar için aynı yedi değer, renkli çubukla. Eşyadan gelen kısım yeşil "+sayı" (değer = kendi + eşya).
 // Hasar: temel vuruşun (ilk saldırı yeteneği) ortalaması; eşyanın ek hasarı da güç çarpanıyla büyüyerek "+" kısmında.
 const MAXS = { hp: 1500, mp: 290, regen: 25, hregen: 40, crit: .45, dodge: .30, dmg: 250 }; // çubukların dolu sayıldığı değerler
 const basicHit = (f, add) => { const sk = f.skills.find(s => s.dmg); return sk ? Math.round(((sk.dmg[0] + sk.dmg[1]) / 2 + add) * (f.dmgMul || 1) * DMG_SCALE) : 0; };
-function statRows(f) {
+// ed (seçim ekranı): her değerin yanında puan sayısı ve "+" düğmesi (kritik ve kaçınma hariç)
+function statRows(f, ed) {
   const g = f.gb || {}, k = f.hand || 1, gHp = Math.round((g.hp || 0) * k), gDmg = basicHit(f, f.dmgAdd || 0) - basicHit(f, 0);
-  const row = (l, v, m, base, plus, unit = '') => `<dt>${l}</dt><dd><div class="sb"><i style="width:${Math.min(100, Math.round(v / m * 100))}%"></i></div></dd><dd class="sv">${base}${unit}${plus > 0 ? `<em>+${plus}</em>` : ''}</dd>`;
+  let n = 0; const keys = ['hp', 'mp', 'regen', 'hregen', null, null, 'dmg'];
+  const row = (l, v, m, base, plus, unit = '') => {
+    const key = keys[n++], j = SP_STATS.indexOf(key), pts = ed && j >= 0 ? ed.sp[4 + j] : 0;
+    const btn = !ed ? '' : j < 0 ? '<dd></dd>' : `<dd><button type="button" class="spb" data-sp="${4 + j}" ${ed.free > 0 && pts < ST_MAX ? '' : 'disabled'} title="${pts}/${ST_MAX} · +${ed.gain[j]}">+</button></dd>`;
+    return `<dt>${l}${pts ? ` <small class="spn">${pts}</small>` : ''}</dt><dd class="sbw"><div class="sb"><i style="width:${Math.min(100, Math.round(v / m * 100))}%"></i></div></dd><dd class="sv">${base}${unit}${plus > 0 ? `<em>+${plus}</em>` : ''}</dd>` + btn;
+  };
   return row('Can', f.maxHp, MAXS.hp, f.maxHp - gHp, gHp) + row('Mana', f.maxMp, MAXS.mp, f.maxMp - (g.mp || 0), g.mp || 0)
     + row('Mana yenileme', f.regen, MAXS.regen, f.regen - (g.regen || 0), g.regen || 0) + row('Can yenileme', f.hregen || 0, MAXS.hregen, f.hregen || 0, 0)
     + row('Kritik', f.crit, MAXS.crit, Math.round(f.crit * 100), 0, '%') + row('Kaçınma', f.dodge, MAXS.dodge, Math.round(f.dodge * 100), 0, '%')
@@ -2507,7 +2583,6 @@ async function pick(key) {
   document.querySelectorAll('.card').forEach(b => b.classList.toggle('on', b.dataset.key === key));
   $('detail').style.setProperty('--c', glowOf(key));
   $('dName').textContent = c.name; $('dRole').textContent = c.role; $('dDesc').textContent = c.desc;
-  $('dSkills').innerHTML = c.skills.map(s => `<div class="ds" style="color:${s.color || glowOf(key)}" title="${skillDesc(s)}">${svg(s.icon)}<b>${s.name}</b><small>${s.cost ? s.cost + ' mana' : 'Mana yok'}</small></div>`).join('');
   renderStats(); renderGear();
   const b = $('choose'); b.disabled = true; b.textContent = 'Ekipmanlar hazırlanıyor…';
   pA = null;
@@ -2801,30 +2876,24 @@ function newBattle(cfg) {
   $('plates').classList.toggle('tight', N >= 4); // kalabalıkta plakalar sıkışık: isim satırı yok
   $('skills').classList.remove('low'); // halkanın ortası her kipte boş: yetenekler ortada
 }
-// sıradaki savaşçı: önce karşı takımın sıradaki canlı üyesi; o takımda kimse yoksa kendi takımı
-function nextUp(fromTeam) {
-  for (const team of [otherTeam(fromTeam), fromTeam]) {
-    const arr = F[team];
-    for (let k = 1; k <= arr.length; k++) {
-      const j = (S2.ptr[team] + k) % arr.length;
-      if (isAlive(arr[j])) { if (team === 'A' && j <= S2.ptr.A) S2.turn++; S2.ptr[team] = j; return arr[j]; } // A takımı başa dönünce yeni tur
-    }
-  }
+// vuruş sırası takım takım: bir takımın canlı üyeleri sırayla (yer sırasıyla) hepsi oynar, sonra karşı takım baştan başlar.
+// A takımı yeniden başlayınca yeni tur. first: savaşın ilk hamlesi (A takımı baştan). ptr: her takımda en son oynayanın yeri.
+function pickNext(fromTeam, ptr, first) {
+  const same = F[fromTeam];
+  if (!first) for (let j = ptr[fromTeam] + 1; j < same.length; j++) if (isAlive(same[j])) return { f: same[j], team: fromTeam, j };
+  for (const team of [otherTeam(fromTeam), fromTeam]) { const arr = F[team]; for (let j = 0; j < arr.length; j++) if (isAlive(arr[j])) return { f: arr[j], team, j, wrap: true }; } // karşı takımda kimse yoksa kendi takımı
   return null;
+}
+function nextUp(fromTeam) {
+  const n = pickNext(fromTeam, S2.ptr, !S2.cur); if (!n) return null;
+  if (n.wrap && n.team === 'A' && S2.cur) S2.turn++;
+  S2.ptr[n.team] = n.j; return n.f;
 }
 // sıradakiler: nextUp'ın kuralını durumu bozmadan taklit eder (şimdiki + sonraki k-1)
 function turnQueue(k) {
   const out = []; let c = S2.cur; if (!c || S2.over) return out;
   const ptr = { ...S2.ptr }; out.push(c);
-  while (out.length < k) {
-    let nx = null;
-    for (const team of [otherTeam(c.team), c.team]) {
-      const arr = F[team];
-      for (let s = 1; s <= arr.length && !nx; s++) { const j = (ptr[team] + s) % arr.length; if (isAlive(arr[j])) { ptr[team] = j; nx = arr[j]; } }
-      if (nx) break;
-    }
-    if (!nx) break; out.push(nx); c = nx;
-  }
+  while (out.length < k) { const n = pickNext(c.team, ptr, false); if (!n) break; ptr[n.team] = n.j; out.push(n.f); c = n.f; }
   return out;
 }
 function renderQueue() {
@@ -2886,7 +2955,7 @@ function chips(f) {
   let h = '';
   if (f.shield) h += `<span class="chip" style="color:${f.shieldColor}">${f.shield >= 1 ? 'Kaçış' : 'Kalkan'}</span>`;
   if (f.rage) h += `<span class="chip" style="color:#ff5a3a">Öfke</span>`;
-  h += f.furyReady ? `<span class="chip fury">ÖFKE MODU</span>` : `<span class="chip" style="color:#c9603f" title="5 darbe yiyince öfke modu">Öfke ${f.fury}/${FURY_HITS}</span>`;
+  h += f.furyReady ? `<span class="chip fury">Öfke</span>` : `<span class="chip" style="color:#c9603f" title="5 darbe yiyince öfke">Öfke ${f.fury}/${FURY_HITS}</span>`;
   if (f.dot) h += `<span class="chip" style="color:${f.dot.color}">${f.dot.label} ${f.dot.turns}</span>`;
   if (f.stunned) h += `<span class="chip" style="color:#ffd27a">Sersem</span>`;
   return h + `<span class="chip" style="color:var(--heal)">İksir ${f.potions}</span>`;
@@ -2896,6 +2965,7 @@ function updateHUD() {
   const mine = myTurn();
   for (const f of F.list) {
     const u = f.ui; if (!u) continue;
+    f.A.kneel = !f.mon && isAlive(f) && f.hp < f.maxHp * KNEEL_AT; // yaralı: tek diz üstü
     u.querySelector('.hp i').style.width = (f.hp / f.maxHp * 100) + '%'; u.querySelector('.hp span').textContent = f.hp;
     u.querySelector('.mp i').style.width = (f.mp / f.maxMp * 100) + '%'; u.querySelector('.mp span').textContent = f.mp;
     u.querySelectorAll('.fz > i').forEach((d, i) => d.classList.toggle('on', f.furyReady || i < f.fury));
@@ -2942,7 +3012,17 @@ const sfxSkill = (sk, fallback) => { if (!(sk.snd && Sfx.skill(sk.snd))) Sfx.pla
 // savaş zarları: çok oyunculu savaşta tüm ekranlar aynı sonucu bulsun diye ortak tohumlu üreteç (botların kararları da)
 let crng = Math.random;
 const seeded = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-const FURY_HITS = 5, FURY_MUL = 2;
+// öfke: 5 darbe yiyen öfkelenir (sonraki saldırısı 2 kat); öfkeliyken yediği her darbe +0,2 (en çok 3 kat). Ekranda çarpan yazılmaz, yalnız "Öfke".
+// Canı ilk kez %25'in altına inen kahraman diz çöker ve hemen öfkelenir (savaş başına bir kez; zaten öfkeliyse öfkesi büyür).
+const FURY_HITS = 5, FURY_MUL = 2, FURY_STEP = .2, FURY_MAX = 3, KNEEL_AT = .25;
+function kneelFury(f) {
+  if (f.mon || f.kneelFury || !isAlive(f) || f.hp >= f.maxHp * KNEEL_AT) return;
+  f.kneelFury = true;
+  if (f.furyReady) f.furyMul = Math.min(FURY_MAX, f.furyMul + FURY_STEP); else { f.furyReady = true; f.furyMul = FURY_MUL; f.fury = 0; }
+  const [hx, hy] = body(f);
+  setTimeout(() => { floatText(f.A, 'ÖFKE!', '#ff3a1a', 40); burst(hx, hy, '#ff3a1a', 36, 260); Sfx.play('big'); }, 420);
+  log(`${f.name} diz çöktü ve öfkelendi!`, f.side);
+}
 function hit(a, d, sk) {
   const [hx, hy] = body(d), nm = sk.name;
   if (d.shield >= 1) { d.shield = 0; Sfx.play('miss'); floatText(d.A, 'KAÇTI', '#cfd6ff'); burst(hx, hy, d.shieldColor, 18, 200); log(`${nm}: ${d.name} saldırıdan tamamen kaçtı!`, d.side); return; }
@@ -2950,14 +3030,18 @@ function hit(a, d, sk) {
   let dmg = Math.round((Math.round(sk.dmg[0] + crng() * (sk.dmg[1] - sk.dmg[0])) + (a.dmgAdd || 0)) * (a.dmgMul || 1) * DMG_SCALE); // ekipmanın ek hasarı zara eklenir
   const crit = crng() < a.crit; if (crit) dmg = Math.round(dmg * 1.6);
   if (a.rage) { dmg = Math.round(dmg * a.rage); a.rage = 0; }
-  const furyHit = a.furyReady; if (furyHit) { dmg = Math.round(dmg * FURY_MUL); a.furyReady = false; } // öfke modu: tek seferlik büyük vuruş
+  const furyHit = a.furyReady; if (furyHit) { dmg = Math.round(dmg * (a.furyMul || FURY_MUL)); a.furyReady = false; a.furyMul = 0; } // öfke: tek seferlik büyük vuruş
   let blocked = false;
   if (d.shield) { dmg = Math.round(dmg * (1 - d.shield)); d.shield = 0; blocked = true; }
   d.hp = Math.max(0, d.hp - dmg);
-  if (d.hp > 0 && !d.furyReady && ++d.fury >= FURY_HITS) { // 5 darbe yiyen öfkelenir
-    d.fury = 0; d.furyReady = true;
-    setTimeout(() => { floatText(d.A, 'ÖFKE MODU!', '#ff3a1a', 40); burst(hx, hy, '#ff3a1a', 36, 260); Sfx.play('big'); }, 380);
-    log(`${d.name} ${FURY_HITS} darbe yedi ve ÖFKE MODUNA girdi: sonraki saldırısı ${FURY_MUL} kat hasar verir!`, d.side);
+  if (d.hp > 0) {
+    if (d.furyReady) { d.furyMul = Math.min(FURY_MAX, (d.furyMul || FURY_MUL) + FURY_STEP); setTimeout(() => burst(hx, hy, '#ff3a1a', 16, 180), 380); } // öfkeliyken yenen darbe öfkeyi büyütür
+    else if (++d.fury >= FURY_HITS) { // 5 darbe yiyen öfkelenir
+      d.fury = 0; d.furyReady = true; d.furyMul = FURY_MUL;
+      setTimeout(() => { floatText(d.A, 'ÖFKE!', '#ff3a1a', 40); burst(hx, hy, '#ff3a1a', 36, 260); Sfx.play('big'); }, 380);
+      log(`${d.name} ${FURY_HITS} darbe yedi ve öfkelendi!`, d.side);
+    }
+    kneelFury(d);
   }
   // yakın dövüşte yeteneğin kendi sesi darbe anında çalar; menzillilerde atış anında çaldığı için burada genel vuruş sesi
   if (blocked) Sfx.play('block');
@@ -3016,7 +3100,7 @@ async function act(f, idx, tgt) {
     await end;
   } else if (sk.kind === 'guard' || sk.kind === 'rage') {
     const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
-    if (sk.kind === 'rage') { f.rage = 1.6; sfxSkill(sk, 'rage'); floatText(A, 'ÖFKE', '#ff5a3a', 36); burst(body(f)[0], body(f)[1], '#ff3a2a', 30, 220); log(`${sk.name}: ${f.name} öfkelendi, sonraki saldırısı çok daha sert.`, who); }
+    if (sk.kind === 'rage') { f.rage = sk.rage || 1.6; sfxSkill(sk, 'rage'); floatText(A, 'ÖFKE', '#ff5a3a', 36); burst(body(f)[0], body(f)[1], '#ff3a2a', 30, 220); log(`${sk.name}: ${f.name} öfkelendi, sonraki saldırısı çok daha sert.`, who); }
     else {
       f.shield = sk.block; f.shieldColor = sk.color; sfxSkill(sk, 'shield');
       burst(body(f)[0], body(f)[1], sk.color, 30, 200);
@@ -3050,7 +3134,7 @@ async function beginTurn(f, first) {
     const hr = Math.min(f.hregen || 0, f.maxHp - f.hp); // can yenileme
     if (hr > 0 && f.hp > 0) { f.hp += hr; floatText(f.A, '+' + hr, '#4be38a', 24); }
     if (f.dot) { // süreli hasar (yanık, zehir, kanama)
-      const d = f.dot; f.hp = Math.max(0, f.hp - d.dmg); f.A.hitT = now();
+      const d = f.dot; f.hp = Math.max(0, f.hp - d.dmg); f.A.hitT = now(); kneelFury(f);
       floatText(f.A, '-' + d.dmg, d.color, 30); burst(body(f)[0], body(f)[1], d.color, 14, 160);
       log(`${f.name}: ${d.label.toLowerCase()} etkisiyle ${d.dmg} hasar.`, f.side === 'player' ? 'enemy' : 'player');
       if (--d.turns <= 0) f.dot = null;
@@ -3120,7 +3204,7 @@ async function end(winTeam) {
   Sfx.play(won ? 'win' : 'lose');
   const o = $('over'); o.classList.toggle('lose', !won);
   $('overT').textContent = won ? 'ZAFER' : 'YENİLGİ';
-  $('overP').textContent = (won ? `${S2.turn} turda kazandın` : `${S2.turn} tur dayandın`) + ` · +${gain} Altın (toplam ${SAVE.gold}) · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}!` : '') + lg + (won ? ` · +${foes} çekiç` : '');
+  $('overP').textContent = (won ? `${S2.turn} turda kazandın` : `${S2.turn} tur dayandın`) + ` · +${gain} Altın (toplam ${SAVE.gold}) · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}! +${spOf(lv1) - spOf(lv0)} beceri puanı` : '') + lg + (won ? ` · +${foes} çekiç` : '');
   $('again').textContent = duel ? 'Lobiye Dön' : 'Tekrar Savaş'; $('change').hidden = duel;
   o.hidden = false; $('again').focus();
 }
@@ -3163,17 +3247,17 @@ let inspA = null;
 // yetenekler kare kutularda: simge, ad, mana
 function skillTiles(list) {
   const g = document.createElement('div'); g.className = 'iskg';
-  for (const sk of list) { const d = document.createElement('div'); d.className = 'isk'; d.style.color = sk.color; d.title = skillDesc(sk); d.innerHTML = `${svg(sk.icon)}<b></b><small></small>`; d.querySelector('b').textContent = sk.name; d.querySelector('small').textContent = sk.cost ? sk.cost + ' mana' : 'Mana yok'; g.appendChild(d); }
+  for (const sk of list) { const d = document.createElement('div'); d.className = 'isk'; d.style.color = sk.color; d.title = skillDesc(sk); d.innerHTML = `${svg(sk.icon)}<b></b><small></small>`; d.querySelector('b').textContent = sk.name; d.querySelector('small').textContent = (sk.lv > 1 ? `Sv ${sk.lv} · ` : '') + (sk.cost ? sk.cost + ' mana' : 'Mana yok'); g.appendChild(d); }
   $('inspSkills').innerHTML = ''; $('inspSkills').appendChild(g);
 }
 // haritadaki oyuncunun profili: varlığından (sınıf, oyuncu seviyesi, ekipman) değerleri hesaplanır
 async function inspectPeer(o, name) {
   const pr = (o.p && o.p.presence) || {}, id = pr.cls, c = CLASSES[id]; if (!c) return;
-  const gear = cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(pr.g) ? pr.g[i] : 1]))), lvl = Math.max(1, Math.min(99, +pr.pl || 1)), st = gearStats(c, gear, lvl);
+  const gear = cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(pr.g) ? pr.g[i] : 1]))), lvl = Math.max(1, Math.min(99, +pr.pl || 1)), sp = cleanSp(pr.sp, lvl), st = gearStats(c, gear, lvl, sp);
   try { await Promise.all([Rig.load(id), Rig.loadTiers(id)]); } catch (e) { return; }
   Sfx.play('click');
   openInspect({ id, cls: c, name: name || nameOfPeer(o.p), lvl, gear, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp, regen: st.regen, hregen: st.hregen, gb: st.gb, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd,
-    skills: c.skills.map(s => ({ ...s, color: s.color || glowOf(id) })), potions: null }, `${c.name} · ${c.role} · Sv ${lvl} · Lig ${+pr.lg || 1} · ekipman ortalaması ${gearLevel(gear)}`);
+    skills: c.skills.map((s, i) => skillAt({ ...s, color: s.color || glowOf(id) }, sp[i])), potions: null }, `${c.name} · ${c.role} · Sv ${lvl} · Lig ${+pr.lg || 1} · ekipman ortalaması ${gearLevel(gear)}`);
 }
 function openInspect(f, sub) {
   if (f.mon) return openMonInspect(f);
@@ -3355,7 +3439,7 @@ function lobbyPresence() {
   if (!room) return;
   const g = gearOf(chosen);
   room.presence({ cls: chosen, lv: gearLevel(g), pl: myLevel(), lg: leagueOf(SAVE.league), st: pvp ? 'duel' : screen === 'battle' ? 'battle' : 'lobby',
-    sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, tp: me.tp || 0, g: ITEMS.map(k => g[k]), m: typeof matchPub === 'function' ? matchPub() : undefined }).catch(() => {});
+    sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, tp: me.tp || 0, g: ITEMS.map(k => g[k]), sp: mySp(chosen), m: typeof matchPub === 'function' ? matchPub() : undefined }).catch(() => {});
 }
 const lobbyOthers = () => room ? room.peers().filter(p => !p.isMe && p.kind === 'viewer').length : 0;
 function openLobby() { invBadge(); showScreen('lobby'); streetActor(); $('lobbyCls').textContent = CLASSES[chosen].name; renderLobby(); renderChat(); }
@@ -3464,7 +3548,7 @@ function challenge(p, name) {
   if (!room || pvp || invite) return;
   const id = Math.random().toString(36).slice(2, 10);
   invite = { mine: true, id, to: p.peer, name };
-  room.emit('duel', { t: 'ask', id, to: p.peer, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel() }).catch(() => { invite = null; addChat(null, 'Meydan okuma gönderilemedi.', null, true); });
+  room.emit('duel', { t: 'ask', id, to: p.peer, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), sp: mySp(chosen) }).catch(() => { invite = null; addChat(null, 'Meydan okuma gönderilemedi.', null, true); });
   addChat(null, name + ' oyuncusuna meydan okundu, cevap bekleniyor…', null, true);
   setTimeout(() => { if (invite && invite.id === id && invite.mine) { invite = null; addChat(null, name + ' cevap vermedi.', null, true); renderLobby(); } }, 25000);
   renderLobby();
@@ -3478,13 +3562,13 @@ async function onDuelMsg(m) {
   if (d.t === 'ask' && d.to === myPeer()) {
     if (pvp || invite || myMatch || !CLASSES[d.cls]) { room.emit('duel', { t: 'no', id: d.id, to: m.peer, busy: true }).catch(() => {}); return; }
     const prof = m.by && user ? await user.profiles([m.by]) : {}, name = (m.by && prof[m.by] && prof[m.by].name) || 'Bir oyuncu';
-    invite = { mine: false, id: d.id, from: m.peer, by: m.by, name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)) };
+    invite = { mine: false, id: d.id, from: m.peer, by: m.by, name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), sp: d.sp };
     $('invT').textContent = `${name} seni ${CLASSES[d.cls].name} ile düelloya çağırıyor. Sen ${CLASSES[chosen].name} ile savaşacaksın.`;
     $('invite').hidden = false; $('invYes').focus(); Sfx.play('stun');
     setTimeout(() => { if (invite && invite.id === d.id && !invite.mine) declineInvite(); }, 20000);
   } else if (d.t === 'yes' && invite && invite.mine && d.id === invite.id && m.peer === invite.to && CLASSES[d.cls]) {
     const inv = invite; invite = null;
-    startDuel({ id: inv.id, opp: m.peer, oppBy: m.by, oppName: inv.name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), seed: d.seed >>> 0, first: true });
+    startDuel({ id: inv.id, opp: m.peer, oppBy: m.by, oppName: inv.name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), sp: d.sp, seed: d.seed >>> 0, first: true });
   } else if (d.t === 'no' && invite && invite.mine && d.id === invite.id) {
     addChat(null, invite.name + (d.busy ? ' şu an meşgul.' : ' meydan okumayı reddetti.'), null, true); invite = null; renderLobby();
   }
@@ -3494,8 +3578,8 @@ $('invNo').addEventListener('click', declineInvite);
 $('invYes').addEventListener('click', () => {
   if (!invite || invite.mine) return; const inv = invite; invite = null; $('invite').hidden = true;
   const seed = (Math.random() * 4294967296) >>> 0;
-  room.emit('duel', { t: 'yes', id: inv.id, to: inv.from, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), seed }).catch(() => {});
-  startDuel({ id: inv.id, opp: inv.from, oppBy: inv.by, oppName: inv.name, cls: inv.cls, gear: inv.gear, alch: inv.alch, lv: inv.lv, seed, first: false });
+  room.emit('duel', { t: 'yes', id: inv.id, to: inv.from, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), sp: mySp(chosen), seed }).catch(() => {});
+  startDuel({ id: inv.id, opp: inv.from, oppBy: inv.by, oppName: inv.name, cls: inv.cls, gear: inv.gear, alch: inv.alch, lv: inv.lv, sp: inv.sp, seed, first: false });
 });
 /* ---------- çok oyunculu maç (düello = 1v1 maç) ----------
    Kadro (roster) her ekranda aynı sırayla kurulur: [{ team, slot, peer|null, id, g: [10 eşya], a, name }].
@@ -3522,7 +3606,7 @@ async function startMatch(o) { // o = { id, room, kind: 'duel'|'team', mode, see
   crng = seeded(pvp.seed);
   for (const k of ids) Sfx.loadSkills(k);
   const cfg = { A: [], B: [] };
-  for (const r of o.roster) cfg[r.team][r.slot] = { id: r.id, gear: gearObj(r.g), alch: Math.max(1, Math.min(8, r.a | 0 || 1)), peer: r.peer || null, lvl: Math.max(1, Math.min(99, r.lv | 0 || 1)),
+  for (const r of o.roster) cfg[r.team][r.slot] = { id: r.id, gear: gearObj(r.g), alch: Math.max(1, Math.min(8, r.a | 0 || 1)), peer: r.peer || null, lvl: Math.max(1, Math.min(99, r.lv | 0 || 1)), sp: r.sp || null,
     ctrl: r.peer === mine ? 'me' : r.peer ? 'remote' : 'ai', name: r.peer === mine ? 'Sen · ' + CLASSES[r.id].name : (r.peer ? r.name : 'Bot') + ' · ' + CLASSES[r.id].name };
   showScreen('battle');
   newBattle(cfg);
@@ -3588,8 +3672,8 @@ setInterval(() => {
 }, 1000);
 // düello: meydan okuyan A, kabul eden B
 function startDuel(o) {
-  const me = { peer: myPeer(), id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, lv: myLevel(), name: 'Sen' };
-  const them = { peer: o.opp, id: o.cls, g: gearArr(o.gear), a: o.alch, lv: o.lv, name: o.oppName };
+  const me = { peer: myPeer(), id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, lv: myLevel(), sp: mySp(chosen), name: 'Sen' };
+  const them = { peer: o.opp, id: o.cls, g: gearArr(o.gear), a: o.alch, lv: o.lv, sp: cleanSp(o.sp, o.lv), name: o.oppName };
   const [A, B] = o.first ? [me, them] : [them, me];
   startMatch({ id: o.id, room: 'duel-' + o.id, kind: 'duel', mode: '1v1', seed: o.seed, roster: [{ team: 'A', slot: 0, ...A }, { team: 'B', slot: 0, ...B }] });
 }
@@ -3611,13 +3695,13 @@ function createMatch(mode) {
   if (!room || pvp || myMatch) return;
   const [na, nb] = MODES[mode], id = Math.random().toString(36).slice(2, 10), g = gearOf(chosen), p = myPeer();
   myMatch = { host: true, id, mode, A: Array(na).fill(0), B: Array(nb).fill(0), info: {} };
-  myMatch.A[0] = { p, n: myName(), c: chosen, l: gearLevel(g), v: myLevel() }; myMatch.info[p] = { g: gearArr(g), a: T.alch, id: chosen, lv: myLevel() };
+  myMatch.A[0] = { p, n: myName(), c: chosen, l: gearLevel(g), v: myLevel() }; myMatch.info[p] = { g: gearArr(g), a: T.alch, id: chosen, lv: myLevel(), sp: mySp(chosen) };
   lobbyPresence(); renderMatches();
 }
 function joinMatch(hostPeer, mid, team) {
   if (!room || pvp || myMatch) return;
   myMatch = { host: false, id: mid, hostPeer, team, t0: Date.now() };
-  room.emit('duel', { t: 'mjoin', mid, team, to: hostPeer, id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, l: gearLevel(gearOf(chosen)), lv: myLevel(), n: myName() }).catch(() => {});
+  room.emit('duel', { t: 'mjoin', mid, team, to: hostPeer, id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, l: gearLevel(gearOf(chosen)), lv: myLevel(), sp: mySp(chosen), n: myName() }).catch(() => {});
   lobbyPresence(); renderMatches();
 }
 function leaveMatch() {
@@ -3651,7 +3735,7 @@ function startTeamMatch() {
   for (const team of ['A', 'B']) {
     const bg = fill(team, 'l', tgtGear, maxGear, 10), bl = fill(team, 'v', tgtLv, maxLv, 99);
     M[team].forEach((s, slot) => {
-      if (s) { const inf = M.info[s.p] || {}; roster.push({ team, slot, peer: s.p, id: inf.id || s.c, g: inf.g, a: inf.a, lv: inf.lv || s.v || 1, name: s.n }); }
+      if (s) { const inf = M.info[s.p] || {}; roster.push({ team, slot, peer: s.p, id: inf.id || s.c, g: inf.g, a: inf.a, lv: inf.lv || s.v || 1, sp: inf.sp ? cleanSp(inf.sp, inf.lv || 1) : SP0, name: s.n }); }
       else { const id = pool.pop() || ORDER[0]; roster.push({ team, slot, peer: null, id, g: gearArr(foeGear(bg)), a: T.alch, lv: bl, name: 'Bot' }); }
     });
   }
@@ -3667,7 +3751,7 @@ function onMatchLobby(m, d) {
     const arr = M[d.team === 'B' ? 'B' : 'A'], k = arr.findIndex(s => !s); if (k < 0) return;
     const lv = Math.max(1, Math.min(99, d.lv | 0 || 1));
     arr[k] = { p: m.peer, n: String(d.n || 'Oyuncu').slice(0, 20), c: d.id, l: Math.max(1, Math.min(10, d.l | 0)), v: lv };
-    M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id, lv };
+    M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id, lv, sp: cleanSp(d.sp, lv) };
     lobbyPresence(); renderMatches();
   } else if (d.t === 'mswap' && M && M.host && d.to === myPeer() && d.mid === M.id && (d.team === 'A' || d.team === 'B')) {
     if (moveSlot(M, m.peer, d.team)) { lobbyPresence(); renderMatches(); }
@@ -3980,7 +4064,7 @@ async function forestEnd(winTeam) {
   Sfx.play(won ? 'win' : 'lose');
   const o = $('over'); o.classList.toggle('lose', !won);
   $('overT').textContent = won ? 'AŞAMA GEÇİLDİ' : 'YENİLGİ';
-  $('overP').textContent = `Orman ${k}. aşama · +${gain} Altın · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}!` : '')
+  $('overP').textContent = `Orman ${k}. aşama · +${gain} Altın · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}! +${spOf(lv1) - spOf(lv0)} beceri puanı` : '')
     + (Object.keys(drops).length ? ` · Envantere eklendi: ${matTxt(drops)}` : '') + (chest ? ` · İlk geçiş sandığı: +${chest} Altın` : '') + (won || hamm ? ` · +${hamm + (won ? F.B.length : 0)} çekiç` : '');
   $('again').textContent = won && k < STAGES.length ? 'Sonraki Aşama' : 'Tekrar Savaş';
   forestRun.next = won && k < STAGES.length ? k + 1 : k;

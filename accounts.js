@@ -31,6 +31,19 @@ const scrypt = (pass, salt) => new Promise((res, rej) => crypto.scrypt(pass, sal
 const int = (v, lo, hi, d) => { v = Math.floor(Number(v)); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
 
 // gelen kaydı bilinen alanlarla ve sınırlarla yeniden kurar
+// beceri puanı (oyundaki spOf / spUsed / xpLevel ile aynı): sınıf başına [yetenek 1-4 seviyesi 1-15, 5 değer puanı 0-15]
+const xpLevel = x => { let l = 1, need = 100; x = x || 0; while (x >= need && l < 99) { x -= need; l++; need = 100 + 50 * (l - 1); } return l; };
+const spOf = lvl => { let p = 0; for (let l = 2; l <= Math.min(99, lvl); l++) p += l % 5 ? 1 : 3; return p; };
+const spUsed = sp => sp.slice(0, 4).reduce((s, v) => s + v - 1, 0) + sp.slice(4).reduce((s, v) => s + v, 0);
+function cleanSp(sp, xp) {
+  const out = {}, max = spOf(xpLevel(xp));
+  for (const [cls, v] of Object.entries(sp && typeof sp === 'object' ? sp : {}).slice(0, 30)) {
+    if (!/^[a-z]{2,16}$/.test(cls) || !Array.isArray(v) || v.length !== 9) continue;
+    const arr = v.map((n, i) => int(n, i < 4 ? 1 : 0, 15, i < 4 ? 1 : 0));
+    if (spUsed(arr) <= max) out[cls] = arr;
+  }
+  return out;
+}
 function cleanSave(s) {
   if (!s || typeof s !== 'object') return null;
   const gear = {};
@@ -51,6 +64,7 @@ function cleanSave(s) {
       .map(it => ({ c: it.c, k: it.k, n: int(it.n, 1, 10, 1), ...(it.new ? { new: 1 } : {}) })),
     invSeen: Object.fromEntries(['pelt', 'silk', 'ess', 'relic'].map(m => [m, int((s.invSeen || {})[m], 0, 1e6, 0)])),
   };
+  out.sp = cleanSp(s.sp, out.xp);
   if (out.stats) for (const k of ['wins', 'battles', 'duelWins', 'teamWins']) if (k in out.stats) out.stats[k] = int(out.stats[k], 0, 1e7, 0);
   return JSON.stringify(out).length > 32 * 1024 ? null : out;
 }

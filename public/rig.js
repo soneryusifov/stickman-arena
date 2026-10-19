@@ -16,6 +16,9 @@ const EYES = [2, -2, .5]; // bütün sınıflarda aynı göz yeri; başlıklar k
 // duruş: ayaklar kalçaların altında, kalça bacak boyuna yakın yükseklikte → bacaklar neredeyse düz (eskisi crouch 4, ayaklar ±30: dizler bükük)
 const COMMON_BASE = { x: 0, lift: 0, rot: 0, lean: 0, head: 0, crouch: -5,
   uaS: -16, laS: 36, main: 40, uaK: 20, laK: 64, off: 0, offTilt: 0, footF: 12, footB: -26, liftF: 0, liftB: 0 };
+// yaralı duruş: tek diz üstü (arka diz yerde, ön ayak önde, gövde öne eğik). Oyun A.kneel'i açar; bekleme ve darbe alma
+// sırasında bu duruşa yavaşça geçilir (A.kneelK 0→1), saldırı, yürüme ya da ölümde ayağa kalkar.
+const KNEEL = { crouch: 50, lean: 12, head: 8, footF: 50, footB: -70, liftF: 0, liftB: 8, uaS: 6, laS: 30, uaK: 34, laK: 40 };
 
 /* ---------- Görseller ---------- */
 const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('yüklenemedi: ' + src)); i.src = src; });
@@ -197,6 +200,8 @@ function play(A, name) {
 const waitAct = A => new Promise(r => A.waits.push(r));
 function update(A, dt) {
   A.at += dt;
+  const kt = A.kneel && (A.cur === 'idle' || A.cur === 'hit') ? 1 : 0, k0 = A.kneelK || 0;
+  A.kneelK = k0 + (kt - k0) * Math.min(1, dt / (kt ? 280 : 110));
   const an = A.ANIMS[A.cur]; if (an.loop) return;
   const p = A.at / an.dur;
   if (!A.fired && p >= actAt(an)) { A.fired = true; const w = A.waits; A.waits = []; w.forEach(f => f()); }
@@ -225,6 +230,7 @@ function poseOf(A, t) {
     const k = A.stride || 1; // adım boyu çarpanı (kasabada uzun adım)
     Object.assign(P, { lean: 6, footF: 16 + 24 * k * s, footB: -18 - 24 * k * s, liftF: Math.max(0, c) * 14 * k, liftB: Math.max(0, -c) * 14 * k, uaS: B.uaS - 6 * s, crouch: 6 + Math.abs(s) * 4, head: -2 });
   } else Object.assign(P, keyPose(A, an.keys, p));
+  if (A.kneelK > .001) for (const k in KNEEL) P[k] += (KNEEL[k] - B[k]) * A.kneelK; // yaralı duruş: bekleme/darbe pozunun üstüne eklenir
   return P;
 }
 function legIK(hip, ankle) {
