@@ -122,9 +122,11 @@ body{font-family:var(--font-body);font-size:15px;background:radial-gradient(120%
 #town[data-only]{grid-template-columns:minmax(0,520px);justify-content:center}
 #townScreen[data-only] .quests{display:none}
 /* dokunmatik joystick (yalnızca dokunmatik ekranda) */
-.joy{position:absolute;left:14px;bottom:14px;width:104px;height:104px;border-radius:50%;background:rgba(14,11,20,.45);border:2px solid rgba(242,193,78,.5);touch-action:none;user-select:none;-webkit-user-select:none;display:none}
-.joy .knob{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#ffe29a,#c99a2a);box-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none}
-@media (hover:none) and (pointer:coarse){.joy{display:block}}
+/* yüzen joystick: parmağın değdiği yer merkezdir, sürüklemeye başlayınca görünür, bırakınca kaybolur */
+.joy{position:absolute;left:0;top:0;width:110px;height:110px;margin:-55px 0 0 -55px;border-radius:50%;background:rgba(255,255,255,.12);border:2px solid rgba(255,255,255,.8);box-shadow:0 0 14px rgba(0,0,0,.35);pointer-events:none;user-select:none;-webkit-user-select:none;display:none;z-index:8}
+.joy.on{display:block}
+.joy .knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#d9d9e0);box-shadow:0 2px 10px rgba(0,0,0,.5);pointer-events:none}
+#lobbyScreen .stage #sv{touch-action:none}
 /* telefon dikeyken: yan çevir uyarısı */
 .rotate{position:fixed;inset:0;z-index:90;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;text-align:center;background:var(--ink)}
 .rotate svg{width:84px;height:84px;color:var(--gold);fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;animation:turn 2.4s ease-in-out infinite}
@@ -378,7 +380,7 @@ html:has(#battleScreen:not([hidden])),html:has(#battleScreen:not([hidden])) body
   .players{top:44px;left:6px;width:min(300px,52%);max-height:calc(100% - 52px);padding:8px}
   .chatbox{right:6px;bottom:6px;width:min(280px,40%)}
   .sbox{bottom:8px;padding:6px 8px 6px 12px} .sbox span{font-size:13px} .sbox .btn{font-size:13px}
-  .joy{width:92px;height:92px;left:10px;bottom:10px}
+  .joy{width:96px;height:96px;margin:-48px 0 0 -48px}
   #battleScreen{display:flex;justify-content:center}
   #battleScreen .lower{display:none}
   .hud{font-size:10px;padding:1% 1.4%} .hud .portrait{width:34px;height:34px}
@@ -547,6 +549,18 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .fcard canvas{width:84%;height:84%;position:relative;z-index:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
 @keyframes fflip{0%{transform:rotateY(90deg) scale(.6);filter:brightness(3)}60%{transform:rotateY(-12deg) scale(1.06)}100%{transform:none;filter:none}}
 @media (prefers-reduced-motion:reduce){.fcard .big{animation:none}}
+/* toplu dövme: adet seçimi ve 5 sonucun kartları */
+.fgqty{display:flex;gap:6px;align-items:center;justify-content:center;font-size:13px;color:var(--muted)}
+.fgqty button{padding:.3em .9em;font-size:13px} .fgqty button[aria-pressed="true"]{border-color:var(--gold);color:var(--gold);background:#2a2132}
+.guide.fres .gc.frc.multi{max-width:780px}
+.fmulti{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;width:100%}
+.fmi{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 5px;border-radius:8px;background:#100d17;border:1px solid #2e2840;min-width:0}
+.fmi .big{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:1;border-radius:8px;border:2px solid var(--b);background:var(--bg);box-shadow:inset 0 0 12px rgba(0,0,0,.55),0 0 14px var(--g);overflow:hidden;animation:fflip .75s ease-out}
+.fmi canvas{width:84%;height:84%;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
+.fmi b{font-size:11.5px;line-height:1.15;color:#e9e4f5;overflow-wrap:anywhere} .fmi small{font-size:10.5px;color:var(--muted);line-height:1.2}
+.fmi .btn{font-size:11px;padding:.3em .4em;width:100%} .fmi .st{font-size:11px;font-weight:700;color:var(--gold);line-height:1.2}
+.fmi.done{opacity:.5}
+@media (max-height:600px){.fmi b{font-size:10px} .fmi small{display:none} .fmi .btn{font-size:10px;padding:.2em .3em}}
 .guide.fres p{margin:0;color:#cfc8de;font-size:14px;line-height:1.45} .guide.fres .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 /* envanterde ekipman: kademe çerçevesi */
 .ivs.gear{border:2px solid var(--b);background:var(--bg);box-shadow:inset 0 0 10px rgba(0,0,0,.55),0 0 8px var(--g);overflow:hidden}
@@ -724,6 +738,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   <div class="guide fres" id="fres" role="dialog" aria-modal="true" aria-labelledby="fresT" hidden>
     <div class="gc frc">
       <div class="fcard"><div class="big" id="fBig"></div></div>
+      <div class="fmulti" id="fMulti" hidden></div>
       <h2 id="fresT"></h2><p id="fresP"></p>
       <div class="row" id="fresBtns"></div>
     </div>
@@ -810,7 +825,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
           <form class="chatf" id="chatf"><input id="chatIn" maxlength="200" autocomplete="off" placeholder="Bir şey yaz…" aria-label="Sohbet mesajı"><button type="submit" id="chatSend">Gönder</button></form>
         </section>
         <div class="sbox" id="sbox" hidden><span id="sboxT"></span><button class="btn ghost" id="sboxI" type="button" hidden>İncele</button><button class="btn" id="sboxB" type="button"></button></div>
-        <div class="joy" id="joy" role="application" aria-label="Yürüme joysticki: sürükleyerek yürü"><div class="knob" id="knob"></div></div>
+        <div class="joy" id="joy" aria-hidden="true"><div class="knob" id="knob"></div></div>
       </div>
     </div>
   </section>
@@ -868,7 +883,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=16"></script>
+<script src="i18n-dict.js?v=17"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
@@ -2134,7 +2149,7 @@ $('sboxB').addEventListener('click', () => {
 });
 $('openTown').addEventListener('click', () => showScreen('town'));
 SV.addEventListener('click', e => {
-  if (trans) return;
+  if (trans || performance.now() - joyDrag < 400) return; // joystick sürüklemesinin sonu tıklama sayılmaz
   const r = SV.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * SW, sy = (e.clientY - r.top) / r.height * SHV, y = sy + VT, wx = x + camX, S = scene();
   const hitAt = (ox, oy) => { const s = scaleAt(oy); return Math.abs(ox - wx) < 55 * s / HS && y > headY(oy, s) && y < oy + 12; };
   if (x > SW - 214 && x < SW - 12 && sy > mmTop() && sy < mmTop() + 96) return openWorldMap(); // küçük harita
@@ -2163,21 +2178,32 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { const k = KEYMAP[e.key.toLowerCase()]; if (k) keys[k] = 0; });
 addEventListener('blur', () => { keys.l = keys.r = keys.u = keys.d = 0; });
-// dokunmatik joystick: topu sürükleme yönü yürüme yönüdür (merkeze yakın küçük hareket sayılmaz)
-const joy = { x: 0, y: 0 };
+// dokunmatik joystick ekranda sabit değil: sol alttaki görünmez dikdörtgende (JOY_ZONE: genişliğin solundaki %45, yüksekliğin alttaki %60'ı)
+// neresine dokunulursa merkez orası olur. Parmak sürüklenince (10 px)
+// beyaz joystick o noktada belirir ve sürükleme yönü yürüme yönüdür; bırakınca kaybolur. Sürüklenmeyen kısa dokunuş eskisi gibi
+// dokunmadır (karaktere, kapıya, küçük haritaya); sürüklemenin hemen ardından gelen tıklama yok sayılır.
+const joy = { x: 0, y: 0 }, JOY_ZONE = { w: .45, h: .6 };
+let joyDrag = 0;
 (function () {
-  const base = $('joy'), knob = $('knob'); let pid = null;
+  const base = $('joy'), knob = $('knob'), stage = $('stage'); let pid = null, cx = 0, cy = 0, moved = false;
   const set = e => {
-    const r = base.getBoundingClientRect(), R = r.width / 2; let dx = e.clientX - (r.left + R), dy = e.clientY - (r.top + R);
-    const L = Math.hypot(dx, dy), m = Math.min(L, R * .62);
+    let dx = e.clientX - cx, dy = e.clientY - cy; const L = Math.hypot(dx, dy), R = (base.offsetWidth || 110) / 2, m = Math.min(L, R * .62);
+    if (!moved && L > 10) { moved = true; base.classList.add('on'); me.target = null; me.door = null; }
+    if (!moved) return;
     if (L) { dx = dx / L * m; dy = dy / L * m; }
     knob.style.transform = `translate(${dx}px,${dy}px)`;
     const on = L > R * .16; joy.x = on ? dx / m : 0; joy.y = on ? dy / m : 0;
   };
-  base.addEventListener('pointerdown', e => { e.preventDefault(); pid = e.pointerId; base.setPointerCapture(pid); me.target = null; me.door = null; set(e); });
-  base.addEventListener('pointermove', e => { if (e.pointerId === pid) set(e); });
-  const end = e => { if (e.pointerId !== pid) return; pid = null; joy.x = joy.y = 0; knob.style.transform = ''; };
-  base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end); base.addEventListener('lostpointercapture', end);
+  SV.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'touch' || pid !== null) return;
+    const r = stage.getBoundingClientRect();
+    if (e.clientX - r.left > r.width * JOY_ZONE.w || e.clientY - r.top < r.height * (1 - JOY_ZONE.h)) return; // dikdörtgenin dışı: normal dokunuş
+    pid = e.pointerId; moved = false; cx = e.clientX; cy = e.clientY; base.style.left = (cx - r.left) + 'px'; base.style.top = (cy - r.top) + 'px'; knob.style.transform = '';
+    try { SV.setPointerCapture(pid); } catch (err) {}
+  });
+  SV.addEventListener('pointermove', e => { if (e.pointerId === pid) set(e); });
+  const end = e => { if (e.pointerId !== pid) return; pid = null; if (moved) joyDrag = performance.now(); moved = false; joy.x = joy.y = 0; knob.style.transform = ''; base.classList.remove('on'); };
+  SV.addEventListener('pointerup', end); SV.addEventListener('pointercancel', end); SV.addEventListener('lostpointercapture', end);
 })();
 // tam ekran + yatay kilit (Android tarayıcıları destekler; iPhone'da telefonu çevirmek yeterli)
 const canFs = !!(document.documentElement.requestFullscreen && document.fullscreenEnabled);
@@ -2308,10 +2334,17 @@ function renderForge() {
   top.querySelector('b').textContent = `${SAVE.hammers} çekiç`;
   top.querySelector('.lv').textContent = `Demirci Sv ${L}`;
   const room = invFree() > 0, can = SAVE.hammers > 0;
+  // bir seferde kaç çekiç: 1 ya da 5 (son seçim hatırlanır)
+  const qty = document.createElement('div'); qty.className = 'fgqty'; qty.append('Bir seferde:');
+  for (const q of [1, 5]) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost'; b.textContent = `${q} çekiç`; b.setAttribute('aria-pressed', forgeQty === q);
+    b.addEventListener('click', () => { forgeQty = q; try { localStorage.setItem('sa.fqty', String(q)); } catch (e) {} renderForge(); });
+    qty.appendChild(b);
+  }
   const modes = document.createElement('div'); modes.className = 'fgmodes';
   for (const own of [false, true]) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'fgbtn'; b.disabled = !can;
-    b.innerHTML = `${svg(own ? 'anvil' : 'hammer')}<b></b><small></small><em>1 çekiç</em>`;
+    b.innerHTML = `${svg(own ? 'anvil' : 'hammer')}<b></b><small></small><em>${Math.max(1, Math.min(forgeQty, SAVE.hammers))} çekiç</em>`;
     b.querySelector('b').textContent = own ? `${CLASSES[key].name} için döv` : 'Rastgele döv';
     b.querySelector('small').textContent = own ? 'Yalnız bu sınıfın eşyası · üst kademe ihtimali 5 kat düşük' : 'Herhangi bir sınıfın eşyası · üst kademe ihtimali yüksek';
     b.title = can ? '' : 'Çekiç yok: orman ilk geçişleri, lig atlama, günün sandığı ya da tüccar';
@@ -2336,7 +2369,7 @@ function renderForge() {
   up.append(ut, ub);
   const note = document.createElement('p'); note.className = 'fgnote';
   note.textContent = room ? 'Elindekinden iyi çıkarsa takabilirsin; değilse envantere koy ya da sat (tüccar fiyatının yarısı).' : 'Envanter dolu: dövülen eşyayı ya takman ya da satman gerekecek.';
-  list.append(top, modes, odds, up, note);
+  list.append(top, qty, modes, odds, up, note);
 }
 function forgeUp() {
   const L = T.forge, c = FORGE_UP[L];
@@ -2346,52 +2379,93 @@ function forgeUp() {
 }
 // zar: kademe ihtimallerine göre; sınıf ve yuva rastgele (sınıfa özelde seçili sınıf)
 function rollTier(L, own) { const p = forgeOdds(L, own); let r = Math.random(); for (let i = 0; i < 10; i++) { r -= p[i]; if (r < 0) return i + 1; } return 1; }
-let forged = null, forgeOwn = false; // forgeOwn: son dövmenin kipi (tekrar döv aynı kiple)
+// forged: dövülen eşyalar ({ c, k, n, done? }); hepsine karar verilene kadar yeni dövme başlamaz. forgeQty: bir seferde 1 ya da 5 çekiç
+let forged = null, forgeOwn = false, forgeQty = (() => { try { return localStorage.getItem('sa.fqty') === '5' ? 5 : 1; } catch (e) { return 1; } })();
 async function doForge(own) {
   if (SAVE.hammers < 1 || forged) return;
   forgeOwn = own;
-  const c = own ? chosen : ORDER[Math.floor(Math.random() * ORDER.length)], k = ITEMS[Math.floor(Math.random() * ITEMS.length)], n = rollTier(T.forge, own);
-  SAVE.hammers--; SAVE.stats.upgrades++; forged = { c, k, n }; persist(); track('upgrade');
-  try { await Promise.all([Rig.load(c), Rig.loadTiers(c)]); } catch (e) {}
-  Sfx.play(n >= 4 ? 'big' : 'upgrade'); showForged();
+  const q = Math.min(forgeQty, SAVE.hammers), list = [];
+  for (let i = 0; i < q; i++) list.push({ c: own ? chosen : ORDER[Math.floor(Math.random() * ORDER.length)], k: ITEMS[Math.floor(Math.random() * ITEMS.length)], n: rollTier(T.forge, own) });
+  SAVE.hammers -= q; SAVE.stats.upgrades += q; forged = list; persist(); track('upgrade', q);
+  try { await Promise.all([...new Set(list.map(it => it.c))].flatMap(c => [Rig.load(c), Rig.loadTiers(c)])); } catch (e) {}
+  Sfx.play(list.some(it => it.n >= 4) ? 'big' : 'upgrade'); showForged();
+  if (screen === 'select') renderGear();
 }
+// bir eşyanın sonu: tak (eskisi 2. kademe ve üstüyse envantere), envantere koy, sat (yarı fiyat) ya da at (1. kademe, değeri yok)
+function resolveItem(it, how) {
+  if (how === 'equip') { equipItem(it); return 'Takıldı'; }
+  if (how === 'keep' && invFree() > 0) { SAVE.items.push({ c: it.c, k: it.k, n: it.n, new: 1 }); return 'Envantere kondu'; }
+  const v = SELL_PRICE(it.k, it.n);
+  if (how !== 'drop' && v > 0) { SAVE.gold += v; Sfx.play('coin'); return `Satıldı · +${v} altın`; }
+  return 'Atıldı';
+}
+const forgeDone = () => { persist(); invBadge(); if (screen === 'select') { renderGear(); renderStats(); } };
+const fresBtn = (txt, cls, fn, dis) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = txt; b.disabled = !!dis; b.addEventListener('click', fn); $('fresBtns').appendChild(b); return b; };
+const againTxt = () => (forgeOwn ? `${CLASSES[chosen].name} için tekrar döv` : 'Tekrar rastgele döv') + (Math.min(forgeQty, SAVE.hammers) > 1 ? ` ×${Math.min(forgeQty, SAVE.hammers)}` : '');
 function showForged() {
-  const it = forged; if (!it) return;
-  const names = Object.fromEntries(RC[it.c].items), cur = gearOf(it.c)[it.k], better = it.n > cur, room = invFree() > 0;
+  if (!forged) return;
+  const multi = forged.length > 1;
+  $('fres').querySelector('.frc').classList.toggle('multi', multi); $('fBig').parentElement.hidden = multi; $('fMulti').hidden = !multi;
+  $('fres').hidden = false;
+  if (multi) return renderMulti();
+  const it = forged[0], names = Object.fromEntries(RC[it.c].items), cur = gearOf(it.c)[it.k], better = it.n > cur, room = invFree() > 0;
   const big = $('fBig'); big.className = 'big tr' + it.n; big.innerHTML = '';
   const cv = document.createElement('canvas'); cv.width = cv.height = 160; drawIcon(cv, it.c, it.k, it.n); big.appendChild(cv);
   big.style.animation = 'none'; void big.offsetWidth; big.style.animation = '';
   $('fresT').textContent = `${names[it.k]} · ${it.n}. kademe`;
   $('fresP').textContent = `${CLASSES[it.c].name} eşyası · ${perkText(it.k, it.n)} · takılı olan: ${cur}. kademe`;
-  const row = $('fresBtns'); row.innerHTML = '';
-  const add = (txt, cls, fn, dis) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = txt; b.disabled = !!dis; b.addEventListener('click', fn); row.appendChild(b); return b; };
-  const first = better ? add(`Tak (${CLASSES[it.c].name})`, '', () => forgedTo('equip')) : null;
-  const keep = add(room ? 'Envantere koy' : 'Envanter dolu', 'ghost', () => forgedTo('keep'), !room);
+  $('fresBtns').innerHTML = '';
+  const first = better ? fresBtn(`Tak (${CLASSES[it.c].name})`, '', () => forgedTo('equip')) : null;
+  const keep = fresBtn(room ? 'Envantere koy' : 'Envanter dolu', 'ghost', () => forgedTo('keep'), !room);
   const sp = SELL_PRICE(it.k, it.n);
-  add(sp ? `Sat · +${sp} altın` : 'At (değeri yok)', 'ghost', () => forgedTo(sp ? 'sell' : 'drop'));
-  $('fres').hidden = false; (first || (room ? keep : row.lastChild)).focus();
+  fresBtn(sp ? `Sat · +${sp} altın` : 'At (değeri yok)', 'ghost', () => forgedTo(sp ? 'sell' : 'drop'));
+  (first || (room ? keep : $('fresBtns').lastChild)).focus();
 }
-// dövülen eşyanın sonu: tak (eskisi 2. kademe ve üstüyse envantere), envantere koy, sat (yarı fiyat) ya da at (1. kademe, değeri yok).
-// Pencere kapanmaz: ne olduğu yazılır ve çekiç kaldıysa aynı kiple "Tekrar döv" çıkar
+// tek eşya: karar verilince pencere kapanmaz, ne olduğu yazılır ve çekiç kaldıysa aynı kiple "Tekrar döv" çıkar
 function forgedTo(how) {
-  const it = forged; if (!it) return;
-  let msg;
-  if (how === 'equip') { equipItem(it); msg = 'Takıldı'; }
-  else if (how === 'keep' && invFree() > 0) { SAVE.items.push({ ...it, new: 1 }); msg = 'Envantere kondu'; }
-  else if (how === 'sell' && SELL_PRICE(it.k, it.n) > 0) { const v = SELL_PRICE(it.k, it.n); SAVE.gold += v; Sfx.play('coin'); msg = `Satıldı · +${v} altın`; }
-  else msg = 'Atıldı';
-  forged = null; persist(); invBadge();
-  if (screen === 'select') { renderGear(); renderStats(); }
-  forgeNext(msg);
+  const it = forged && forged[0]; if (!it) return;
+  const msg = resolveItem(it, how); forged = null; forgeDone(); forgeNext(msg);
 }
 function forgeNext(msg) {
   $('fresT').textContent = msg;
   $('fresP').textContent = SAVE.hammers > 0 ? `${SAVE.hammers} çekiç kaldı · ${SAVE.gold} Altın` : 'Çekiç kalmadı';
-  const row = $('fresBtns'); row.innerHTML = '';
-  const add = (txt, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = txt; b.addEventListener('click', fn); row.appendChild(b); return b; };
-  const again = SAVE.hammers > 0 ? add(forgeOwn ? `${CLASSES[chosen].name} için tekrar döv` : 'Tekrar rastgele döv', '', () => doForge(forgeOwn)) : null;
-  const close = add('Kapat', 'ghost', () => { $('fres').hidden = true; });
+  $('fresBtns').innerHTML = '';
+  const again = SAVE.hammers > 0 ? fresBtn(againTxt(), '', () => { forged = null; doForge(forgeOwn); }) : null;
+  const close = fresBtn('Kapat', 'ghost', () => { forged = null; $('fres').hidden = true; });
   (again || close).focus();
+}
+// 5 eşya: kartlar yan yana; her biri tek tek (tak / envantere koy / sat) ya da kalanlar toplu
+function renderMulti() {
+  const box = $('fMulti'); box.innerHTML = '';
+  for (const it of forged) {
+    const names = Object.fromEntries(RC[it.c].items), cur = gearOf(it.c)[it.k], card = document.createElement('div');
+    card.className = 'fmi' + (it.done ? ' done' : '');
+    const big = document.createElement('div'); big.className = 'big tr' + it.n; if (it.shown) big.style.animation = 'none'; it.shown = 1;
+    const cv = document.createElement('canvas'); cv.width = cv.height = 120; drawIcon(cv, it.c, it.k, it.n); big.appendChild(cv);
+    const b = document.createElement('b'); b.textContent = `${names[it.k]} · ${it.n}. kademe`;
+    const s = document.createElement('small'); s.textContent = `${CLASSES[it.c].name} · takılı ${cur}`;
+    card.append(big, b, s);
+    if (it.done) { const st = document.createElement('span'); st.className = 'st'; st.textContent = it.done; card.appendChild(st); }
+    else {
+      const add = (txt, cls, how, dis) => { const x = document.createElement('button'); x.type = 'button'; x.className = 'btn' + (cls ? ' ' + cls : ''); x.textContent = txt; x.disabled = !!dis; x.addEventListener('click', () => { it.done = resolveItem(it, how); forgeDone(); renderMulti(); }); card.appendChild(x); };
+      if (it.n > cur) add('Tak', '', 'equip');
+      add('Envantere koy', 'ghost', 'keep', invFree() <= 0);
+      const v = SELL_PRICE(it.k, it.n); add(v ? `Sat · +${v}` : 'At', 'ghost', v ? 'sell' : 'drop');
+    }
+    box.appendChild(card);
+  }
+  const left = forged.filter(it => !it.done), worth = left.reduce((a, it) => a + SELL_PRICE(it.k, it.n), 0);
+  $('fresT').textContent = left.length ? `${forged.length} eşya dövüldü` : 'Hepsi tamam';
+  $('fresP').textContent = SAVE.hammers > 0 ? `${SAVE.hammers} çekiç kaldı · ${SAVE.gold} Altın` : `Çekiç kalmadı · ${SAVE.gold} Altın`;
+  $('fresBtns').innerHTML = '';
+  if (left.length) {
+    fresBtn('Kalanları envantere koy', '', () => { for (const it of left) it.done = resolveItem(it, 'keep'); forgeDone(); renderMulti(); }, invFree() < left.length);
+    fresBtn(`Kalanları sat · +${worth} altın`, 'ghost', () => { for (const it of left) it.done = resolveItem(it, 'sell'); forgeDone(); renderMulti(); });
+  } else {
+    const again = SAVE.hammers > 0 ? fresBtn(againTxt(), '', () => { forged = null; doForge(forgeOwn); }) : null;
+    const close = fresBtn('Kapat', 'ghost', () => { forged = null; $('fres').hidden = true; });
+    (again || close).focus();
+  }
 }
 function equipItem(it) {
   const g = gearOf(it.c), old = g[it.k];
@@ -3829,7 +3903,11 @@ function invInfo() {
   } else row('Adet', String(SAVE.hammers));
   box.append(big, b, p, dl);
 }
-$('fres').addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (forged) forgedTo(invFree() > 0 ? 'keep' : SELL_PRICE(forged.k, forged.n) ? 'sell' : 'drop'); $('fres').hidden = true; }); // kapatınca: yer varsa envantere, yoksa satılır (değeri yoksa atılır)
+$('fres').addEventListener('keydown', e => { // kapatınca: kalanlar yer varsa envantere, yoksa satılır (değeri yoksa atılır)
+  if (e.key !== 'Escape') return;
+  if (forged) { for (const it of forged) if (!it.done) it.done = resolveItem(it, invFree() > 0 ? 'keep' : 'sell'); forgeDone(); forged = null; }
+  $('fres').hidden = true;
+});
 $('invBtn').addEventListener('click', openInventory);
 $('invClose').addEventListener('click', closeInventory);
 $('inv').addEventListener('click', e => { if (e.target === $('inv')) closeInventory(); });
