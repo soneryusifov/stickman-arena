@@ -868,7 +868,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=13"></script>
+<script src="i18n-dict.js?v=14"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
@@ -1218,6 +1218,8 @@ function forgeOdds(L, own) {
 // demirci seviye atlama (indeks: şimdiki seviye): altın + ormandan düşen malzeme
 const FORGE_UP = [null, { g: 600, m: { pelt: 3 } }, { g: 1200, m: { pelt: 3, silk: 2 } }, { g: 2000, m: { silk: 3, ess: 2 } }, { g: 3200, m: { ess: 4, relic: 1 } },
   { g: 5000, m: { ess: 6, relic: 2 } }, { g: 7500, m: { ess: 8, relic: 3 } }, { g: 11000, m: { ess: 10, relic: 4 } }];
+// geçici etkinlik: kazanılan her savaşta (arena, düello, takım maçı, orman) bu kadar çekiç. Kapatmak için 0 yap.
+const WIN_HAMMERS = 1000;
 function addShards(n) { SAVE.shards += n; while (SAVE.shards >= SHARDS_PER_HAMMER) { SAVE.shards -= SHARDS_PER_HAMMER; SAVE.hammers++; } }
 const mineStored = () => Math.min(mineCap(T.mine), Math.floor(mineRate(T.mine) * Math.max(0, Date.now() - T.mineAt) / 3600000));
 /* Hesap ve bulut kaydı: yalnızca kendi sunucumuzda (/api) çalışır; claude.ai'de ve misafirken kayıt tarayıcıda kalır.
@@ -3010,7 +3012,7 @@ async function end(winTeam) {
   const pk = pvp ? pvp.kind : null; // pvpFinish pvp'yi sıfırlar
   if (duel) pvpFinish();
   const St = SAVE.stats; St.battles++; track('play');
-  if (won) { St.wins++; St.won[chosen] = 1; if (duel) St.duelWins = (St.duelWins || 0) + 1; if (team) St.teamWins = (St.teamWins || 0) + 1; track('win'); track('class', 1, chosen); }
+  if (won) { St.wins++; St.won[chosen] = 1; if (duel) St.duelWins = (St.duelWins || 0) + 1; if (team) St.teamWins = (St.teamWins || 0) + 1; track('win'); track('class', 1, chosen); SAVE.hammers += WIN_HAMMERS; }
   const bl0 = St.bestLeague; St.bestLeague = Math.max(St.bestLeague, leagueOf(SAVE.league)); const lgHam = St.bestLeague - bl0; SAVE.hammers += lgHam; persist(); // her yeni lig 1 çekiç
   const L1 = leagueOf(SAVE.league), lv1 = xpLevel(SAVE.xp), ye = n => ['', "'e", "'ye", "'e", "'e", "'e", "'ya", "'ye", "'e", "'a", "'a"][n]; // 1'e, 2'ye, 6'ya, 9'a, 10'a
   const lg = (pk === 'team' ? ' · Takım maçı' : duel ? ' · Düello' : '') + (L1 > L0 ? ` · Lig ${L1}${ye(L1)} yükseldin!` + (lgHam ? ` · +${lgHam} çekiç` : '') : L1 < L0 ? ` · Lig ${L1}${ye(L1)} düştün` : lp > 0 ? ' · +1 lig puanı' : duel ? '' : ` · Lig ${L1}`);
@@ -3018,7 +3020,7 @@ async function end(winTeam) {
   Sfx.play(won ? 'win' : 'lose');
   const o = $('over'); o.classList.toggle('lose', !won);
   $('overT').textContent = won ? 'ZAFER' : 'YENİLGİ';
-  $('overP').textContent = (won ? `${S2.turn} turda kazandın` : `${S2.turn} tur dayandın`) + ` · +${gain} Altın (toplam ${SAVE.gold}) · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}!` : '') + lg;
+  $('overP').textContent = (won ? `${S2.turn} turda kazandın` : `${S2.turn} tur dayandın`) + ` · +${gain} Altın (toplam ${SAVE.gold}) · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}!` : '') + lg + (won && WIN_HAMMERS ? ` · Etkinlik: +${WIN_HAMMERS} çekiç` : '');
   $('again').textContent = duel ? 'Lobiye Dön' : 'Tekrar Savaş'; $('change').hidden = duel;
   o.hidden = false; $('again').focus();
 }
@@ -3872,14 +3874,14 @@ async function forestEnd(winTeam) {
   invBadge();
   SAVE.gold += gain + chest; SAVE.xp = (SAVE.xp || 0) + xp;
   const St = SAVE.stats; St.battles++; track('play');
-  if (won) { St.forestWins = (St.forestWins || 0) + 1; track('forest'); track('fkill', F.B.length); }
+  if (won) { St.forestWins = (St.forestWins || 0) + 1; track('forest'); track('fkill', F.B.length); SAVE.hammers += WIN_HAMMERS; }
   persist();
   const lv1 = xpLevel(SAVE.xp), g = S2.gid; await wait(1500); if (g !== S2.gid) return;
   Sfx.play(won ? 'win' : 'lose');
   const o = $('over'); o.classList.toggle('lose', !won);
   $('overT').textContent = won ? 'AŞAMA GEÇİLDİ' : 'YENİLGİ';
   $('overP').textContent = `Orman ${k}. aşama · +${gain} Altın · +${xp} EXP` + (lv1 > lv0 ? ` · Seviye ${lv1}!` : '')
-    + (Object.keys(drops).length ? ` · Envantere eklendi: ${matTxt(drops)}` : '') + (chest ? ` · İlk geçiş sandığı: +${chest} Altın` : '') + (hamm ? ` · +${hamm} çekiç` : '');
+    + (Object.keys(drops).length ? ` · Envantere eklendi: ${matTxt(drops)}` : '') + (chest ? ` · İlk geçiş sandığı: +${chest} Altın` : '') + (hamm ? ` · +${hamm} çekiç` : '') + (won && WIN_HAMMERS ? ` · Etkinlik: +${WIN_HAMMERS} çekiç` : '');
   $('again').textContent = won && k < STAGES.length ? 'Sonraki Aşama' : 'Tekrar Savaş';
   forestRun.next = won && k < STAGES.length ? k + 1 : k;
   o.hidden = false; $('again').focus();
