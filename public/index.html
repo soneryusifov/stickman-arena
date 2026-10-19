@@ -439,12 +439,14 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
   #battleScreen .skills .skill svg{width:2.5em;height:2.5em}
   #battleScreen .skills .skill .nm{font-size:1em}
 }
-/* kahraman plakası */
+/* kahraman plakaları: ekranın kenarlarında alt alta (kendi takımın solda, rakipler sağda), üst düğmelerin altından başlar */
 .plates{position:absolute;inset:0;pointer-events:none;z-index:2}
-.plate{--pc:var(--gold);position:absolute;transform:translate(0,-50%);font-size:clamp(9px,calc((.75 + .35 * var(--s,1)) * 1cqw),17px);display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
-  background:rgba(8,6,12,.8);border:1px solid var(--pc);border-radius:.45em;pointer-events:auto;cursor:pointer;white-space:nowrap;transition:box-shadow .2s}
+.pcol{position:absolute;top:calc(var(--crop,0px) + 1.4% + 46px);display:flex;flex-direction:column;gap:.45em;font-size:clamp(9px,1.02cqw,15px)}
+.pcol.l{left:1.2%;align-items:flex-start} .pcol.r{right:1.2%;align-items:flex-end}
+.plate{--pc:var(--gold);position:relative;display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
+  background:rgba(8,6,12,.8);border:1px solid var(--pc);border-radius:.45em;pointer-events:auto;cursor:pointer;white-space:nowrap;transition:box-shadow .2s,opacity .3s}
 .plate .portrait{width:2.9em;height:2.9em;border-width:1px;border-radius:.3em;box-shadow:none;flex:none}
-.plate .pb{display:flex;flex-direction:column;gap:.16em;width:11.2em;min-width:0} /* çubuklar eskisinden %70 uzun */
+.plate .pb{display:flex;flex-direction:column;gap:.16em;width:8.6em;min-width:0}
 .plate .pn{font-size:.72em;font-weight:700;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #000;line-height:1.1} .plate .pn b{color:var(--gold);font-family:var(--font-display)}
 .plate .bar{height:.85em;border-radius:.15em} .plate .bar span{font-size:.62em} /* can ve mana aynı kalınlıkta, ikisinde de sayı yazar */
 .plate.ally .bar.hp i{background:linear-gradient(#8af5a8,#33b85c 55%,#1f7a3c)}
@@ -454,8 +456,10 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .plate .st{font-style:normal;display:flex;gap:.3em;margin-left:.2em;font-size:.55em;font-weight:800;text-transform:uppercase} .plate .st i{font-style:normal}
 .plate.cur{box-shadow:0 0 0 1px var(--pc),0 0 1em var(--pc)}
 .plate.tgt{outline:2px solid #ff5a5a;outline-offset:1px} .plate.atgt{outline:2px solid #4be38a;outline-offset:1px}
-.plate.dead{display:none} .plate.pl-l{transform:translate(-100%,-50%);flex-direction:row-reverse;padding:.22em .22em .22em .4em}
-.plates.tight .plate .pn{display:none} .plates.tight .plate .portrait{width:2.3em;height:2.3em} .plates.tight .plate .pb{width:8.2em} .plates.tight .plate{gap:.25em;padding:.18em .3em .18em .18em}
+.plate.dead{opacity:.35;filter:grayscale(1);pointer-events:none} /* ölen kahraman listede soluk kalır */
+.pcol.r .plate{flex-direction:row-reverse;padding:.22em .22em .22em .4em} /* sağdakilerde portre dış kenarda */
+.plates.tight .pcol{gap:.35em} .plates.tight .plate .portrait{width:2.5em;height:2.5em} .plates.tight .plate .pb{width:7.4em} .plates.tight .plate{gap:.25em;padding:.18em .3em .18em .18em}
+.plates.tight .pcol.r .plate{padding:.18em .18em .18em .3em}
 /* savaşta açılan pencereler: ortada, ekranın yarısı */
 
 #battleScreen .overlay{background:rgba(6,5,10,.45);z-index:8}
@@ -464,7 +468,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
   .bctl .tbtn,.bctl .back{height:30px;min-width:30px;width:auto} .bctl .back{width:30px}
   .bset{min-width:120px;padding:6px;gap:4px} .bset .tbtn{min-height:28px;padding:2px 8px} .bset .tbtn::after{font-size:11px}
   #battleScreen .log{width:56%;font-size:9px} #battleScreen .log li:nth-child(n+3){display:none}
-  .plate{font-size:clamp(8px,calc((.95 + .4 * var(--s,1)) * 1cqw),13px)}
+  .pcol{top:calc(var(--crop,0px) + 1.4% + 36px);font-size:clamp(8px,1.25cqw,12px)} .plate .pb{width:6em} .plates.tight .plate .pb{width:5.4em} /* telefonda dar kartlar: hilaldeki kahramanların üstüne binmesin */
   #battleScreen .overlay .ocard{width:70%;min-height:60%;padding:12px}
 }
 .verbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6);font-weight:700}
@@ -883,7 +887,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=17"></script>
+<script src="i18n-dict.js?v=18"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
@@ -1225,9 +1229,9 @@ const potionHeal = a => 130 + 20 * (a - 1);             // 1: 130, 8: 270
 if (typeof SAVE.hammers !== 'number') SAVE.hammers = 1;
 delete SAVE.shards; SAVE.items = Array.isArray(SAVE.items) ? SAVE.items : []; // eşya parçalama kalktı: eski kayıtlardaki parçalar silinir
 T.forge = T.forge || 1;
-const FORGE_CLS_DIV = 5;
+const FORGE_CLS_DIV = 10;
 // dövme ihtimali: 2. kademe a, her üst kademe bir öncekinin r katı; kalan ihtimal de 2. kademenin (1. kademe herkeste var, dövmeden çıkmaz).
-// Sınıfa özel kipte 2-10. kademeler 5 kat düşük. Demirci seviyesi a'yı ve r'yi büyütür (Sv1: %25 / 0,5 → Sv8: %42,5 / 0,55).
+// Sınıfa özel kipte 2-10. kademeler 10 kat düşük. Demirci seviyesi a'yı ve r'yi büyütür (Sv1: %25 / 0,5 → Sv8: %42,5 / 0,55).
 function forgeOdds(L, own) {
   const a = .25 + .025 * (L - 1), r = .5 + .0071 * (L - 1), p = [0]; let s = 0;
   for (let n = 2; n <= 10; n++) { const v = a * r ** (n - 2) / (own ? FORGE_CLS_DIV : 1); p.push(v); s += v; }
@@ -1406,7 +1410,6 @@ function frame(t) {
         lctx.globalCompositeOperation = 'source-over'; ctx.drawImage(layer, 0, 0, W, H);
       } else Rig.draw(ctx, f.A, t, dt, f.A.x, gy, s, fx);
     }
-    placePlates();
   }
   ctx.globalCompositeOperation = 'lighter';
   for (let i = projs.length - 1; i >= 0; i--) {
@@ -2323,7 +2326,7 @@ function buyItem(k, to) {
 }
 /* ---------- Demirci: çekiçle ekipman dövme ----------
    1 çekiç = 1 eşya. Rastgele kipte herhangi bir sınıfın herhangi bir eşyası çıkar; sınıfa özel kipte kadroda seçili sınıfın eşyası
-   (üst kademe ihtimali 5 kat düşük). Yuva her iki kipte de rastgeledir. Sonuç: tak, envantere koy ya da sat (tüccar fiyatının yarısı); 1. kademe eşyanın değeri yoktur, atılır. */
+   (üst kademe ihtimali 10 kat düşük). Yuva her iki kipte de rastgeledir. Sonuç: tak, envantere koy ya da sat (tüccar fiyatının yarısı); 1. kademe eşyanın değeri yoktur, atılır. */
 const fmtPct = v => { const p = v * 100; return (p >= 10 ? Math.round(p) : p >= 1 ? +p.toFixed(1) : +p.toFixed(2)) + '%'; };
 function renderForge() {
   const key = chosen, L = T.forge, list = $('gearList'); list.innerHTML = ''; list.className = 'gearlist forgebox';
@@ -2345,7 +2348,7 @@ function renderForge() {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'fgbtn'; b.disabled = !can;
     b.innerHTML = `${svg(own ? 'anvil' : 'hammer')}<b></b><small></small><em>${Math.max(1, Math.min(forgeQty, SAVE.hammers))} çekiç</em>`;
     b.querySelector('b').textContent = own ? `${CLASSES[key].name} için döv` : 'Rastgele döv';
-    b.querySelector('small').textContent = own ? 'Yalnız bu sınıfın eşyası · üst kademe ihtimali 5 kat düşük' : 'Herhangi bir sınıfın eşyası · üst kademe ihtimali yüksek';
+    b.querySelector('small').textContent = own ? 'Yalnız bu sınıfın eşyası · üst kademe ihtimali 10 kat düşük' : 'Herhangi bir sınıfın eşyası · üst kademe ihtimali yüksek';
     b.title = can ? '' : 'Çekiç yok: orman ilk geçişleri, lig atlama, günün sandığı ya da tüccar';
     b.addEventListener('click', () => doForge(own));
     modes.appendChild(b);
@@ -2734,16 +2737,18 @@ const LAYOUTS = {
   classic: { path: CRESCENT_PATH, T: CRESCENT_T, depth: y => .9 + .1 * Math.max(0, Math.min(1, (y - 353) / (593 - 353))) },
   // arena3: sol hilalin orta çizgisi, alttaki uç (önde) → kenara doğru şişen kavis → üstteki uç (arkada)
   tall: { path: [[295, 548], [240, 535], [185, 512], [145, 480], [122, 440], [115, 395], [125, 350], [150, 305], [190, 262], [245, 228], [300, 205], [355, 192]],
-    T: { 1: [.02], 2: [0, 1], 3: [0, .5, 1], 4: [0, .33, .67, 1], 5: [0, .25, .5, .75, 1] }, // uçtan uca eşit aralık // küçük takımda üstteki daha aşağıda: büyük olduğu için başı taşmasın
+    // en öndeki uç (t < .22) boş kalır: ortadaki yetenek düğmeleri kahramanın üstüne binmesin; geri kalanı eşit aralık
+    T: { 1: [.3], 2: [.25, 1], 3: [.22, .61, 1], 4: [.22, .48, .74, 1], 5: [.22, .415, .61, .805, 1] },
     depth: y => .68 + .32 * Math.max(0, Math.min(1, (y - 192) / (548 - 192))) },
 };
 let LAYOUT = LAYOUTS.tall;
 const layoutFor = () => LAYOUTS.tall; // tüm arka planlar (arena3, kurt ini 2) aynı derin C hilal düzeninde
+// plakalar ekranın kenarında durduğu için hilalin dışa şişen kısmı (x < 270) içeri sıkıştırılır: oradaki kahramanlar plakaların altında kalmaz
 function arcSpot(n, slot, N) {
-  const [x, y] = pathPoint(LAYOUT.T[n][slot], LAYOUT.path);
+  const [x0, y] = pathPoint(LAYOUT.T[n][slot], LAYOUT.path), x = x0 < 270 ? 270 - (270 - x0) * .4 : x0;
   return { x, y, s: SIZE[N] * LAYOUT.depth(y) };
 }
-const SIZE = { 1: .95, 2: .84, 3: .74, 4: .66, 5: .6 };
+const SIZE = { 1: .76, 2: .67, 3: .59, 4: .53, 5: .48 }; // savaşta kahramanlar eskisinden %20 küçük
 // kalabalık takıma güç azaltma: (az / çok)^0.55 oranında can ve hasar (1v2: %68, 1v5: %41, 4v5: %88)
 const handicap = (mine, theirs) => mine > theirs ? Math.pow(theirs / mine, .55) : 1;
 const isAlive = f => f.hp > 0;
@@ -2830,13 +2835,15 @@ function pickTarget(t) {
 }
 
 /* ---------- HUD ---------- */
-// her kahramanın başının üstünde tek plaka: portre (basınca ekipman/değerler), can, mana, öfke noktaları
+// her kahramana bir plaka: portre (basınca ekipman/değerler), ad, can, mana, öfke noktaları.
+// Plakalar ekranın kenarlarında alt alta: kendi takımın solda, rakipler sağda (takım sırasıyla, sen en üstte)
 function buildHUD() {
   $('teamL').innerHTML = $('teamR').innerHTML = '';
-  const box = $('plates'); box.innerHTML = '';
+  const box = $('plates'); box.innerHTML = '<div class="pcol l"></div><div class="pcol r"></div>';
+  const colL = box.firstChild, colR = box.lastChild;
   for (const f of F.list) {
     const mine = f.side === 'player', u = document.createElement('div');
-    u.className = 'plate ' + (mine ? 'ally' : 'foe'); f.ui = u; u.style.setProperty('--s', f.sc);
+    u.className = 'plate ' + (mine ? 'ally' : 'foe'); f.ui = u;
     u.innerHTML = `<canvas class="portrait" width="72" height="72"></canvas><div class="pb"><div class="pn"><b>Sv ${f.lvl}</b> <span></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="fz">${'<i></i>'.repeat(FURY_HITS)}<em class="st"></em></div></div>`;
     u.querySelector('.pn span').textContent = f.name.replace(/^(Müttefik|Rakip) /, '');
     u.title = f.name; u.setAttribute('role', 'button'); u.tabIndex = 0; u.setAttribute('aria-label', (mine ? 'Takım arkadaşı: ' : 'Rakip: ') + f.name + ' (hedef seç)');
@@ -2847,17 +2854,7 @@ function buildHUD() {
     pc.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openInspect(f); } });
     u.addEventListener('click', () => pickTarget(f));
     u.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickTarget(f); } });
-    box.appendChild(u);
-  }
-}
-// plakalar kahramanı izler (yakın dövüşte yürürken de)
-function placePlates() {
-  for (const f of F.list) {
-    const u = f.ui; if (!u) continue;
-    // plaka başın yanında, ortadaki boş zemine doğru (hilalde arkadaki kahramanın üstüne binmesin)
-    const side = f.A.face, x = f.A.x + f.A.off * f.A.face + side * 62 * f.sc, y = footY(f) - (f.topH || 362) * f.sc * .8;
-    u.style.left = (x / W * 100) + '%'; u.style.top = Math.max(4, y / H * 100) + '%';
-    u.classList.toggle('pl-l', side < 0);
+    (mine ? colL : colR).appendChild(u);
   }
 }
 const statusChips = f => (f.shield ? `<i style="color:${f.shieldColor}">${f.shield >= 1 ? 'Kaçış' : 'Kalkan'}</i>` : '') + (f.rage ? '<i style="color:#ff5a3a">Öfke</i>' : '')
@@ -3780,8 +3777,11 @@ const STAGES = [
   { n: 'Cadının Sunağı', pack: ['witch', 'treant', 'wisp', 'wisp', 'mushroom'], boss: true },
 ];
 const stagePow = k => 1 + .17 * (k - 1); // aşama güçlendikçe can ve hasar artar
+// ormanda her aşamada tek canavar çıkar (sürünün ilki; boss aşamasında boss). Aşama eskisi kadar zor kalsın diye o tek canavar
+// sürünün toplam gücünü taşır: eski n'li sürü kalabalık cezasıyla n^0,45 canavar kadardı, tek canavarın canı ve hasarı o kadar katlanır
+const packPow = st => Math.pow(st.pack.length, .45);
 function mkMonster(m, team) {
-  const d = MONSTERS[m.id], k = m.stage || 1, pw = stagePow(k), hp = Math.round(d.hp * pw), topH = Math.round(d.h * 300 + 50);
+  const d = MONSTERS[m.id], k = m.stage || 1, pw = stagePow(k) * (m.pow || 1), hp = Math.round(d.hp * pw), topH = Math.round(d.h * 300 + 50);
   return { team, side: 'enemy', ctrl: 'ai', id: m.id, mon: d, stage: k, cls: { name: d.name, hp: d.hp }, gear: null, lvl: m.lvl || k * 2, name: d.name,
     hp, maxHp: hp, mp: d.mp, maxMp: d.mp, regen: d.regen, crit: d.crit, dodge: d.dodge, dmgMul: pw * .95,
     skills: [...d.skills.map((s, i) => ({ ...s, color: s.color || d.color, snd: m.id + '_' + i })), { ...POTION, heal: 0 }], healMul: 1, heals: 0, // ses: assets/sfx/skills/<canavar>_<0-3>.mp3 (yoksa genel vuruş sesi)
@@ -3925,9 +3925,8 @@ function renderForest() {
   STAGES.forEach((st, i) => {
     const k = i + 1, open = k <= F0.best + 1, done = k <= F0.best;
     const el = document.createElement('div'); el.className = 'fst' + (st.boss ? ' boss' : '') + (done ? ' done' : '') + (open ? '' : ' locked');
-    const names = [...new Set(st.pack)].map(id => MONSTERS[id].name).join(', ');
     el.innerHTML = `<div class="fn"><b>${k}</b><span></span></div><small></small><em>${done ? '✔ Geçildi' : open ? '🎁 İlk geçiş sandığı' : '🔒 Kilitli'}</em>`;
-    el.querySelector('.fn span').textContent = st.n + (st.boss ? ' · BOSS' : ''); el.querySelector('small').textContent = `${st.pack.length} canavar: ${names}`;
+    el.querySelector('.fn span').textContent = st.n + (st.boss ? ' · BOSS' : ''); el.querySelector('small').textContent = `Canavar: ${MONSTERS[st.pack[0]].name}`; // her aşamada tek canavar
     const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = open ? 'Savaş' : 'Kilitli'; b.disabled = !open;
     b.addEventListener('click', () => { closeForest(); startForest(k); });
     el.appendChild(b); box.appendChild(el);
@@ -3937,29 +3936,29 @@ async function startForest(k) {
   const st = STAGES[k - 1]; if (!st || k > SAVE.forest.best + 1) return;
   const pool = ORDER.filter(x => x !== chosen).sort(() => Math.random() - .5), allies = pool.slice(0, forestSize - 1), L = leagueOf(SAVE.league);
   try { await Promise.all([chosen, ...allies].flatMap(x => [Rig.load(x), Rig.loadTiers(x)])); } catch (e) { return; }
-  for (const x of [chosen, ...allies, ...new Set(st.pack)]) Sfx.loadSkills(x);
-  for (const x of new Set(st.pack)) Sfx.loadVoices(x);
+  for (const x of [chosen, ...allies, st.pack[0]]) Sfx.loadSkills(x);
+  Sfx.loadVoices(st.pack[0]);
   forestRun = { k, size: forestSize }; pvp = null; crng = Math.random; lastDuel = false;
   $('again').textContent = 'Tekrar Savaş'; $('change').hidden = false; $('change').textContent = 'Orman Haritası';
   showScreen('battle');
   newBattle({
     A: [{ id: chosen, gear: gearOf(chosen), ctrl: 'me', lvl: myLevel(), name: 'Sen · ' + CLASSES[chosen].name }, ...allies.map(id => ({ id, gear: foeGear(L), lvl: myLevel(), name: 'Müttefik ' + CLASSES[id].name }))],
-    B: st.pack.map(id => ({ id, mon: true, stage: k, lvl: k * 2 })),
+    B: [{ id: st.pack[0], mon: true, stage: k, lvl: k * 2, pow: packPow(st) }],
   });
   log(`Orman · ${k}. aşama: ${st.n}${st.boss ? ' (BOSS)' : ''}. Hedefini seçmek için bir canavara dokun. İlk hamle senin.`);
-  setTimeout(() => { if (forestRun && forestRun.k === k) for (const id of new Set(st.pack)) if (Sfx.voice(id, 'howl', .7)) break; }, 700); // sürü ulur
+  setTimeout(() => { if (forestRun && forestRun.k === k) Sfx.voice(st.pack[0], 'howl', .7); }, 700); // canavar ulur
   beginTurn(nextUp('B'), true);
 }
 async function forestEnd(winTeam) {
   const won = winTeam === F.me.team, { k } = forestRun, st = STAGES[k - 1], F0 = SAVE.forest;
   if (!won) { const w = F.B.find(f => isAlive(f)); if (w) setTimeout(() => Sfx.voice(w.id, 'howl', .8), 600); } // canavarlar kazanınca uluma
   for (const f of F[winTeam]) if (isAlive(f)) Rig.play(f.A, 'win');
-  log(won ? 'Sürü dağıldı. Aşama geçildi!' : 'Orman seni geri püskürttü. Tekrar dene!', won ? 'player' : 'enemy');
+  log(won ? 'Canavar yenildi. Aşama geçildi!' : 'Orman seni geri püskürttü. Tekrar dene!', won ? 'player' : 'enemy');
   const lv0 = xpLevel(SAVE.xp), gain = won ? 50 + 35 * k : 10 + 4 * k, xp = won ? 25 + 12 * k : 8;
   const drops = {}, add = (m, n) => { drops[m] = (drops[m] || 0) + n; };
   let chest = 0, hamm = 0;
   if (won) {
-    for (const f of F.B) { const d = f.mon; if (d.boss) { add('relic', 1); add(d.mat, 2); } else if (Math.random() < .55) add(d.mat, 1); }
+    for (const id of st.pack) { const d = MONSTERS[id]; if (d.boss) { add('relic', 1); add(d.mat, 2); } else if (Math.random() < .55) add(d.mat, 1); } // tek canavar sürünün tamamı kadar düşürür
     if (k > F0.best) { chest = 150 * k; add(st.pack.map(id => MONSTERS[id].mat)[0], 2); if (st.boss) add('relic', 1); F0.best = k; hamm = st.boss ? 2 : 1; SAVE.hammers += hamm; } // ilk geçiş sandığı (+çekiç)
   }
   for (const [m, n] of Object.entries(drops)) F0.mats[m] = (F0.mats[m] || 0) + n; // düşenler envantere
