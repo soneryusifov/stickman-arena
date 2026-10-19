@@ -54,7 +54,8 @@ body{font-family:var(--font-body);font-size:15px;background:radial-gradient(120%
 .stats dt{color:var(--muted)} .stats dd{margin:0}
 .stats .sb{height:6px;background:#221d30;border-radius:3px;overflow:hidden}
 .stats .sb i{display:block;height:100%;background:var(--c);box-shadow:0 0 8px var(--c)}
-.stats .sv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.stats .sv{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stats .sv em{font-style:normal;color:#6dff95;margin-left:.3em} /* eşyadan gelen */
 .loadnote{font-size:13px;color:var(--muted);text-align:center;margin:0}
 .gear{display:flex;flex-direction:column;gap:6px}
 .gearhead{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:var(--muted)}
@@ -264,7 +265,7 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 @keyframes trspin{to{transform:rotate(1turn)}}
 @media (prefers-reduced-motion:reduce){.tr9::before,.tr10::before{animation:none}}
 .iside{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}
-.istats{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0;font-size:14px} .istats dt{color:var(--muted)} .istats dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
+.istats{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0;font-size:14px} .istats.stats{grid-template-columns:auto minmax(2.5em,1fr) auto;align-items:center} .istats.stats dd.sv{text-align:right} .istats dt{color:var(--muted)} .istats dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
 .iskills{flex:1 1 0;min-height:0;container-type:size}
 .iskg{--n:2;--s:min(calc((100cqw - 6px * (var(--n) - 1)) / var(--n)),calc((100cqh - 6px * (4 / var(--n) - 1)) / (4 / var(--n))));display:grid;grid-template-columns:repeat(var(--n),var(--s));grid-auto-rows:var(--s);gap:6px}
 .isk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 4px;text-align:center;border-radius:6px;border:1px solid #2e2840;
@@ -754,7 +755,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
       <div class="ibody">
         <canvas id="inspCv" width="320" height="400" aria-hidden="true"></canvas>
         <div class="iitems" id="inspItems"></div>
-        <div class="iside"><dl class="istats" id="inspStats"></dl><div class="iskills" id="inspSkills"></div></div>
+        <div class="iside"><dl class="istats stats" id="inspStats"></dl><div class="iskills" id="inspSkills"></div></div>
       </div>
     </div>
   </div>
@@ -887,7 +888,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=18"></script>
+<script src="i18n-dict.js?v=19"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
@@ -957,52 +958,53 @@ const BURN = { turns: 2, dmg: 12, label: 'Yanık', color: '#ff9a4a' }, POISON = 
 // Her sınıfın bir rolü var. pow: hasar katsayısı (tank ve şifacılar düşük, savaşçı ve yıkıcı yüksek).
 // crit/dodge: 1. seviyedeki kritik ve kaçınma; cm/dm: 50. seviyede ulaştıkları değer (arası doğrusal artar).
 // Kritik ve kaçınmayı yalnız seviye artırır, ekipman artırmaz; kaçınma hiçbir zaman %30'u geçmez.
+// hr: can yenileme; her tur, seviyeyle büyüyen temel canın bu oranı kadar can gelir (eşya canı sayılmaz). Tank ve şifacılarda yüksek.
 // hp ve hpg (seviye başına can artışı) düello simülasyonuyla ayarlandı: eşit seviye ve ekipmanda her sınıf ~%50 kazanır.
 const CLASSES = {
-  tank:       { name: 'Tank', role: 'Koruyucu (tank)', desc: 'En çok canı olan ön saf. Hasarı düşük ama dayanıklı; kalkanıyla rakibini sersemletir.', hp: 977, mp: 100, regen: 12, crit: .05, dodge: .03,
-    cm: .1, dm: .06, pow: .7, hpg: .0447, hpe: 1.0014,
+  tank:       { name: 'Tank', role: 'Koruyucu (tank)', desc: 'En çok canı olan ön saf. Hasarı düşük ama dayanıklı; kalkanıyla rakibini sersemletir.', hp: 861, mp: 100, regen: 12, crit: .05, dodge: .03,
+    cm: .1, dm: .06, pow: .7, hr: .02, hpg: .0415, hpe: 1.053,
     skills: [M('Kılıç Darbesi', 0, [38, 48], 'sword'), G('Kalkan Duruşu', 20, .75, 'shield'), M('Kalkan Vuruşu', 25, [28, 36], 'bash', { stun: true }), M('Öfke Darbesi', 50, [72, 92], 'whirl', { big: true })] },
-  mage:       { name: 'Mage', role: 'Büyücü (uzak hasar)', desc: 'Uzaktan büyü yağdırır. Canı az ama büyü hasarı çok yüksek.', hp: 412, mp: 200, regen: 18, crit: .12, dodge: .04,
-    cm: .26, dm: .1, pow: 1.1, hpg: .037, hpe: 1.0989,
+  mage:       { name: 'Mage', role: 'Büyücü (uzak hasar)', desc: 'Uzaktan büyü yağdırır. Canı az ama büyü hasarı çok yüksek.', hp: 419, mp: 200, regen: 18, crit: .12, dodge: .04,
+    cm: .26, dm: .1, pow: 1.1, hr: .01, hpg: .0359, hpe: 1.0376,
     skills: [Rg('Büyü Oku', 0, [26, 34], 'arcane', 'bolt'), Rg('Gizem Patlaması', 30, [50, 62], 'arcane', 'bolt', { big: true }), G('Büyü Kalkanı', 20, .5, 'shield'), Rg('Meteor', 70, [100, 125], 'meteor', 'meteor', { big: true, color: '#ff7a2a' })] },
-  warrior:    { name: 'Warrior', role: 'Savaşçı (yakın hasar)', desc: 'Kılıç ve baltayla sert vurur, rakibini kanatır. Hasarı yüksek.', hp: 455, mp: 110, regen: 12, crit: .12, dodge: .06,
-    cm: .26, dm: .12, pow: 1.12, hpg: .0306, hpe: 1.0141,
+  warrior:    { name: 'Warrior', role: 'Savaşçı (yakın hasar)', desc: 'Kılıç ve baltayla sert vurur, rakibini kanatır. Hasarı yüksek.', hp: 463, mp: 110, regen: 12, crit: .12, dodge: .06,
+    cm: .26, dm: .12, pow: 1.12, hr: .012, hpg: .0298, hpe: .9687,
     skills: [M('Çift Darbe', 0, [40, 50], 'sword'), M('Yarık Açan', 25, [34, 42], 'axe', { dot: BLEED }), G('Çapraz Savunma', 20, .6, 'shield'), M('Kasırga', 55, [80, 98], 'whirl', { big: true })] },
-  vampire:    { name: 'Vampire', role: 'Kan düellocusu', desc: 'Hızlı saplamalarla vurur, verdiği hasarın bir kısmını can olarak emer. Çeviktir.', hp: 361, mp: 140, regen: 14, crit: .15, dodge: .1,
-    cm: .3, dm: .22, pow: 1, hpg: .008, hpe: .9041,
+  vampire:    { name: 'Vampire', role: 'Kan düellocusu', desc: 'Hızlı saplamalarla vurur, verdiği hasarın bir kısmını can olarak emer. Çeviktir.', hp: 381, mp: 140, regen: 14, crit: .15, dodge: .1,
+    cm: .3, dm: .22, pow: 1, hr: .01, hpg: .0095, hpe: .736,
     skills: [M('Saplama', 0, [32, 40], 'sword'), M('Kan Emme', 30, [40, 50], 'fang', { drain: .5 }), G('Savuşturma', 20, .6, 'shield'), M('Kan Hasadı', 60, [80, 100], 'fang', { drain: .4, big: true })] },
-  elf:        { name: 'Elf', role: 'Okçu (uzak hasar)', desc: 'Uzaktan isabetli oklar atar; kritiği yüksek, çevik. Zehirli oklarla eritir.', hp: 391, mp: 140, regen: 14, crit: .2, dodge: .12,
-    cm: .38, dm: .26, pow: 1.05, hpg: .0158, hpe: .7997,
+  elf:        { name: 'Elf', role: 'Okçu (uzak hasar)', desc: 'Uzaktan isabetli oklar atar; kritiği yüksek, çevik. Zehirli oklarla eritir.', hp: 412, mp: 140, regen: 14, crit: .2, dodge: .12,
+    cm: .38, dm: .26, pow: 1.05, hr: .01, hpg: .0168, hpe: .7696,
     skills: [Rg('Ok At', 0, [30, 38], 'bow', 'arrow'), Rg('Zehirli Ok', 25, [30, 40], 'drop', 'arrow', { dot: POISON }), G('Kaçın', 25, 1, 'moon'), Rg('Delici Ok', 60, [85, 105], 'arrow', 'arrow', { big: true })] },
-  support:    { name: 'Support', role: 'Şifacı (destek)', desc: 'Hasarı düşük, canı yüksek; güçlü iyileştirmesiyle savaşı uzatır.', hp: 1209, mp: 180, regen: 18, crit: .05, dodge: .05,
-    cm: .1, dm: .1, pow: .72, hpg: .064, hpe: 1.052,
+  support:    { name: 'Support', role: 'Şifacı (destek)', desc: 'Hasarı düşük, canı yüksek; güçlü iyileştirmesiyle savaşı uzatır.', hp: 1026, mp: 180, regen: 18, crit: .05, dodge: .05,
+    cm: .1, dm: .1, pow: .72, hr: .02, hpg: .0563, hpe: 1.0689,
     skills: [M('Topuz', 0, [26, 34], 'hammer'), Rg('Kutsal Işık', 25, [40, 50], 'sun', 'bolt', { color: '#ffe08a', anim: 'block' }), HL('İyileştir', 30, 140, 'heart'), M('Kutsal Ceza', 60, [80, 100], 'sun', { big: true })] },
-  assassin:   { name: 'Assassin', role: 'Suikastçı', desc: 'Kritiği ve kaçınması en yüksek sınıf; zehirli hançerlerle saldırır.', hp: 331, mp: 130, regen: 14, crit: .25, dodge: .18,
-    cm: .45, dm: .3, pow: 1.08, hpg: .0105, hpe: .6422,
+  assassin:   { name: 'Assassin', role: 'Suikastçı', desc: 'Kritiği ve kaçınması en yüksek sınıf; zehirli hançerlerle saldırır.', hp: 350, mp: 130, regen: 14, crit: .25, dodge: .18,
+    cm: .45, dm: .3, pow: 1.08, hr: .01, hpg: .0109, hpe: .5305,
     skills: [M('Çift Saplama', 0, [30, 38], 'dagger'), M('Zehirli Bıçak', 25, [26, 34], 'drop', { dot: POISON }), G('Gölge Adımı', 30, 1, 'moon'), M('Ölüm İşareti', 55, [85, 105], 'target', { big: true })] },
-  ranger:     { name: 'Ranger', role: 'Avcı (kontrol)', desc: 'Uzun mızrağıyla vurur, kapan fırlatıp rakibini kıstırır.', hp: 653, mp: 120, regen: 12, crit: .13, dodge: .1,
-    cm: .28, dm: .2, pow: .98, hpg: .0279, hpe: .8708,
+  ranger:     { name: 'Ranger', role: 'Avcı (kontrol)', desc: 'Uzun mızrağıyla vurur, kapan fırlatıp rakibini kıstırır.', hp: 658, mp: 120, regen: 12, crit: .13, dodge: .1,
+    cm: .28, dm: .2, pow: .98, hr: .015, hpg: .0265, hpe: .9014,
     skills: [M('Mızrak', 0, [34, 44], 'arrow'), Rg('Kapan At', 30, [22, 30], 'trap', 'trap', { stun: true, anim: 'block' }), HL('Bandaj', 25, 100, 'heart', { anim: null }), M('Ölümcül Mızrak', 55, [80, 100], 'target', { big: true })] },
-  paladin:    { name: 'Paladin', role: 'Kutsal şövalye (yarı tank)', desc: 'Sağlam ve dengeli; kutsal kalkanı hem korur hem iyileştirir. Hasarı orta.', hp: 608, mp: 140, regen: 14, crit: .07, dodge: .04,
-    cm: .14, dm: .08, pow: .82, hpg: .0415, hpe: 1.0778,
+  paladin:    { name: 'Paladin', role: 'Kutsal şövalye (yarı tank)', desc: 'Sağlam ve dengeli; kutsal kalkanı hem korur hem iyileştirir. Hasarı orta.', hp: 618, mp: 140, regen: 14, crit: .07, dodge: .04,
+    cm: .14, dm: .08, pow: .82, hr: .015, hpg: .0381, hpe: 1.0813,
     skills: [M('Çekiç', 0, [36, 46], 'hammer'), G('Kutsal Kalkan', 25, .6, 'shield', { heal: 40 }), M('Sersemleten Çekiç', 30, [34, 44], 'bash', { stun: true }), M('Yargı Çekici', 60, [85, 105], 'sun', { big: true })] },
-  berserker:  { name: 'Berserker', role: 'Yıkıcı (en yüksek hasar)', desc: 'Savunması zayıf ama en sert vuran sınıf; öfkelenince ezer geçer.', hp: 393, mp: 90, regen: 12, crit: .15, dodge: .03,
-    cm: .3, dm: .08, pow: 1.18, hpg: .0279, hpe: 1.0641,
+  berserker:  { name: 'Berserker', role: 'Yıkıcı (en yüksek hasar)', desc: 'Savunması zayıf ama en sert vuran sınıf; öfkelenince ezer geçer.', hp: 402, mp: 90, regen: 12, crit: .15, dodge: .03,
+    cm: .3, dm: .08, pow: 1.18, hr: .012, hpg: .0275, hpe: 1.0993,
     skills: [M('Yarma', 0, [42, 54], 'axe'), { name: 'Öfke', kind: 'rage', anim: 'block', cost: 20, icon: 'rage' }, M('Kan Çılgınlığı', 25, [36, 46], 'axe', { dot: BLEED }), M('Kıyım', 50, [90, 115], 'whirl', { big: true })] },
-  druid:      { name: 'Druid', role: 'Doğa şifacısı (destek)', desc: 'Sarmaşıklarla rakibini bağlar, doğanın gücüyle iyileşir. Hasarı düşük.', hp: 772, mp: 170, regen: 18, crit: .07, dodge: .07,
-    cm: .14, dm: .14, pow: .78, hpg: .049, hpe: 1.0231,
+  druid:      { name: 'Druid', role: 'Doğa şifacısı (destek)', desc: 'Sarmaşıklarla rakibini bağlar, doğanın gücüyle iyileşir. Hasarı düşük.', hp: 714, mp: 170, regen: 18, crit: .07, dodge: .07,
+    cm: .14, dm: .14, pow: .78, hr: .02, hpg: .0437, hpe: 1.0576,
     skills: [Rg('Sarmaşık', 0, [26, 34], 'leaf', 'vines'), Rg('Diken Ağı', 30, [30, 40], 'leaf', 'vines', { stun: true }), HL('Doğanın Şifası', 30, 140, 'heart'), Rg('Doğanın Gazabı', 65, [90, 110], 'leaf', 'vines', { big: true })] },
-  necromancer:{ name: 'Necromancer', role: 'Can emici büyücü', desc: 'Ruh oklarıyla vurur, rakibinin canını emip kendine aktarır.', hp: 436, mp: 180, regen: 18, crit: .1, dodge: .05,
-    cm: .22, dm: .1, pow: 1, hpg: .0374, hpe: 1.0463,
+  necromancer:{ name: 'Necromancer', role: 'Can emici büyücü', desc: 'Ruh oklarıyla vurur, rakibinin canını emip kendine aktarır.', hp: 448, mp: 180, regen: 18, crit: .1, dodge: .05,
+    cm: .22, dm: .1, pow: 1, hr: .01, hpg: .0376, hpe: 1.0612,
     skills: [Rg('Ruh Oku', 0, [26, 34], 'skull', 'bolt'), Rg('Can Emme', 30, [36, 46], 'skull', 'bolt', { drain: 1, anim: 'block' }), Rg('Lanet', 25, [20, 28], 'skull', 'bolt', { dot: POISON }), Rg('Ölüm Dalgası', 65, [95, 115], 'skull', 'bolt', { big: true })] },
-  monk:       { name: 'Monk', role: 'Dövüş ustası (çevik)', desc: 'Bo sopasıyla hızlı vurur, darbelerden kolayca kaçar, odaklanarak toparlanır.', hp: 524, mp: 120, regen: 14, crit: .12, dodge: .14,
-    cm: .26, dm: .28, pow: .95, hpg: .0226, hpe: .7829,
+  monk:       { name: 'Monk', role: 'Dövüş ustası (çevik)', desc: 'Bo sopasıyla hızlı vurur, darbelerden kolayca kaçar, odaklanarak toparlanır.', hp: 528, mp: 120, regen: 14, crit: .12, dodge: .14,
+    cm: .26, dm: .28, pow: .95, hr: .015, hpg: .0234, hpe: .8216,
     skills: [M('Sopa Dalgası', 0, [32, 42], 'fist'), HL('Odak', 25, 70, 'heart', { block: .4 }), M('Sersemletici Darbe', 25, [28, 36], 'fist', { stun: true }), M('Yüz Darbe', 55, [80, 100], 'whirl', { big: true })] },
-  inquisitor: { name: 'Inquisitor', role: 'Avcı yargıç (uzak kontrol)', desc: 'Arbaletiyle uzaktan vurur, gümüş kazığıyla rakibini sersemletir.', hp: 392, mp: 130, regen: 14, crit: .15, dodge: .07,
-    cm: .3, dm: .14, pow: 1, hpg: .0218, hpe: .9662,
+  inquisitor: { name: 'Inquisitor', role: 'Avcı yargıç (uzak kontrol)', desc: 'Arbaletiyle uzaktan vurur, gümüş kazığıyla rakibini sersemletir.', hp: 423, mp: 130, regen: 14, crit: .15, dodge: .07,
+    cm: .3, dm: .14, pow: 1, hr: .01, hpg: .0209, hpe: .9924,
     skills: [Rg('Arbalet', 0, [30, 38], 'crossbow', 'bolt'), Rg('Kutsal Ok', 25, [40, 50], 'crossbow', 'bolt', { dot: BURN }), M('Gümüş Kazık', 30, [36, 46], 'dagger', { stun: true, anim: 'block' }), Rg('Arınma', 60, [85, 105], 'sun', 'bolt', { big: true })] },
-  shadow:     { name: 'Shadow', role: 'Gölge savaşçısı (çevik)', desc: 'Dumana dönüşüp rakibinin önünde belirir, iki orakla keser. Kaçınması yüksek.', hp: 378, mp: 140, regen: 14, crit: .2, dodge: .16,
-    cm: .4, dm: .3, pow: 1.05, hpg: .0119, hpe: .6111,
+  shadow:     { name: 'Shadow', role: 'Gölge savaşçısı (çevik)', desc: 'Dumana dönüşüp rakibinin önünde belirir, iki orakla keser. Kaçınması yüksek.', hp: 404, mp: 140, regen: 14, crit: .2, dodge: .16,
+    cm: .4, dm: .3, pow: 1.05, hr: .01, hpg: .0123, hpe: .5712,
     skills: [M('Gölge Kesiği', 0, [34, 44], 'moon'), G('Gölgeye Karış', 25, 1, 'moon'), M('Karanlık Yara', 30, [30, 38], 'dagger', { dot: BLEED }), M('Gölge Fırtınası', 60, [85, 105], 'whirl', { big: true })] }
 };
 const ORDER = ['tank', 'warrior', 'mage', 'vampire', 'elf', 'support', 'assassin', 'ranger', 'paladin', 'berserker', 'druid', 'necromancer', 'monk', 'inquisitor', 'shadow'];
@@ -1160,7 +1162,7 @@ const PERK = {
   knee: { hp: 125 }, boot: { hp: 80 }, main: { dmg: 25 }, off: { hp: 120, dmg: 8 }, cape: { mp: 60, regen: 5 }
 };
 const perkVal = (k, s, n) => Math.round(PERK[k][s] * 1.25 ** (Math.max(1, Math.min(10, n)) - 10));
-const PERK_TXT = { hp: 'can', dmg: 'hasar', mp: 'mana', regen: 'yenilenme' };
+const PERK_TXT = { hp: 'can', dmg: 'hasar', mp: 'mana', regen: 'mana yenileme' };
 const perkText = (k, n) => Object.keys(PERK[k]).map(s => [s, perkVal(k, s, n)]).filter(([, v]) => v > 0).map(([s, v]) => `+${v} ${PERK_TXT[s]}`).join(', ') || '—';
 let SAVE = { gold: 300, gear: {}, town: null };
 try { const s = JSON.parse(localStorage.getItem('sa.save')); if (s && typeof s.gold === 'number') SAVE = { ...s, gear: s.gear || {}, league: s.league || 0 }; } catch (e) {}
@@ -1335,7 +1337,7 @@ function gearStats(c, g, lvl = 1) {
   const b = { hp: 0, dmg: 0, mp: 0, regen: 0 }, L = Math.max(0, (lvl | 0) - 1), t = Math.min(1, L / (LV_TOP - 1));
   for (const k of ITEMS) for (const s of Object.keys(PERK[k])) b[s] += perkVal(k, s, g[k]);
   const hp0 = c.hp * (1 + c.hpg * (LV_TOP - 1) * (L / (LV_TOP - 1)) ** c.hpe), mp0 = c.mp * (1 + LV_BONUS.mp * L);
-  return { hp: Math.round(hp0 + b.hp), mp: Math.round(mp0 + b.mp), regen: c.regen + b.regen, dmgAdd: b.dmg,
+  return { hp: Math.round(hp0 + b.hp), mp: Math.round(mp0 + b.mp), regen: c.regen + b.regen, hregen: Math.round(hp0 * (c.hr || 0)), dmgAdd: b.dmg, gb: b, // gb: eşyalardan gelen
     crit: c.crit + (c.cm - c.crit) * t, dodge: Math.min(DODGE_CAP, c.dodge + (c.dm - c.dodge) * t), dmgMul: c.pow * (1 + LV_BONUS.dmg * L) };
 }
 // rakip, oyuncunun ortalama seviyesinde gelir; her eşya ±1 oynar
@@ -1343,7 +1345,7 @@ function foeGear(L) { const out = {}; ITEMS.forEach(k => out[k] = Math.max(1, Ma
 const mkFighter = (id, team, gear, alch = T.alch, o = {}) => {
   const c = CLASSES[id], lvl = Math.max(1, Math.min(99, o.lvl | 0 || 1)), st = gearStats(c, gear, lvl);
   return { team, side: 'enemy', ctrl: o.ctrl || 'ai', id, cls: c, gear, lvl, name: o.name || c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
-    regen: st.regen, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd, skills: [...c.skills.map((s, i) => ({ ...s, color: s.color || glowOf(id), snd: id + '_' + i })), { ...POTION, heal: potionHeal(alch) }],
+    regen: st.regen, hregen: st.hregen, gb: st.gb, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd, skills: [...c.skills.map((s, i) => ({ ...s, color: s.color || glowOf(id), snd: id + '_' + i })), { ...POTION, heal: potionHeal(alch) }],
     healMul: 1 + (st.hp / c.hp - 1) * .5, heals: 0,
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: potionCount(alch || 1),
     A: Rig.actor(id, 260, 1, gear) }; // konum ve yön newBattle'da dizilime göre verilir
@@ -2482,11 +2484,21 @@ function renderGear() {
 }
 function renderStats() {
   const c = CLASSES[chosen], xp = xpProgress(SAVE.xp), st = gearStats(c, gearOf(chosen), xp.lvl);
-  const row = (l, v, m, t) => `<dt>${l}</dt><dd><div class="sb"><i style="width:${Math.min(100, Math.round(v / m * 100))}%"></i></div></dd><dd class="sv">${t}</dd>`;
-  $('dStats').innerHTML = row('Seviye', xp.cur, xp.need, `${xp.lvl} · ${xp.cur}/${xp.need} EXP`) + row('Can', st.hp, MAXS.hp, st.hp) + row('Mana', st.mp, MAXS.mp, st.mp) + row('Kritik', st.crit, MAXS.crit, Math.round(st.crit * 100) + '%')
-    + row('Kaçınma', st.dodge, MAXS.dodge, Math.round(st.dodge * 100) + '%') + row('Hasar gücü', st.dmgMul, MAXS.dmg, Math.round(st.dmgMul * 100) + '%') + row('Ek hasar', st.dmgAdd, MAXS.add, '+' + st.dmgAdd);
+  $('dRole').textContent = `${c.role} · Sv ${xp.lvl} · ${xp.cur}/${xp.need} EXP`;
+  $('dStats').innerHTML = statRows({ ...st, maxHp: st.hp, maxMp: st.mp, skills: c.skills });
 }
-const MAXS = { hp: 1500, mp: 290, crit: .45, dodge: .30, dmg: 1.6, add: 43 }; // çubukların dolu sayıldığı değerler
+// her kahraman ve canavar için aynı yedi değer, renkli çubukla. Eşyadan gelen kısım yeşil "+sayı" (değer = kendi + eşya).
+// Hasar: temel vuruşun (ilk saldırı yeteneği) ortalaması; eşyanın ek hasarı da güç çarpanıyla büyüyerek "+" kısmında.
+const MAXS = { hp: 1500, mp: 290, regen: 25, hregen: 40, crit: .45, dodge: .30, dmg: 250 }; // çubukların dolu sayıldığı değerler
+const basicHit = (f, add) => { const sk = f.skills.find(s => s.dmg); return sk ? Math.round(((sk.dmg[0] + sk.dmg[1]) / 2 + add) * (f.dmgMul || 1) * DMG_SCALE) : 0; };
+function statRows(f) {
+  const g = f.gb || {}, k = f.hand || 1, gHp = Math.round((g.hp || 0) * k), gDmg = basicHit(f, f.dmgAdd || 0) - basicHit(f, 0);
+  const row = (l, v, m, base, plus, unit = '') => `<dt>${l}</dt><dd><div class="sb"><i style="width:${Math.min(100, Math.round(v / m * 100))}%"></i></div></dd><dd class="sv">${base}${unit}${plus > 0 ? `<em>+${plus}</em>` : ''}</dd>`;
+  return row('Can', f.maxHp, MAXS.hp, f.maxHp - gHp, gHp) + row('Mana', f.maxMp, MAXS.mp, f.maxMp - (g.mp || 0), g.mp || 0)
+    + row('Mana yenileme', f.regen, MAXS.regen, f.regen - (g.regen || 0), g.regen || 0) + row('Can yenileme', f.hregen || 0, MAXS.hregen, f.hregen || 0, 0)
+    + row('Kritik', f.crit, MAXS.crit, Math.round(f.crit * 100), 0, '%') + row('Kaçınma', f.dodge, MAXS.dodge, Math.round(f.dodge * 100), 0, '%')
+    + row('Hasar', basicHit(f, f.dmgAdd || 0), MAXS.dmg, basicHit(f, 0), gDmg);
+}
 let pickToken = 0;
 async function pick(key) {
   chosen = key; const tok = ++pickToken;
@@ -2780,7 +2792,7 @@ function newBattle(cfg) {
     const { x, y, s } = arcSpot(F[f.team].length, f.slot, N), left = f.side === 'player';
     f.A.x = left ? x : W - x; f.A.face = left ? 1 : -1; f.gy = f.A.gy = y; f.sc = f.A.sc = s;
     const k = handicap(F[f.team].length, F[otherTeam(f.team)].length);
-    if (k < 1) { f.hp = f.maxHp = Math.round(f.maxHp * k); f.dmgMul *= k; f.hand = k; }
+    if (k < 1) { f.hp = f.maxHp = Math.round(f.maxHp * k); f.hregen = Math.round((f.hregen || 0) * k); f.dmgMul *= k; f.hand = k; }
   }
   S2 = { turn: 1, moves: 0, cur: null, busy: false, over: false, waiting: false, timer: 15, gid: S2.gid + 1, ptr: { A: -1, B: -1 }, foe: null, ally: null, mv: 0 };
   parts.length = texts.length = projs.length = 0; flash = null;
@@ -3035,6 +3047,8 @@ async function beginTurn(f, first) {
   S2.cur = f; S2.remote = false;
   if (!first) {
     f.mp = Math.min(f.maxMp, f.mp + f.regen);
+    const hr = Math.min(f.hregen || 0, f.maxHp - f.hp); // can yenileme
+    if (hr > 0 && f.hp > 0) { f.hp += hr; floatText(f.A, '+' + hr, '#4be38a', 24); }
     if (f.dot) { // süreli hasar (yanık, zehir, kanama)
       const d = f.dot; f.hp = Math.max(0, f.hp - d.dmg); f.A.hitT = now();
       floatText(f.A, '-' + d.dmg, d.color, 30); burst(body(f)[0], body(f)[1], d.color, 14, 160);
@@ -3158,7 +3172,7 @@ async function inspectPeer(o, name) {
   const gear = cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(pr.g) ? pr.g[i] : 1]))), lvl = Math.max(1, Math.min(99, +pr.pl || 1)), st = gearStats(c, gear, lvl);
   try { await Promise.all([Rig.load(id), Rig.loadTiers(id)]); } catch (e) { return; }
   Sfx.play('click');
-  openInspect({ id, cls: c, name: name || nameOfPeer(o.p), lvl, gear, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp, regen: st.regen, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd,
+  openInspect({ id, cls: c, name: name || nameOfPeer(o.p), lvl, gear, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp, regen: st.regen, hregen: st.hregen, gb: st.gb, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd,
     skills: c.skills.map(s => ({ ...s, color: s.color || glowOf(id) })), potions: null }, `${c.name} · ${c.role} · Sv ${lvl} · Lig ${+pr.lg || 1} · ekipman ortalaması ${gearLevel(gear)}`);
 }
 function openInspect(f, sub) {
@@ -3177,10 +3191,7 @@ function openInspect(f, sub) {
     b.textContent = names[k] || k; s.textContent = perkText(k, n);
     fr.append(cv, tn); it.append(fr, b, s); grid.appendChild(it);
   }
-  const rows = [['Can', `${f.hp} / ${f.maxHp}`], ['Mana', `${f.mp} / ${f.maxMp}`], ['Yenilenme', `+${f.regen} / tur`], ['Hasar gücü', Math.round(f.dmgMul * 100) + '%'], ['Ek hasar', '+' + (f.dmgAdd || 0)],
-    ['Kritik', Math.round(f.crit * 100) + '%'], ['Kaçınma', Math.round(f.dodge * 100) + '%']];
-  if (f.potions != null) rows.push(['İksir', `${f.potions} × +${f.skills[4] ? f.skills[4].heal : 0}`]);
-  $('inspStats').innerHTML = ''; for (const [a, v] of rows) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = a; dd.textContent = v; $('inspStats').append(dt, dd); }
+  $('inspStats').style.setProperty('--c', glowOf(f.id)); $('inspStats').innerHTML = statRows(f);
   skillTiles(f.skills.slice(0, 4));
   inspA = Rig.actor(f.id, 0, 1, f.gear);
   $('insp').hidden = false; $('inspClose').focus();
@@ -3195,9 +3206,7 @@ function openMonInspect(f) {
   const it = document.createElement('div'); it.className = 'imon';
   const cv = document.createElement('canvas'); cv.width = cv.height = 240; Rig.portrait(cv, f.id);
   const p = document.createElement('p'); p.textContent = d.desc; it.append(cv, p); grid.appendChild(it);
-  const rows = [['Can', `${f.hp} / ${f.maxHp}`], ['Mana', `${f.mp} / ${f.maxMp}`], ['Yenilenme', `+${f.regen} / tur`], ['Hasar gücü', Math.round(f.dmgMul * 100) + '%'],
-    ['Kritik', Math.round(f.crit * 100) + '%'], ['Kaçınma', Math.round(f.dodge * 100) + '%']];
-  $('inspStats').innerHTML = ''; for (const [a, v] of rows) { const dt = document.createElement('dt'), dd = document.createElement('dd'); dt.textContent = a; dd.textContent = v; $('inspStats').append(dt, dd); }
+  $('inspStats').style.setProperty('--c', d.color); $('inspStats').innerHTML = statRows(f);
   skillTiles(f.skills.slice(0, 4));
   inspA = null; $('insp').hidden = false; $('inspClose').focus();
 }
@@ -3751,13 +3760,13 @@ const MONSTERS = {
     skills: [M('Zehirli Isırık', 0, [22, 30], 'fang', { dot: POISON }), Rg('Ağ Fırlat', 25, [16, 22], 'trap', 'trap', { stun: true }), M('Sokma', 15, [28, 36], 'dagger'), M('Ölümcül Isırık', 55, [58, 74], 'fang', { big: true, dot: POISON })] },
   goblin:  { name: 'Goblin', desc: 'Sinsi ve hızlı; hançeriyle kanatır.', hp: 250, mp: 110, regen: 14, crit: .22, dodge: .16, h: .72, color: '#6fae4a', mat: 'silk',
     skills: [M('Hançer', 0, [24, 32], 'dagger'), M('Sinsi Bıçak', 25, [28, 36], 'dagger', { dot: BLEED }), G('Saklan', 20, .6, 'moon'), M('Arkadan Vuruş', 50, [62, 80], 'target', { big: true })] },
-  mushroom:{ name: 'Mantar Adam', desc: 'Zehirli sporlar saçar, kökleriyle iyileşir.', hp: 347, mp: 140, regen: 16, crit: .08, dodge: .05, h: .76, color: '#e0503c', mat: 'ess',
+  mushroom:{ name: 'Mantar Adam', desc: 'Zehirli sporlar saçar, kökleriyle iyileşir.', hp: 347, mp: 140, regen: 16, hr: .02, crit: .08, dodge: .05, h: .76, color: '#e0503c', mat: 'ess',
     skills: [Rg('Spor Bulutu', 0, [18, 26], 'drop', 'bolt', { dot: POISON, color: '#c4ff6a' }), HL('Kök Tutun', 30, 90, 'heart'), M('Şapka Darbesi', 15, [26, 34], 'bash'), Rg('Spor Patlaması', 55, [50, 64], 'drop', 'bolt', { big: true, color: '#c4ff6a' })] },
   boar:    { name: 'Yaban Domuzu', desc: 'Kalın postu var; toslayıp sersemletir.', hp: 444, mp: 100, regen: 12, crit: .10, dodge: .04, h: .6, color: '#8a5a3a', mat: 'pelt',
     skills: [M('Toslama', 0, [30, 40], 'bash'), M('Diş Darbesi', 30, [34, 44], 'axe', { stun: true }), M('Eşelenme', 15, [26, 34], 'bash'), M('Hücum', 50, [66, 84], 'whirl', { big: true })] },
   wisp:    { name: 'Orman Ruhu', desc: 'Uçuşan ışık; vurması zor, uzaktan büyü atar.', hp: 210, mp: 180, regen: 18, crit: .14, dodge: .26, h: .7, float: true, color: '#7dffe0', mat: 'ess',
     skills: [Rg('Ruh Oku', 0, [24, 32], 'arcane', 'bolt', { color: '#7dffe0' }), G('Saydamlaş', 25, 1, 'moon'), Rg('Soğuk Işık', 20, [28, 36], 'arcane', 'bolt', { color: '#7dffe0' }), Rg('Işık Patlaması', 60, [64, 82], 'sun', 'bolt', { big: true, color: '#b0fff0' })] },
-  treant:  { name: 'Ent', desc: 'Yürüyen ağaç; kabuğu çok sert, kökleriyle ezer.', hp: 682, mp: 110, regen: 12, crit: .06, dodge: .02, h: 1.25, color: '#6b5a3a', mat: 'ess',
+  treant:  { name: 'Ent', desc: 'Yürüyen ağaç; kabuğu çok sert, kökleriyle ezer.', hp: 682, mp: 110, regen: 12, hr: .02, crit: .06, dodge: .02, h: 1.25, color: '#6b5a3a', mat: 'ess',
     skills: [M('Dal Savuruşu', 0, [34, 44], 'hammer'), G('Kabuk', 20, .6, 'shield'), M('Kök Dolaması', 30, [28, 36], 'vines', { stun: true }), M('Kök Ezme', 55, [72, 92], 'whirl', { big: true })] },
   alpha:   { name: 'Alfa Kurtadam', desc: 'Sürünün lideri. Öfkelenince çok sert vurur.', hp: 1223, mp: 140, regen: 16, crit: .20, dodge: .10, h: 1.2, color: '#3a3440', mat: 'pelt', boss: true,
     skills: [M('Pençe', 0, [40, 52], 'fang'), { name: 'Kan Uluması', kind: 'rage', anim: 'block', cost: 25, icon: 'rage' }, M('Yırtıcı', 30, [42, 54], 'fang', { dot: BLEED }), M('Parçalayıcı', 55, [86, 108], 'fang', { big: true })] },
@@ -3783,7 +3792,7 @@ const packPow = st => Math.pow(st.pack.length, .45);
 function mkMonster(m, team) {
   const d = MONSTERS[m.id], k = m.stage || 1, pw = stagePow(k) * (m.pow || 1), hp = Math.round(d.hp * pw), topH = Math.round(d.h * 300 + 50);
   return { team, side: 'enemy', ctrl: 'ai', id: m.id, mon: d, stage: k, cls: { name: d.name, hp: d.hp }, gear: null, lvl: m.lvl || k * 2, name: d.name,
-    hp, maxHp: hp, mp: d.mp, maxMp: d.mp, regen: d.regen, crit: d.crit, dodge: d.dodge, dmgMul: pw * .95,
+    hp, maxHp: hp, mp: d.mp, maxMp: d.mp, regen: d.regen, hregen: Math.round(hp * (d.hr || .01)), crit: d.crit, dodge: d.dodge, dmgMul: pw * .95, // can yenileme: canın %1'i (hr)
     skills: [...d.skills.map((s, i) => ({ ...s, color: s.color || d.color, snd: m.id + '_' + i })), { ...POTION, heal: 0 }], healMul: 1, heals: 0, // ses: assets/sfx/skills/<canavar>_<0-3>.mp3 (yoksa genel vuruş sesi)
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: 0, topH, A: monActor(m.id, topH) };
 }
