@@ -13,8 +13,9 @@ const CL = window.RIG_CLASSES;
 
 const L = window.RIG_BODY.L, BODY = window.RIG_BODY;
 const EYES = [2, -2, .5]; // bütün sınıflarda aynı göz yeri; başlıklar kafaya göre yerleştirilir
-const COMMON_BASE = { x: 0, lift: 0, rot: 0, lean: 0, head: 0, crouch: 4,
-  uaS: -16, laS: 36, main: 40, uaK: 20, laK: 64, off: 0, offTilt: 0, footF: 30, footB: -30, liftF: 0, liftB: 0 };
+// duruş: ayaklar kalçaların altında, kalça bacak boyuna yakın yükseklikte → bacaklar neredeyse düz (eskisi crouch 4, ayaklar ±30: dizler bükük)
+const COMMON_BASE = { x: 0, lift: 0, rot: 0, lean: 0, head: 0, crouch: -5,
+  uaS: -16, laS: 36, main: 40, uaK: 20, laK: 64, off: 0, offTilt: 0, footF: 12, footB: -26, liftF: 0, liftB: 0 };
 
 /* ---------- Görseller ---------- */
 const loadImg = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('yüklenemedi: ' + src)); i.src = src; });
@@ -218,7 +219,7 @@ function poseOf(A, t) {
   const p = an.loop ? (A.at % an.dur) / an.dur : Math.min(1, A.at / an.dur);
   const P = { ...B, _p: p };
   const br = Math.sin(t / 380 + A.x);
-  if (A.cur === 'idle') Object.assign(P, { crouch: 4 + br * 1.5, uaS: B.uaS + br * 2, uaK: B.uaK - br * 1.5, main: B.main + br * 2, head: br });
+  if (A.cur === 'idle') Object.assign(P, { crouch: B.crouch + br * .5 - .5, uaS: B.uaS + br * 2, uaK: B.uaK - br * 1.5, main: B.main + br * 2, head: br });
   else if (A.cur === 'walk') {
     const s = Math.sin(p * Math.PI * 2), c = Math.cos(p * Math.PI * 2);
     const k = A.stride || 1; // adım boyu çarpanı (kasabada uzun adım)
@@ -229,7 +230,7 @@ function poseOf(A, t) {
 function legIK(hip, ankle) {
   const t = L.thigh, s = L.shin;
   let dx = ankle[0] - hip[0], dy = ankle[1] - hip[1], d = Math.hypot(dx, dy);
-  const maxD = t + s - .5;
+  const maxD = t + s - .05; // düz bacak: neredeyse tam uzanabilir
   if (d > maxD) { const k = maxD / d; dx *= k; dy *= k; d = maxD; ankle = [hip[0] + dx, hip[1] + dy]; }
   const base = Math.atan2(dy, dx), a = Math.acos(Math.min(1, Math.max(-1, (t * t + d * d - s * s) / (2 * t * d))));
   const k1 = [hip[0] + Math.cos(base + a) * t, hip[1] + Math.sin(base + a) * t];
