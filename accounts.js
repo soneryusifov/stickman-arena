@@ -10,6 +10,19 @@ const HALL_COST = [0, 400, 800, 1400, 2200, 3200, 4500, 6000];
 const MINE_COST = [0, 200, 400, 700, 1100, 1600, 2200, 3000];
 const ALCH_COST = [0, 250, 500, 850, 1300, 1900, 2600, 3500];
 const ITEMS = ['head', 'chest', 'sleeve', 'bracer', 'glove', 'knee', 'boot', 'main', 'off', 'cape'];
+// eşya satışı (oyundaki SHOP_PRICE / SELL_PRICE ile aynı): tüccar fiyatının yarısı
+const ITEM_W = { head: .74, chest: 1.36, sleeve: .42, bracer: .75, glove: .86, knee: .53, boot: .34, main: 3.08, off: 1.49, cape: .43 };
+const SHOP_PRICE = (k, n) => n <= 1 ? 0 : Math.round(900 * 2 ** (n - 2) * ITEM_W[k] / 10) * 10;
+const SELL = (k, n) => Math.floor(SHOP_PRICE(k, n) / 2), MAX_SALE = SELL('main', 10);
+// iki kayıt arasında satıştan gelebilecek en fazla altın: dövülüp hemen satılmış olabilecek her eşya en pahalısı kadar,
+// envanterden eksilen eşyalar kendi yarı fiyatı kadar
+function saleAllowance(prev, next) {
+  const forged = Math.max(0, ((next.stats || {}).upgrades || 0) - ((prev.stats || {}).upgrades || 0), (prev.hammers || 0) - (next.hammers || 0));
+  const left = new Map(); for (const it of next.items || []) { const k = it.c + it.k + it.n; left.set(k, (left.get(k) || 0) + 1); }
+  let v = Math.min(forged, 5000) * MAX_SALE;
+  for (const it of prev.items || []) { const k = it.c + it.k + it.n; if (left.get(k) > 0) left.set(k, left.get(k) - 1); else v += SELL(it.k, it.n); }
+  return v;
+}
 
 const nameKey = n => n.toLocaleLowerCase('tr');
 const NAME_RE = /^[\p{L}\p{N}_]{3,16}$/u;
@@ -147,7 +160,7 @@ function makeApi(store) {
         if (prev && !ADMINS.has(u._id)) {
           // altın, geçen süreye göre makul olandan hızlı artamaz; seviyeler bedelsiz atlanamaz
           const mins = (Date.now() - (u.savedAt || 0)) / 60000;
-          const allowed = Math.min(250000, 8000 + mins * 1500);
+          const allowed = Math.min(250000, 8000 + mins * 1500) + saleAllowance(prev, next);
           // sıralama değerleri de oynanan süreyle sınırlı: bir savaş en az ~15 sn sürer
           const a = rankOf(prev), b = rankOf(next);
           const badRank = b.wins - a.wins > 5 + mins * 4 || b.duels - a.duels > 2 + mins * 2 || b.league - a.league > b.wins - a.wins + 1 || (next.xp || 0) - (prev.xp || 0) > 200 + mins * 150;

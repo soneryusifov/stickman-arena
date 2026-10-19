@@ -868,7 +868,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=14"></script>
+<script src="i18n-dict.js?v=15"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
@@ -1124,6 +1124,7 @@ const ITEM_W = { head: .74, chest: 1.36, sleeve: .42, bracer: .75, glove: .86, k
 const SHOP_BASE = 900, SHOP_STEP = 2;
 const SHOP_PRICE = (k, n) => n <= 1 ? 0 : Math.round(SHOP_BASE * SHOP_STEP ** (n - 2) * ITEM_W[k] / 10) * 10;
 const HAMMER_PRICE = 1500; // tüccarda çekiç
+const SELL_PRICE = (k, n) => Math.floor(SHOP_PRICE(k, n) / 2); // eşya satışı: tüccar fiyatının yarısı (1. kademe satılmaz)
 const goldShort = v => v >= 1e4 ? Math.round(v / 1e3) + 'k' : v >= 1e3 ? (Math.round(v / 100) / 10) + 'k' : String(v); // kutu içi kısa fiyat
 // iki yönlü arena ligi: galibiyet +1, yenilgi -1 puan; her 3 puan bir lig; rakip seviyesi ve ödül lige göre
 const LEAGUE_STEP = 3;
@@ -2347,9 +2348,10 @@ function forgeUp() {
 }
 // zar: kademe ihtimallerine göre; sınıf ve yuva rastgele (sınıfa özelde seçili sınıf)
 function rollTier(L, own) { const p = forgeOdds(L, own); let r = Math.random(); for (let i = 0; i < 10; i++) { r -= p[i]; if (r < 0) return i + 1; } return 1; }
-let forged = null;
+let forged = null, forgeOwn = false; // forgeOwn: son dövmenin kipi (tekrar döv aynı kiple)
 async function doForge(own) {
   if (SAVE.hammers < 1 || forged) return;
+  forgeOwn = own;
   const c = own ? chosen : ORDER[Math.floor(Math.random() * ORDER.length)], k = ITEMS[Math.floor(Math.random() * ITEMS.length)], n = rollTier(T.forge, own);
   SAVE.hammers--; SAVE.stats.upgrades++; forged = { c, k, n }; persist(); track('upgrade');
   try { await Promise.all([Rig.load(c), Rig.loadTiers(c)]); } catch (e) {}
@@ -2367,17 +2369,32 @@ function showForged() {
   const add = (txt, cls, fn, dis) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = txt; b.disabled = !!dis; b.addEventListener('click', fn); row.appendChild(b); return b; };
   const first = better ? add(`Tak (${CLASSES[it.c].name})`, '', () => forgedTo('equip')) : null;
   const keep = add(room ? 'Envantere koy' : 'Envanter dolu', 'ghost', () => forgedTo('keep'), !room);
+  const sp = SELL_PRICE(it.k, it.n);
+  add(sp ? `Sat · +${sp} altın` : 'Satılmaz (1. kademe)', 'ghost', () => forgedTo('sell'), !sp);
   add(`Parçala · +${it.n} parça`, 'ghost', () => forgedTo('break'));
   $('fres').hidden = false; (first || (room ? keep : row.lastChild)).focus();
 }
-// dövülen eşyanın sonu: tak (eskisi 2. kademe ve üstüyse envantere), envantere koy ya da parçala
+// dövülen eşyanın sonu: tak (eskisi 2. kademe ve üstüyse envantere), envantere koy, sat (yarı fiyat) ya da parçala.
+// Pencere kapanmaz: ne olduğu yazılır ve çekiç kaldıysa aynı kiple "Tekrar döv" çıkar
 function forgedTo(how) {
   const it = forged; if (!it) return;
-  if (how === 'equip') equipItem(it);
-  else if (how === 'keep' && invFree() > 0) SAVE.items.push({ ...it, new: 1 });
-  else { addShards(it.n); Sfx.play('coin'); }
-  forged = null; $('fres').hidden = true; persist(); invBadge();
+  let msg;
+  if (how === 'equip') { equipItem(it); msg = 'Takıldı'; }
+  else if (how === 'keep' && invFree() > 0) { SAVE.items.push({ ...it, new: 1 }); msg = 'Envantere kondu'; }
+  else if (how === 'sell' && SELL_PRICE(it.k, it.n) > 0) { const v = SELL_PRICE(it.k, it.n); SAVE.gold += v; Sfx.play('coin'); msg = `Satıldı · +${v} altın`; }
+  else { addShards(it.n); Sfx.play('coin'); msg = `Parçalandı · +${it.n} parça`; }
+  forged = null; persist(); invBadge();
   if (screen === 'select') { renderGear(); renderStats(); }
+  forgeNext(msg);
+}
+function forgeNext(msg) {
+  $('fresT').textContent = msg;
+  $('fresP').textContent = SAVE.hammers > 0 ? `${SAVE.hammers} çekiç kaldı · ${SAVE.gold} Altın` : 'Çekiç kalmadı';
+  const row = $('fresBtns'); row.innerHTML = '';
+  const add = (txt, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (cls ? ' ' + cls : ''); b.textContent = txt; b.addEventListener('click', fn); row.appendChild(b); return b; };
+  const again = SAVE.hammers > 0 ? add(forgeOwn ? `${CLASSES[chosen].name} için tekrar döv` : 'Tekrar rastgele döv', '', () => doForge(forgeOwn)) : null;
+  const close = add('Kapat', 'ghost', () => { $('fres').hidden = true; });
+  (again || close).focus();
 }
 function equipItem(it) {
   const g = gearOf(it.c), old = g[it.k];
@@ -3803,7 +3820,10 @@ function invInfo() {
     eq.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); delete it.new; equipItem(it); persist(); invSel = null; renderInventory(); invBadge(); });
     const br = document.createElement('button'); br.type = 'button'; br.className = 'btn ghost'; br.textContent = `Parçala · +${it.n} parça`;
     br.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); addShards(it.n); Sfx.play('coin'); persist(); invSel = null; renderInventory(); invBadge(); });
-    acts.append(eq, br); box.append(big, b, p, dl, acts); return;
+    const sp = SELL_PRICE(it.k, it.n), sl = document.createElement('button'); sl.type = 'button'; sl.className = 'btn ghost';
+    sl.textContent = sp ? `Sat · +${sp} altın` : 'Satılmaz (1. kademe)'; sl.disabled = !sp;
+    sl.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); SAVE.gold += sp; Sfx.play('coin'); persist(); invSel = null; renderInventory(); invBadge(); if (screen === 'select') { renderGear(); renderStats(); } });
+    acts.append(eq, sl, br); box.append(big, b, p, dl, acts); return;
   }
   const key = e.t === 'mat' ? e.m : e.t, inf = INV_INFO[key], name = e.t === 'mat' ? MATS[key][0] : inf.name;
   box.style.setProperty('--c', e.t === 'mat' ? MATS[key][1] : inf.color);
@@ -3816,7 +3836,7 @@ function invInfo() {
   } else row('Adet', key === 'ham' ? String(SAVE.hammers) : `${SAVE.shards}/${SHARDS_PER_HAMMER}`);
   box.append(big, b, p, dl);
 }
-$('fres').addEventListener('keydown', e => { if (e.key === 'Escape') forgedTo(invFree() > 0 ? 'keep' : 'break'); }); // kapatınca: yer varsa envantere, yoksa parçala
+$('fres').addEventListener('keydown', e => { if (e.key !== 'Escape') return; if (forged) forgedTo(invFree() > 0 ? 'keep' : 'break'); $('fres').hidden = true; }); // kapatınca: yer varsa envantere, yoksa parçala
 $('invBtn').addEventListener('click', openInventory);
 $('invClose').addEventListener('click', closeInventory);
 $('inv').addEventListener('click', e => { if (e.target === $('inv')) closeInventory(); });
