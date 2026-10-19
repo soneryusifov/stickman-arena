@@ -874,7 +874,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
 <script src="tiers.js"></script>
 <script src="rig.js?v=3"></script>
-<script src="audio.js"></script>
+<script src="audio.js?v=2"></script>
 <script src="monsters.js?v=19"></script>
 <script>
 (() => {
@@ -1566,6 +1566,11 @@ const SCENES = {
     doors: [{ x: 800, to: 'champions', name: 'Şampiyon Salonu', painted: true, ly: 150 }], npcs: [{ k: 'arena', x: 600, y: 452, cls: 'warrior', face: 1, name: 'Arena Görevlisi' }] },
 };
 // büyük haritada "yakında" bölgeleri: ad, x, y, bağlandığı yer (sahne kimliği ya da başka bir "yakında" bölgenin adı)
+// bölge müzikleri (assets/music): aynı temadaki bölgeler aynı parçayı paylaşır, aralarında yürürken müzik kesilmez
+const AREA_MUSIC = { hall: 'kasaba', square: 'kasaba', market: 'kasaba', tower: 'kasaba', castle: 'kale', arenagate: 'kale', champions: 'kale',
+  chapel: 'sapel', graveyard: 'sapel', harbor: 'liman', seacave: 'liman', swamp: 'bataklik', mineroad: 'dag', mountpass: 'dag', crystal: 'kristal',
+  forest: 'orman', wolftrail: 'orman', spiderwood: 'orman', mushwood: 'orman', goblinlair: 'orman' };
+const areaMusic = () => AREA_MUSIC[me.sc] || 'kasaba';
 const MAP_SOON = []; // tüm bölgeler dolu; yeni bölge eklenecekse buraya
 const monSign = n => { const b = SAVE.forest.best, k = n.stage; return `${STAGES[k - 1].n} · ${k}. aşama` + (k <= b ? ' ✔' : k > b + 1 ? ' 🔒' : ''); };
 const npcSign = k => k === 'hall' ? `Belediye · Sv ${T.hall}` : k === 'mine' ? `Altın Madeni · Sv ${T.mine} · ${mineStored()} altın` : k === 'alch' ? `Simyacı · Sv ${T.alch}`
@@ -1730,6 +1735,7 @@ function goScene(to, via) {
 function arrive(tr) {
   const S = SCENES[tr.to];
   me.sc = tr.to; setFloor(S);
+  if (screen === 'lobby') Sfx.music(areaMusic()); // bölge değişince müzik de değişir (aynı temadaysa sürer)
   const from = tr.from, back = S.doors.find(d => d.to === from), down = (S.downs || []).find(d => d.to === from);
   const edge = S.left === from ? 'L' : S.right === from ? 'R' : null, pref = tr.via === 'door' ? ['door', 'edge', 'down'] : tr.via === 'down' ? ['down', 'door', 'edge'] : ['edge', 'door', 'down'];
   const how = tr.via === 'tp' ? 'tp' : pref.find(k => k === 'edge' ? edge : k === 'door' ? back : down) || 'mid';
@@ -2424,7 +2430,7 @@ function showScreen(name) {
   $('backBtn').hidden = name === 'lobby';
   if (name !== 'town') { delete $('town').dataset.only; delete $('townScreen').dataset.only; }
   $('speedBtn').hidden = name !== 'battle'; $('helpBtn').hidden = name !== 'town' && name !== 'lobby';
-  Sfx.music(name === 'battle' ? 'battle' : 'town');
+  Sfx.music(name === 'battle' ? (forestRun ? 'ormansavas' : 'arena') : name === 'lobby' ? areaMusic() : 'kasaba');
   $('backBtn').setAttribute('aria-label', name === 'battle' ? 'Karakter seçimine dön' : 'Meydana dön');
   $('plaque').textContent = name === 'town' ? 'KASABA' : name === 'lobby' ? 'KASABA MEYDANI' : name === 'battle' ? (pvp ? (pvp.kind === 'team' ? 'TAKIM MAÇI (' + pvp.mode + ')' : 'DÜELLO') : 'SAVAŞ ARENASI (' + battleMode + ')') : mode === 'smith' ? 'DEMİRCİ' : mode === 'shop' ? 'TÜCCAR' : 'ARENA · KARAKTER SEÇ';
   if (name === 'town') renderTown();

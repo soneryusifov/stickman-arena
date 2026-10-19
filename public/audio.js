@@ -1,13 +1,14 @@
 /* Stickman Arena sesleri: dosya kullanmadan Web Audio ile üretilen ortaçağ temalı efektler ve müzik.
-   Sfx.play(ad) efekt çalar, Sfx.music('town' | 'battle' | null) müziği değiştirir.
+   Sfx.play(ad) efekt çalar, Sfx.music(ad | null) müziği değiştirir. Bölge ve savaş müzikleri assets/music/{ad}.mp3 dosyalarıdır
+   (dikişsiz döner); dosyası olmayan parça için eski çalgı müziği ('town' ya da 'battle') çalar.
    Tarayıcılar sesi ancak ilk dokunuş/tuştan sonra açtığı için motor o an kurulur.
    Çalgılar: lavta (Karplus-Strong tel modeli), kaval, çarklı lir demi, borazan, koro, def, savaş davulu;
    efektlerde çelik, örs, çan ve tahta kalkan sesleri. */
 (() => {
-let ctx = null, master, sfxBus, musBus, verb;
+let ctx = null, master, sfxBus, musBus, musFileBus, verb;
 const st = { sfx: true, music: true, track: null };
 try { st.sfx = localStorage.getItem('sa.sfx') !== '0'; st.music = localStorage.getItem('sa.music') !== '0'; } catch (e) {}
-const MUS_VOL = .38, SFX_VOL = .75;
+const MUS_VOL = .38, SFX_VOL = .75, MUS_FILE_VOL = .55; // dosya müziği kendi yankısıyla gelir: salon yankısına gitmez
 
 function init() {
   if (ctx) return true;
@@ -19,6 +20,7 @@ function init() {
   verb = ctx.createConvolver(); verb.buffer = hallIR(1.8); const vg = ctx.createGain(); vg.gain.value = .32; verb.connect(vg); vg.connect(master);
   sfxBus = ctx.createGain(); sfxBus.gain.value = st.sfx ? SFX_VOL : 0; sfxBus.connect(master);
   musBus = ctx.createGain(); musBus.gain.value = st.music ? MUS_VOL : 0; musBus.connect(master);
+  musFileBus = ctx.createGain(); musFileBus.gain.value = st.music ? MUS_FILE_VOL : 0; musFileBus.connect(master);
   const s1 = ctx.createGain(); s1.gain.value = .25; sfxBus.connect(s1); s1.connect(verb);
   const s2 = ctx.createGain(); s2.gain.value = .55; musBus.connect(s2); s2.connect(verb);
   return true;
@@ -32,7 +34,7 @@ function unlock() {
   if (!init()) return;
   if (ctx.state === 'suspended') ctx.resume();
   loadFiles();
-  if (st.track && !sched) startMusic(st.track);
+  if (st.track && !sched && !fileCur) switchMusic(st.track);
 }
 addEventListener('pointerdown', unlock, { capture: true });
 addEventListener('keydown', unlock, { capture: true });
@@ -312,16 +314,79 @@ function stopMusic() {
   for (const n of droneNodes) { try { if (n.g) n.g.gain.setTargetAtTime(0.0001, now(), .2); n.o.stop(now() + .8); } catch (e) {} }
   droneNodes = [];
 }
+/* ---------- bölge müzikleri: assets/music/{ad}.mp3 ----------
+   Parça kesintisiz döner ve sonu başına dikişsiz bağlanır: başa ve sona yakın, ses zarfı ve vuruşları en çok benzeyen iki an (A, B)
+   bulunur; A–B arası yeni bir tampona kopyalanır, son X saniyesi A'dan önceki X saniyeyle yumuşakça karıştırılır. Tampon sonundan
+   başına atladığında müzik A'da kaldığı yerden sürer. Parçalar arası geçiş de yumuşaktır (eski azalırken yeni yükselir). */
+const MUS_FILES = new Set(['kasaba', 'kale', 'sapel', 'liman', 'bataklik', 'dag', 'kristal', 'orman', 'arena', 'ormansavas']);
+const MUS_SYNTH = name => SONGS[name] ? name : /arena|savas|battle/.test(name) ? 'battle' : 'town'; // dosyası yoksa çalgı müziği
+const MBUF = {}; // ad -> Promise<{ b, gain, A, B } | null>
+let fileCur = null, mTok = 0;
+function loopify(raw) {
+  const sr = raw.sampleRate, ch = raw.numberOfChannels, n = raw.length, hop = Math.round(sr / 100), X = 1.5;
+  // 10 ms'lik ses zarfı (E) ve vuruş izi (O: zarfın artışı)
+  const K = Math.floor(n / hop), E = new Float32Array(K), O = new Float32Array(K), chans = [];
+  for (let c = 0; c < ch; c++) chans.push(raw.getChannelData(c));
+  let tot = 0;
+  for (let k = 0; k < K; k++) { let s = 0; for (let i = k * hop, e = i + hop; i < e; i++) { let v = 0; for (let c = 0; c < ch; c++) v += chans[c][i]; v /= ch; s += v * v; } E[k] = Math.sqrt(s / hop); tot += s; }
+  for (let k = 1; k < K; k++) O[k] = Math.max(0, E[k] - E[k - 1]);
+  const rms = Math.sqrt(tot / (K * hop));
+  // aday A'lar baştaki ilk saniyelerde (giriş ve kısma dışında), B'ler son %40'ta (son 2.5 sn hariç); 3 sn'lik pencere benzerliği
+  const W = 150, sim = (p, q) => { let s = 0, pa = 0, qb = 0; for (let j = -W; j < W; j++) { const x = O[p + j] * 4 + E[p + j], y = O[q + j] * 4 + E[q + j]; s += x * y; pa += x * x; qb += y * y; } return s / Math.sqrt(pa * qb + 1e-12); };
+  // en iyi benzerlikten en çok 0.03 aşağıda kalanlar arasından en uzun döngü seçilir (parça kısa döngüde çabuk tekrar etmesin)
+  const cands = []; let best = -1, A = 0, B = 0;
+  for (let ak = Math.ceil((X + 1.5) * 100); ak <= Math.min(K / 4, 700); ak += 25)
+    for (let bk = Math.floor(K * .6); bk < K - 250 - W; bk += 1) { const s = sim(ak, bk); cands.push([s, ak, bk]); if (s > best) best = s; }
+  for (const [s, ak, bk] of cands) if (s >= best - .03 && (!B || bk - ak > B - A)) { A = ak; B = bk; }
+  if (!B) return { b: raw, gain: Math.min(3, .14 / (rms || 1)), A: 0, B: raw.duration };
+  const a0 = A * hop, b0 = B * hop, L = b0 - a0, xn = Math.round(X * sr), out = ctx.createBuffer(ch, L, sr);
+  for (let c = 0; c < ch; c++) {
+    const d = chans[c], o = out.getChannelData(c);
+    o.set(d.subarray(a0, b0));
+    for (let j = 0; j < xn; j++) { const t = .5 - .5 * Math.cos(Math.PI * j / xn); o[L - xn + j] = d[b0 - xn + j] * (1 - t) + d[a0 - xn + j] * t; }
+  }
+  return { b: out, gain: Math.min(3, .14 / (rms || 1)), A: a0 / sr, B: b0 / sr, score: sim(A, B) };
+}
+function loadMusic(name) {
+  if (!MBUF[name]) MBUF[name] = (async () => {
+    try { const r = await fetch(`assets/music/${name}.mp3?v=1`); if (!r.ok) return null; return loopify(await ctx.decodeAudioData(await r.arrayBuffer())); }
+    catch (e) { return null; }
+  })();
+  return MBUF[name];
+}
+function stopFile(fade = 1.2) {
+  if (!fileCur) return;
+  const { src, g } = fileCur; fileCur = null;
+  try { g.gain.cancelScheduledValues(now()); g.gain.setValueAtTime(g.gain.value, now()); g.gain.linearRampToValueAtTime(0.0001, now() + fade); src.stop(now() + fade + .05); } catch (e) {}
+}
+async function switchMusic(name) {
+  const tok = ++mTok;
+  stopFile(); stopMusic();
+  if (!name) return;
+  if (MUS_FILES.has(name)) {
+    const m = await loadMusic(name);
+    if (tok !== mTok) return; // bu arada başka parçaya geçildi
+    if (m) {
+      const src = ctx.createBufferSource(), g = ctx.createGain();
+      src.buffer = m.b; src.loop = true; src.connect(g); g.connect(musFileBus);
+      g.gain.setValueAtTime(0.0001, now()); g.gain.linearRampToValueAtTime(m.gain, now() + 1.5);
+      src.start(); fileCur = { name, src, g };
+      return;
+    }
+  }
+  startMusic(MUS_SYNTH(name));
+}
 function music(name) {
   if (st.track === name) return;
   st.track = name;
   if (!ctx || ctx.state !== 'running') return; // ilk dokunuşta başlar
-  name ? startMusic(name) : stopMusic();
+  switchMusic(name);
 }
 function setSfx(on) { st.sfx = on; try { localStorage.setItem('sa.sfx', on ? '1' : '0'); } catch (e) {} if (sfxBus) sfxBus.gain.value = on ? SFX_VOL : 0; }
 function setMusic(on) {
   st.music = on; try { localStorage.setItem('sa.music', on ? '1' : '0'); } catch (e) {}
   if (musBus) musBus.gain.setTargetAtTime(on ? MUS_VOL : 0, now(), .15);
+  if (musFileBus) musFileBus.gain.setTargetAtTime(on ? MUS_FILE_VOL : 0, now(), .15);
 }
-window.Sfx = { play, skill, loadSkills, loadVoices, voice, music, setSfx, setMusic, unlock, get sfx() { return st.sfx; }, get musicOn() { return st.music; }, get running() { return !!ctx && ctx.state === 'running'; }, get files() { return Object.keys(BUFS); } };
+window.Sfx = { play, skill, loadSkills, loadVoices, voice, music, setSfx, setMusic, unlock, _loop: loadMusic, get track() { return fileCur ? fileCur.name + ' (dosya)' : st.track; }, get sfx() { return st.sfx; }, get musicOn() { return st.music; }, get running() { return !!ctx && ctx.state === 'running'; }, get files() { return Object.keys(BUFS); } };
 })();

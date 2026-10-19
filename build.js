@@ -32,6 +32,7 @@ for (const f of ['mage_common_set.webp', 'mage_common_cape.webp', 'tank_common_s
 for (const f of list('assets/sfx')) if (/\.mp3$/.test(f)) copy('assets/sfx/' + f);
 for (const f of list('assets/sfx/skills')) if (/\.mp3$/.test(f)) copy('assets/sfx/skills/' + f);
 for (const f of list('assets/sfx/mon')) if (/\.mp3$/.test(f)) copy('assets/sfx/mon/' + f);
+for (const f of list('assets/music')) if (/\.mp3$/.test(f)) copy('assets/music/' + f);
 for (const f of list('assets/bg')) if (/\.(webp|png)$/.test(f)) copy('assets/bg/' + f);
 for (const f of list('assets/npc')) if (/\.(webp|png)$/.test(f)) copy('assets/npc/' + f);
 for (const f of list('assets/mon')) if (/\.(webp|png)$/.test(f)) copy('assets/mon/' + f);
