@@ -645,13 +645,14 @@ html:has(#battleScreen:not([hidden])) .ibody{grid-template-columns:minmax(0,2.5f
   </section>
 </div>
 
-<script src="i18n-dict.js?v=5"></script>
+<script src="i18n-dict.js?v=6"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
 <script src="tiers.js"></script>
 <script src="rig.js"></script>
 <script src="audio.js"></script>
+<script src="monsters.js?v=18"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -1943,7 +1944,7 @@ const LAYOUTS = {
     depth: y => .68 + .32 * Math.max(0, Math.min(1, (y - 192) / (548 - 192))) },
 };
 let LAYOUT = LAYOUTS.tall;
-const layoutFor = () => { const st = forestRun && STAGES[forestRun.k - 1]; return st && st.bg && STAGE_BG[st.bg] ? LAYOUTS.classic : LAYOUTS.tall; }; // kurt ini eski düzende
+const layoutFor = () => LAYOUTS.tall; // tüm arka planlar (arena3, kurt ini 2) aynı derin C hilal düzeninde
 function arcSpot(n, slot, N) {
   const [x, y] = pathPoint(LAYOUT.T[n][slot], LAYOUT.path);
   return { x, y, s: SIZE[N] * LAYOUT.depth(y) };
@@ -2933,7 +2934,7 @@ SAVE.forest.mats = { pelt: 0, silk: 0, ess: 0, relic: 0, ...(SAVE.forest.mats ||
 const MONSTERS = {
   wolf:    { name: 'Kurt', desc: 'Sürü halinde avlanır, ısırığı kanatır.', hp: 300, mp: 100, regen: 14, crit: .14, dodge: .12, armor: 0, h: .64, color: '#9aa6b8', mat: 'pelt',
     skills: [M('Isırık', 0, [26, 34], 'fang'), M('Parçalama', 25, [30, 40], 'fang', { dot: BLEED }), M('Atılma', 20, [32, 42], 'fang'), M('Boğaz Isırığı', 50, [60, 76], 'fang', { big: true })] },
-  spider:  { name: 'Dev Örümcek', desc: 'Ağıyla avını sabitler, zehirli ısırır.', hp: 260, mp: 120, regen: 14, crit: .12, dodge: .14, armor: .04, h: .45, color: '#8a5cc8', mat: 'silk',
+  spider:  { name: 'Dev Örümcek', desc: 'Ağıyla avını sabitler, zehirli ısırır.', hp: 260, mp: 120, regen: 14, crit: .12, dodge: .14, armor: .04, h: .52, color: '#8a5cc8', mat: 'silk',
     skills: [M('Zehirli Isırık', 0, [22, 30], 'fang', { dot: POISON }), Rg('Ağ Fırlat', 25, [16, 22], 'trap', 'trap', { stun: true }), M('Sokma', 15, [28, 36], 'dagger'), M('Ölümcül Isırık', 55, [58, 74], 'fang', { big: true, dot: POISON })] },
   goblin:  { name: 'Goblin', desc: 'Sinsi ve hızlı; hançeriyle kanatır.', hp: 250, mp: 110, regen: 14, crit: .22, dodge: .16, armor: 0, h: .72, color: '#6fae4a', mat: 'silk',
     skills: [M('Hançer', 0, [24, 32], 'dagger'), M('Sinsi Bıçak', 25, [28, 36], 'dagger', { dot: BLEED }), G('Saklan', 20, .6, 'moon'), M('Arkadan Vuruş', 50, [62, 80], 'target', { big: true })] },
@@ -2952,9 +2953,9 @@ const MONSTERS = {
 };
 const STAGES = [
   { n: 'Kurt İzleri', pack: ['wolf', 'wolf'], bg: 'wolfden' },
+  { n: 'Örümcek Yuvası', pack: ['spider', 'spider'], bg: 'spidernest' },
+  { n: 'Mantar Korusu', pack: ['mushroom', 'mushroom', 'mushroom'], bg: 'mushgrove' },
   { n: 'Goblin Pususu', pack: ['goblin', 'wolf', 'goblin'] },
-  { n: 'Örümcek Yuvası', pack: ['spider', 'goblin', 'spider'] },
-  { n: 'Mantar Korusu', pack: ['mushroom', 'boar', 'mushroom'] },
   { n: 'Alfa\'nın İni', pack: ['alpha', 'wolf', 'wolf'], boss: true, bg: 'wolfden' },
   { n: 'Yaban Patikası', pack: ['boar', 'wolf', 'wisp', 'boar'] },
   { n: 'Ruhlar Vadisi', pack: ['wisp', 'spider', 'mushroom', 'wisp'] },
@@ -2963,125 +2964,6 @@ const STAGES = [
   { n: 'Cadının Sunağı', pack: ['witch', 'treant', 'wisp', 'wisp', 'mushroom'], boss: true },
 ];
 const stagePow = k => 1 + .17 * (k - 1); // aşama güçlendikçe can ve hasar artar
-// canavar resimleri: assets/mon/<id>.webp (sola bakar); yoksa geçici siluet
-const MON_IMG = {};
-for (const id of Object.keys(MONSTERS)) { const im = new Image(); im.onload = () => { MON_IMG[id] = im; }; im.src = 'assets/mon/' + id + '.webp?v=1'; }
-/* ---------- canavar iskeletleri: her türün kendi parçaları ve eklemleri ----------
-   Parça sayfası (beyaz zemin, sola bakar) yüklenince her parça kendi pikselleriyle kesilir.
-   Açılar: pozitif = saat yönü (sola bakan çizimde: kafa/kuyruk ucu yukarı-aşağı, bacak ileri). */
-function cutPart(im, [x0, y0, x1, y1]) {
-  const pad = 4, w = x1 - x0 + 1 + pad * 2, h = y1 - y0 + 1 + pad * 2, c = document.createElement('canvas'); c.width = w; c.height = h;
-  const x = c.getContext('2d'); x.drawImage(im, x0 - pad, y0 - pad, w, h, 0, 0, w, h);
-  const id = x.getImageData(0, 0, w, h), d = id.data, N = w * h, m = new Uint8Array(N), lab = new Int32Array(N);
-  for (let i = 0; i < N; i++) if (Math.min(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]) < 225) m[i] = 1;
-  let best = 0, bestN = 0, n = 0; // yalnızca en büyük bileşen (komşu parçalardan taşan kırıntılar atılır)
-  for (let i = 0; i < N; i++) {
-    if (!m[i] || lab[i]) continue; n++; let cnt = 0; const st = [i]; lab[i] = n;
-    while (st.length) { const p = st.pop(), X = p % w, Y = (p - X) / w; cnt++;
-      for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const a = X + dx, b = Y + dy; if (a < 0 || b < 0 || a >= w || b >= h) continue; const q = b * w + a; if (m[q] && !lab[q]) { lab[q] = n; st.push(q); } } }
-    if (cnt > bestN) { bestN = cnt; best = n; }
-  }
-  for (let i = 0; i < N; i++) {
-    const mn = Math.min(d[i * 4], d[i * 4 + 1], d[i * 4 + 2]); let keep = lab[i] === best;
-    if (!keep && !m[i]) { const X = i % w, Y = (i - X) / w; for (let dy = -2; dy <= 2 && !keep; dy++) for (let dx = -2; dx <= 2; dx++) { const a = X + dx, b = Y + dy; if (a >= 0 && b >= 0 && a < w && b < h && lab[b * w + a] === best) { keep = true; break; } } }
-    d[i * 4 + 3] = keep ? (mn > 222 ? Math.max(0, Math.min(255, (252 - mn) * 9)) : 255) : 0;
-  }
-  x.putImageData(id, 0, 0); return { c, ox: x0 - pad, oy: y0 - pad };
-}
-// dört ayaklı iskelet (kurt; ileride yaban domuzu): gövde, kafa + ayrı alt çene, kuyruk, üç parçalı 4 bacak
-// (üst, alt, pençe; uzak taraf koyu). Parça sayfasında birleşmiş kurt rehberi var; ölçekler ona göre ayarlandı:
-// s = parçanın ölçeği (bacakta kalınlık), sl = bacak boyu. Bacak parçaları yüklenirken eklem ekseni dikey olacak şekilde döndürülür.
-const MRIG = {
-  wolf: {
-    src: 'assets/mon/wolf_parts2.webp?v=1',
-    R: { head: [38, 412, 401, 690], torso: [483, 436, 1029, 723], tail: [1110, 482, 1465, 762], jaw: [77, 661, 218, 743],
-      fu: [111, 738, 303, 989], fl: [340, 761, 511, 986], fp: [501, 829, 674, 988], hu: [836, 729, 1056, 974], hl: [1078, 768, 1252, 988], hp: [1298, 832, 1466, 991] },
-    // bacak eksenleri: [üst yuva, alt yuva] (sayfa pikseli)
-    LIMB: { fu: [[283, 780], [133, 963]], fl: [[484, 783], [367, 963]], hu: [[862, 781], [1032, 939]], hl: [[1097, 801], [1199, 964]] },
-    J: { torso: { s: .8, pv: [502, 570], neck: [512, 560], shoulder: [722, 668], hip: [966, 662], tailBase: [1000, 560] },
-      head: { s: .68, pv: [330, 600], hinge: [160, 630] }, jaw: { s: .68, pv: [205, 680] }, tail: { s: .75, pv: [1128, 540] },
-      fu: { s: .52, sl: .37 }, fl: { s: .52, sl: .37 }, hu: { s: .52, sl: .37 }, hl: { s: .52, sl: .37 },
-      fp: { s: .44, pv: [643, 842], sole: 988 }, hp: { s: .44, pv: [1430, 842], sole: 991 } },
-    // duruş açıları (yakın / uzak bacak ayrı ki dört pençe görünsün)
-    REST: { fn1: .42, fn2: -.42, fn3: 0, ff1: .22, ff2: -.3, ff3: .05, hn1: -.35, hn2: .45, hn3: -.08, hf1: -.18, hf2: .4, hf3: -.1 },
-  },
-};
-const RIGP = {}; // yüklenmiş parçalar (+ hesaplanan zemin ve boy)
-function straightenPart(p, pv, end) { // eklem ekseni dikey: pv üstte, end tam altında
-  const dx = end[0] - pv[0], dy = end[1] - pv[1], L = Math.hypot(dx, dy), a = Math.atan2(dx, dy), D = Math.ceil(Math.hypot(p.c.width, p.c.height)) * 2;
-  const c = document.createElement('canvas'); c.width = c.height = D; const x = c.getContext('2d');
-  x.translate(D / 2, D / 2); x.rotate(a); x.drawImage(p.c, p.ox - pv[0], p.oy - pv[1]);
-  return { part: { c, ox: 0, oy: 0 }, pv: [D / 2, D / 2], end: [D / 2, D / 2 + L] };
-}
-for (const [id, rig] of Object.entries(MRIG)) {
-  const im = new Image();
-  im.onload = () => {
-    const P = {}; for (const [k, b] of Object.entries(rig.R)) P[k] = cutPart(im, b);
-    for (const [k, [pv, end]] of Object.entries(rig.LIMB)) { const r = straightenPart(P[k], pv, end); P[k] = r.part; Object.assign(rig.J[k], { pv: r.pv, end: r.end }); }
-    // zemin: duruşta en alttaki pençe tabanı; boy: zeminden kafa tepesine
-    const Q = { ...rig.REST }, pts = quadJoints(rig, Q), J = rig.J;
-    rig.ground = Math.max(...['fn', 'ff', 'hn', 'hf'].map(k => pts[k][1] + (J[k[0] + 'p'].sole - J[k[0] + 'p'].pv[1]) * J[k[0] + 'p'].s));
-    rig.cx = (pts.fn[0] + pts.hn[0]) / 2; rig.tall = rig.ground - (pts.headTop);
-    RIGP[id] = P;
-  };
-  im.src = rig.src;
-}
-const rot2 = (p, a) => [p[0] * Math.cos(a) - p[1] * Math.sin(a), p[0] * Math.sin(a) + p[1] * Math.cos(a)];
-function jointAt(J, k, at, a, jt) { const j = J[k], pv = j.pv, r = rot2([(jt[0] - pv[0]) * j.s, (jt[1] - pv[1]) * (j.sl || j.s)], a); return [at[0] + r[0], at[1] + r[1]]; }
-// duruşta pençe yuvalarının ve kafa tepesinin yeri (zemin hesabı için); kök: gövde pv = (0,0)
-function quadJoints(rig, q) {
-  const J = rig.J, out = {}, tj = k => jointAt(J, 'torso', [0, 0], 0, J.torso[k]);
-  for (const [k, att, u, l] of [['fn', 'shoulder', 'fu', 'fl'], ['ff', 'shoulder', 'fu', 'fl'], ['hn', 'hip', 'hu', 'hl'], ['hf', 'hip', 'hu', 'hl']]) {
-    const a1 = q[k + '1'], a2 = q[k + '2'], at = tj(att), e1 = jointAt(J, u, at, a1, J[u].end); out[k] = jointAt(J, l, e1, a1 + a2, J[l].end);
-  }
-  out.headTop = tj('neck')[1] + (rig.R.head[1] - J.head.pv[1]) * J.head.s;
-  return out;
-}
-// dört ayaklı çizim: kök = ayak noktası (gövdenin altında, zeminde), sola bakar
-function drawQuad(x, rig, P, q) {
-  const J = rig.J;
-  const put = (k, at, a, dark) => { const p = P[k], j = J[k], pv = j.pv; x.save(); x.translate(at[0], at[1]); x.rotate(a); x.scale(j.s, j.sl || j.s); if (dark) x.filter = 'brightness(.6)'; x.drawImage(p.c, p.ox - pv[0], p.oy - pv[1]); x.restore(); };
-  const ta = q.body || 0, tp = [-rig.cx + (q.bx || 0), -rig.ground + (q.by || 0)], tj = k => jointAt(J, 'torso', tp, ta, J.torso[k]);
-  const leg = (u, l, p, att, a1, a2, a3, dark) => { const at = tj(att), e1 = jointAt(J, u, at, ta + a1, J[u].end), e2 = jointAt(J, l, e1, ta + a1 + a2, J[l].end); put(p, e2, ta + a1 + a2 + a3, dark); put(l, e1, ta + a1 + a2, dark); put(u, at, ta + a1, dark); };
-  leg('hu', 'hl', 'hp', 'hip', q.hf1, q.hf2, q.hf3, true); leg('fu', 'fl', 'fp', 'shoulder', q.ff1, q.ff2, q.ff3, true);
-  put('tail', tj('tailBase'), ta + (q.tail || 0));
-  put('torso', tp, ta);
-  leg('hu', 'hl', 'hp', 'hip', q.hn1, q.hn2, q.hn3); leg('fu', 'fl', 'fp', 'shoulder', q.fn1, q.fn2, q.fn3);
-  const hp = tj('neck'), ha = ta + (q.head || 0); put('jaw', jointAt(J, 'head', hp, ha, J.head.hinge), ha + (q.jaw || 0)); put('head', hp, ha);
-}
-// kurt hareketleri: duruş açılarına eklenen salınımlar (birim: rehber kurt pikseli; kurt ~770 uzun, ~400 yüksek)
-function wolfPose(A, t) {
-  const an = A.ANIMS[A.cur] || {}, p = Math.max(0, Math.min(1, A.at / (an.dur || 1))), S = Math.sin, br = S(t / 380);
-  const q = { ...MRIG.wolf.REST, by: br * 3, tail: .1 * S(t / 420), head: .03 * br, jaw: -.03 - .03 * S(t / 300) };
-  const add = o => { for (const k in o) q[k] = (q[k] || 0) + o[k]; };
-  if (A.cur === 'walk') {
-    const ph = t / 85; // tırıs: çaprazdaki bacaklar birlikte; kalkan pençe bükülür
-    const sw = o => S(ph + o) * .32, lift = o => Math.max(0, -Math.cos(ph + o));
-    add({ by: -Math.abs(S(ph)) * 8, head: .05 * S(ph * 2), tail: .18 * S(ph),
-      fn1: sw(0), fn2: -lift(0) * .5, fn3: lift(0) * .5, hf1: sw(0), hf2: lift(0) * .45, hf3: -lift(0) * .3,
-      ff1: sw(Math.PI), ff2: -lift(Math.PI) * .5, ff3: lift(Math.PI) * .5, hn1: sw(Math.PI), hn2: lift(Math.PI) * .45, hn3: -lift(Math.PI) * .3 });
-  } else if (A.cur === 'attack') {
-    // geri çekil + ağzı aç, atıl ve ısır (hitAt .55'te çene kapanır), sonra toparlan
-    const wind = p < .4 ? p / .4 : 1, strike = p < .4 ? 0 : p < .55 ? (p - .4) / .15 : 1 - (p - .55) / .45, w2 = wind * (1 - strike);
-    add({ bx: 40 * w2 - 120 * strike, by: 14 * w2 - 6 * strike, body: -.08 * strike + .06 * w2, head: -.22 * strike + .12 * w2,
-      jaw: p < .52 ? -.6 * Math.min(1, p / .3) : -.6 * Math.max(0, 1 - (p - .52) / .08),
-      fn1: .35 * strike - .15 * w2, fn2: -.2 * strike, ff1: .3 * strike, hn1: -.3 * strike + .1 * w2, hf1: -.2 * strike, tail: -.25 * strike });
-  } else if (A.cur === 'block') { // uluma / sinme: kafa yukarı, ağız açık, kuyruk havada
-    const k = S(p * Math.PI); add({ head: .5 * k, jaw: -.5 * k, body: .06 * k, by: 6 * k, tail: -.35 * k });
-  } else if (A.cur === 'hit') {
-    const k = 1 - p; add({ bx: 34 * k, body: .1 * k, head: .25 * k, jaw: -.3 * k });
-  } else if (A.cur === 'death') { // bacaklar çözülür, gövde yere yığılır
-    const k = Math.min(1, p * 1.4);
-    add({ by: 120 * k, body: -.15 * k, head: -.35 * k, jaw: -.3 * k, tail: .4 * k, fn1: .8 * k, fn2: -.9 * k, fn3: .6 * k, ff1: .6 * k, ff2: -.8 * k, hn1: -.9 * k, hn2: 1.1 * k, hf1: -.7 * k, hf2: 1 * k });
-  } else if (A.cur === 'win') { // zafer uluması: başı göğe
-    const k = .7 + .3 * S(t / 260); add({ head: .55 * k, jaw: -.55 * k, tail: -.3 + .15 * S(t / 120), body: .05 });
-  }
-  return q;
-}
-const RIG_POSE = { wolf: wolfPose };
-const MON_ANIMS = { idle: { loop: true, dur: 1000 }, walk: { loop: true, dur: 500 }, attack: { dur: 620, hitAt: .55 }, block: { dur: 600, cast: .5 },
-  hit: { dur: 320, flash: true }, death: { dur: 900, hold: true }, win: { loop: true, dur: 700 } };
-const monActor = (id, topH) => ({ mon: MONSTERS[id], id, cur: 'idle', at: 0, fired: false, waits: [], ended: false, endCb: null, hitT: -9999, x: 0, face: -1, off: 0, offY: 0, wp: {}, ANIMS: MON_ANIMS, topH });
 function mkMonster(m, team) {
   const d = MONSTERS[m.id], k = m.stage || 1, pw = stagePow(k), hp = Math.round(d.hp * pw), topH = Math.round(d.h * 300 + 50);
   return { team, side: 'enemy', ctrl: 'ai', id: m.id, mon: d, stage: k, cls: { name: d.name, hp: d.hp }, gear: null, lvl: m.lvl || k * 2, name: d.name,
@@ -3089,53 +2971,7 @@ function mkMonster(m, team) {
     skills: [...d.skills.map((s, i) => ({ ...s, color: s.color || d.color, snd: m.id + '_' + i })), { ...POTION, heal: 0 }], healMul: 1, heals: 0, // ses: assets/sfx/skills/<canavar>_<0-3>.mp3 (yoksa genel vuruş sesi)
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: 0, topH, A: monActor(m.id, topH) };
 }
-// canavar çizimi: nefes alma, yürüme sekmesi, atılma, darbe, devrilme; resim sola bakar
-function drawMonster(c, A, t, gx, gy, s) {
-  const d = A.mon, an = A.ANIMS[A.cur] || MON_ANIMS.idle, p = Math.max(0, Math.min(1, A.at / an.dur)), h = d.h * 227 * s;
-  let dx = 0, dy = d.float ? -h * .18 + Math.sin(t / 420) * 6 * s : 0, rot = 0, alpha = 1, sy = 1;
-  if (A.cur === 'idle') sy = 1 + .025 * Math.sin(t / 320);
-  else if (A.cur === 'walk') dy -= Math.abs(Math.sin(t / 95)) * 7 * s;
-  else if (A.cur === 'attack') { const k = p < .55 ? ease(p / .55) : 1 - (p - .55) / .45; dx = 46 * s * k; rot = .14 * k; }
-  else if (A.cur === 'block') sy = 1 + .1 * Math.sin(p * Math.PI);
-  else if (A.cur === 'hit') dx = -16 * s * (1 - p);
-  else if (A.cur === 'death') { rot = -1.25 * Math.min(1, p * 1.6); alpha = 1 - .55 * p; dy = d.float ? dy + h * .18 * p : 0; }
-  else if (A.cur === 'win') dy -= Math.abs(Math.sin(t / 150)) * 12 * s;
-  const x = gx + A.off * A.face, P = RIGP[A.id];
-  if (P) {
-    const rig = MRIG[A.id], k = h / rig.tall;
-    c.save(); c.globalAlpha *= A.cur === 'death' ? 1 - .45 * p : 1;
-    c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(x, gy + 2, h * .45, h * .06, 0, 0, 7); c.fill();
-    c.translate(x, gy); c.scale(-A.face * k, k); drawQuad(c, rig, P, RIG_POSE[A.id](A, t)); // çizim sola bakar
-    c.restore(); return;
-  }
-  c.save(); c.globalAlpha *= alpha;
-  // ayak gölgesi
-  c.fillStyle = 'rgba(0,0,0,.35)'; c.beginPath(); c.ellipse(x, gy + 2, h * .32, h * .06, 0, 0, 7); c.fill();
-  c.translate(x, gy + dy); c.scale(A.face, 1); c.rotate(rot); c.scale(1, sy); // +x = baktığı yön
-  const im = MON_IMG[A.id];
-  if (im) { const w = h * im.naturalWidth / im.naturalHeight; c.scale(-1, 1); c.drawImage(im, -w / 2, -h, w, h); } // resim sola bakar
-  else monSilhouette(c, d, h);
-  c.restore();
-}
-// resim gelene kadar: renkli gövde, baş ve parlayan gözler (+x yönüne bakar)
-function monSilhouette(c, d, h) {
-  const w = h * (d.h < .65 ? 1.5 : .8);
-  c.lineWidth = Math.max(2, h * .025); c.strokeStyle = '#120e18';
-  c.fillStyle = d.color; c.beginPath(); c.ellipse(0, -h * .45, w * .5, h * .4, 0, 0, 7); c.fill(); c.stroke();
-  c.beginPath(); c.arc(w * .38, -h * .72, h * .2, 0, 7); c.fill(); c.stroke();
-  c.fillStyle = d.boss ? '#ff4a4a' : '#fff'; c.shadowColor = c.fillStyle; c.shadowBlur = 8;
-  c.beginPath(); c.arc(w * .44, -h * .75, h * .035, 0, 7); c.arc(w * .3, -h * .75, h * .035, 0, 7); c.fill(); c.shadowBlur = 0;
-  c.fillStyle = '#120e18'; for (const lx of [-w * .25, w * .2]) c.fillRect(lx, -h * .12, h * .05, h * .12);
-}
-function monPortrait(cv, id) {
-  const x = cv.getContext('2d'), S = cv.width, d = MONSTERS[id];
-  const g = x.createRadialGradient(S / 2, S * .6, 4, S / 2, S * .6, S * .65); g.addColorStop(0, d.color + '66'); g.addColorStop(1, '#0c0a12');
-  x.fillStyle = g; x.fillRect(0, 0, S, S);
-  const P = RIGP[id];
-  if (P) { const hd = P.head.c, k = S * .92 / Math.max(hd.width, hd.height); x.save(); x.translate(S / 2, S / 2); x.scale(-k, k); x.drawImage(hd, -hd.width / 2, -hd.height / 2); x.restore(); return true; } // portrede sağa (rakibe) bakar
-  const A = monActor(id, 0); A.face = -1; drawMonster(x, A, 0, S / 2, S * (d.h > 1 ? 1.25 : .95), S / 227 / Math.max(.5, d.h) * .95);
-  return true;
-}
+setMonsterData(MONSTERS); loadMonsterImgs(Object.keys(MONSTERS)); // iskeleti olmayanlar için tek parça resim (assets/mon/<id>.webp)
 { // Rig'e canavar desteği: çizim ve portre canavarsa buradan
   const rd = Rig.draw, rp = Rig.portrait;
   Rig.draw = (c, A, t, dt, gx, gy, s, fx) => A && A.mon ? drawMonster(c, A, t, gx, gy, s) : rd(c, A, t, dt, gx, gy, s, fx);
@@ -3146,7 +2982,7 @@ const fbg = document.createElement('canvas'); fbg.width = W; fbg.height = H; let
 (function () { const im = new Image(); im.onload = () => { fbg.getContext('2d').drawImage(im, 0, 0, W, H); fbgOk = true; }; im.src = 'assets/bg/forest_battle.webp?v=1'; })();
 
 // aşamaya özel arka plan (assets/bg/<ad>.png, 1280x720, arenayla aynı hilal düzeni); yüklenene kadar orman/arena resmi
-const STAGE_BG = {}, STAGE_BG_SRC = { wolfden: 'assets/bg/wolfden.png?v=1' };
+const STAGE_BG = {}, STAGE_BG_SRC = { wolfden: 'assets/bg/wolfden2.png?v=1', spidernest: 'assets/bg/spidernest.png?v=1', mushgrove: 'assets/bg/mushgrove.png?v=1' };
 for (const [k, src] of Object.entries(STAGE_BG_SRC)) { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = W; c.height = H; c.getContext('2d').drawImage(im, 0, 0, W, H); STAGE_BG[k] = c; }; im.src = src; }
 const stageBg = () => forestRun && STAGES[forestRun.k - 1] && STAGE_BG[STAGES[forestRun.k - 1].bg];
 let forestRun = null; // { k, size } orman savaşındayken
