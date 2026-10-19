@@ -108,6 +108,18 @@ const MRIG = {
       legL: ['thL', 'shL', 'hipL', 'knL', [863, 417], [849, 522], [840, 667]], legR: ['thR', 'shR', 'hipR', 'knR', [973, 414], [994, 523], [985, 686]] },
     REST: {},
   },
+  // Goblin: mantar adamla aynı insansı yapı; yeşil deri için eflatun perde. Hançer sol ön kolun (faL) parçası.
+  // NEAR 'R': sola bakan 3/4 görünüşte sağdaki (boş elli) kol ve sağ bacak bize dönük, öndedir; hançerli kol ve sol bacak arkada.
+  // Kalçalar birbirine yakın (bacaklar gövdenin altında); uyluk uçları peştamalın altında kalır.
+  goblin: {
+    type: 'humanoid', key: 'magenta', NEAR: 'R', src: 'assets/mon/goblin_parts.png?v=1', face: 'body', portrait: [745, 40, 1000, 295],
+    R: { body: [739, 37, 1047, 399], uaL: [718, 204, 783, 305], faL: [647, 306, 746, 546], uaR: [1009, 204, 1074, 307], faR: [1033, 309, 1104, 485],
+      thL: [815, 377, 872, 494], shL: [758, 499, 871, 671], thR: [904, 374, 966, 496], shR: [905, 501, 994, 677] },
+    JT: { pelvis: [889, 352], shL: [840, 228], elL: [820, 305], shR: [945, 228], elR: [971, 307], hipL: [856, 352], knL: [853, 446], hipR: [922, 352], knR: [924, 449] },
+    LIMBS: { armL: ['uaL', 'faL', 'shL', 'elL', [758, 217], [725, 318], [712, 432]], armR: ['uaR', 'faR', 'shR', 'elR', [1032, 217], [1068, 318], [1062, 470]],
+      legL: ['thL', 'shL', 'hipL', 'knL', [843, 392], [842, 510], [843, 668]], legR: ['thR', 'shR', 'hipR', 'knR', [935, 390], [946, 517], [948, 672]] },
+    REST: {},
+  },
 };
 const RIGP = {}; // yüklenmiş parçalar (+ hesaplanan zemin ve boy)
 function straightenPart(p, pv, end) { // eklem ekseni dikey: pv üstte, end tam altında
@@ -297,16 +309,25 @@ function drawHumanoid(x, rig, P, q) {
   const bones = [];
   const limb = (k, dark) => {
     const [up, lo, j0, j1, upv, lpv, tip] = L[k], leg = k.startsWith('leg'), base = leg ? 0 : ta; // bacaklar gövdeyle dönmez: ayaklar yere basık kalsın
-    const a1 = base + (q[k + '1'] || 0), a2 = a1 + (q[k + '2'] || 0), root = leg ? [o[0] + T[j0][0] - pl[0], o[1] + T[j0][1] - pl[1]] : bj(T[j0]);
+    let a1 = base + (q[k + '1'] || 0), a2 = a1 + (q[k + '2'] || 0); const root = leg ? [o[0] + T[j0][0] - pl[0], o[1] + T[j0][1] - pl[1]] : bj(T[j0]);
     if (leg) { const hp = bj(T[j0]); root[0] = hp[0]; root[1] = hp[1]; }
+    const ft = leg && q[k + 'F'];
+    if (ft) { // IK: q.<bacak>F ayak hedefi (zemin y = 0); diz öne (sola) bükülür, açılar hedeften hesaplanır
+      const v1 = [T[j1][0] - T[j0][0], T[j1][1] - T[j0][1]], v2 = [tip[0] - lpv[0], tip[1] - lpv[1]];
+      const [kn, fe] = ik2(root, ft, Math.hypot(v1[0], v1[1]), Math.hypot(v2[0], v2[1]), -1);
+      a1 = Math.atan2(kn[1] - root[1], kn[0] - root[0]) - Math.atan2(v1[1], v1[0]);
+      a2 = Math.atan2(fe[1] - kn[1], fe[0] - kn[0]) - Math.atan2(v2[1], v2[0]);
+    }
     const r1 = rot2([T[j1][0] - T[j0][0], T[j1][1] - T[j0][1]], a1), mid = [root[0] + r1[0], root[1] + r1[1]];
     const r2 = rot2([tip[0] - lpv[0], tip[1] - lpv[1]], a2), end = [mid[0] + r2[0], mid[1] + r2[1]];
     put(lo, lpv, mid, a2, dark); put(up, upv, root, a1, dark);
     bones.push([[root, mid, end], dark ? '#2a9cc0' : '#4fd8ff']);
   };
-  limb('armR', true); limb('legR', true); limb('legL'); // arka kol ve bacaklar gövdenin arkasında
+  // NEAR: bize dönük taraf (L ya da R). Sola bakan 3/4 görünüşte gövdenin ileri (sol) yanındaki uzuvlar aslında uzak taraftır
+  const nr = rig.NEAR || 'L', fr = nr === 'L' ? 'R' : 'L';
+  limb('arm' + fr, true); limb('leg' + fr, true); limb('leg' + nr); // arka kol ve bacaklar gövdenin arkasında
   put('body', pl, o, ta);
-  limb('armL'); // bize dönük kol gövdenin önünde: öne-arkaya sallanırken görünür kalır
+  limb('arm' + nr); // bize dönük kol gövdenin önünde: öne-arkaya sallanırken görünür kalır
   bones.push([[bj(T.hipL), o, bj(T.hipR)], '#f2c14e'], [[o, bj([pl[0], rig.R.body[1] + 120])], '#f2c14e'], [[bj(T.shL), bj([pl[0], 280]), bj(T.shR)], '#f2c14e']);
   drawBones(x, bones);
 }
@@ -334,7 +355,33 @@ function mushroomPose(A, t) {
   }
   return q;
 }
-const RIG_POSE = { wolf: wolfPose, spider: spiderPose, mushroom: mushroomPose };
+// Goblin: sinsi ve çevik; hafif çömelik bekler, hançeri önde tutar, hızlı adımlar, atılıp saplar
+function goblinPose(A, t) {
+  const an = A.ANIMS[A.cur] || {}, p = Math.max(0, Math.min(1, A.at / (an.dur || 1))), S = Math.sin, br = S(t / 240);
+  const q = { by: 4 + br * 2, body: -.05 + .015 * br, armL1: .3 + .04 * br, armL2: .45, armR1: -.05 - .04 * br, armR2: .15, legL1: .1, legL2: -.18, legR1: .06, legR2: -.14 };
+  const add = o => { for (const k in o) q[k] = (q[k] || 0) + o[k]; };
+  if (A.cur === 'walk') { // IK yürüyüş: yere basan ayak yerinde kalıp geriye kayar (gövde üstünden geçer), öbürü yay çizerek öne gelir
+    const rg = MRIG.goblin, T = rg.JT, pl = T.pelvis, L = rg.LIMBS, u = (t / 520) % 1, SL = 170, LIFT = 42, c = Math.cos(2 * Math.PI * u);
+    const restX = k => { const l = L[k]; return T[l[3]][0] - pl[0] + l[6][0] - l[5][0]; }; // düz bacakta ayağın kalçaya göre yeri
+    const foot = (k, ph) => { const r = restX(k); if (ph < .5) return [r - SL / 2 + SL * ph / .5, 0]; const v = (ph - .5) / .5, e = v * v * (3 - 2 * v); return [r + SL / 2 - SL * e, -LIFT * S(Math.PI * v)]; };
+    q.legLF = foot('legL', u); q.legRF = foot('legR', (u + .5) % 1);
+    add({ by: 10 + 4 * Math.cos(4 * Math.PI * u), body: -.1, armL1: -.12 - .18 * c, armR1: .45 * c, armR2: .15 }); // kollar bacaklara ters sallanır
+  } else if (A.cur === 'attack') { // hançeri geri çek, öne atılıp sapla (hitAt .55)
+    const wind = p < .35 ? p / .35 : 1, strike = p < .35 ? 0 : p < .55 ? (p - .35) / .2 : 1 - (p - .55) / .45, w2 = wind * (1 - strike);
+    add({ armL1: -.9 * w2 + 1.5 * strike, armL2: .6 * w2 - .35 * strike, armR1: .3 * w2 - .4 * strike, body: .1 * w2 - .35 * strike, bx: 25 * w2 - 110 * strike,
+      legL1: .55 * strike, legL2: -.35 * strike, legR1: -.35 * strike, legR2: -.1 * strike, by: 10 * strike - 6 * w2 });
+  } else if (A.cur === 'block') { // sinip kollarını öne alır
+    const k = S(p * Math.PI); add({ armL1: 1.2 * k, armL2: 1.1 * k, armR1: 1.3 * k, armR2: 1.2 * k, legL1: .45 * k, legL2: -.8 * k, legR1: .35 * k, legR2: -.7 * k, by: 26 * k, body: .15 * k });
+  } else if (A.cur === 'hit') {
+    const k = 1 - p; add({ bx: 34 * k, body: -.3 * k, armL1: -.7 * k, armR1: -.6 * k, legL1: -.2 * k });
+  } else if (A.cur === 'death') { // dizleri çözülür, geriye devrilir
+    const k = Math.min(1, p * 1.3); add({ legL1: .9 * k, legL2: -1.6 * k, legR1: .7 * k, legR2: -1.5 * k, body: -1.25 * k, bx: 60 * k, by: 110 * k, armL1: -1.2 * k, armR1: -.9 * k });
+  } else if (A.cur === 'win') { // zıplayıp hançerini sallar
+    const k = Math.abs(S(t / 130)); add({ by: -26 * k, armL1: 2.6 + .35 * S(t / 80), armL2: .2, armR1: 1.4 - .2 * S(t / 80), armR2: .4, legL2: -.5 * k, legR2: -.5 * k, legL1: .25 * k, legR1: .2 * k });
+  }
+  return q;
+}
+const RIG_POSE = { wolf: wolfPose, spider: spiderPose, mushroom: mushroomPose, goblin: goblinPose };
 const MON_ANIMS = { idle: { loop: true, dur: 1000 }, walk: { loop: true, dur: 500 }, attack: { dur: 620, hitAt: .55 }, block: { dur: 600, cast: .5 },
   hit: { dur: 320, flash: true }, death: { dur: 900, hold: true }, win: { loop: true, dur: 700 } };
 const monActor = (id, topH) => ({ mon: MON_DATA[id], id, cur: 'idle', at: 0, fired: false, waits: [], ended: false, endCb: null, hitT: -9999, x: 0, face: -1, off: 0, offY: 0, wp: {}, ANIMS: MON_ANIMS, topH });

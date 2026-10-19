@@ -462,7 +462,10 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 /* dünya haritası penceresi: her bölge resimli bir kart, aralarında yollar; karta dokununca ışınlanılır */
 .guide.wmap .gc.wc{max-width:none;width:min(1200px,94vw);max-height:92vh;display:flex;flex-direction:column;gap:10px;padding:16px 18px;position:relative}
 .wgrid{position:relative;width:100%;aspect-ratio:var(--wa,4);max-height:calc(92vh - 100px)}
-.wlines{position:absolute;inset:0;width:100%;height:100%;overflow:visible} .wlines line{stroke:rgba(242,193,78,.5);stroke-width:3;stroke-dasharray:7 6;vector-effect:non-scaling-stroke}
+.wlines{position:absolute;inset:0;width:100%;height:100%;overflow:visible} .wlines line,.wlines polyline{fill:none;stroke:rgba(242,193,78,.55);stroke-width:3;stroke-dasharray:7 6;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.wlines polyline.soon{stroke:rgba(156,148,176,.35)}
+.wnode.soon{cursor:default;border-style:dashed;border-color:#4a4258;background:#14111c;color:var(--muted)} .wnode.soon .wi{display:grid;place-items:center;background:#1a1624;color:#6b6480;font:700 11px var(--font-body);letter-spacing:.06em}
+.wnode.hub{border-color:var(--gold)}
 .wnode{position:absolute;transform:translate(-50%,-50%);width:calc(100% / var(--wc,8) - 10px);display:flex;flex-direction:column;padding:0;border:1px solid #3b3350;border-radius:6px;overflow:hidden;
   background:#0d0b13;color:var(--text);cursor:pointer;font-family:var(--font-body);transition:transform .12s,border-color .15s,box-shadow .15s}
 .wnode .wi{display:block;width:100%;aspect-ratio:16/9;background:#14101c center/cover no-repeat}
@@ -836,14 +839,14 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=10"></script>
+<script src="i18n-dict.js?v=13"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
 <script src="tiers.js"></script>
 <script src="rig.js?v=3"></script>
 <script src="audio.js"></script>
-<script src="monsters.js?v=18"></script>
+<script src="monsters.js?v=19"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -1414,43 +1417,109 @@ const BNAME = { hall: 'Belediye', mine: 'Altın Madeni', alch: 'Simyacı', smith
 // Sahneler. Kapı: arka kenarda x konumu; NPC: duran karakter (yeni görseller gelene dek çöp adam iskeletiyle çizilir).
 // map: küçük haritadaki yeri. img: tek ekranlık boyalı sahne (1536x1024 resim, y. satırdan itibaren 624 satır
 // ekrana sığdırılır); y0/y1 zemin şeridi, hs kahraman ölçeği. img'si olmayan sahne geçici kayan sokağı kullanır.
+// Harita ağaç gibi dallanır, Belediye merkezdedir. Sahne çıkışları: left/right (yan kenarlar), doors (arka kenar: kapı ya da "↑" tabela,
+// sign: resimde kapı yok, yalnız tabela), downs (ön kenar: "↓" çıkış). map: büyük haritadaki yer (x sağa, y aşağı).
 const SCENES = {
-  // meydan resmi: kaldırım 662-693. satır, zemin 696'dan; Belediye kapısı x 765, 545-660. satır
-  square: { name: 'Meydan', w: 1280, map: [0, 0], left: 'market', right: 'arenagate', lamps: [],
-    img: { src: 'assets/bg/square.webp?v=1', y: 170 }, y0: 442, y1: 512, hs: .5,
-    doors: [{ x: 637, to: 'hall', name: 'Belediye', painted: true, ly: 296 }], npcs: [] },
-  // belediye içi: zemin 576. satırdan; kapı x 463 (300-568. satır), masa x 1020; yakın çekim, kahraman büyük
-  hall: { name: 'Belediye', w: 1280, map: [0, -1], lamps: [],
-    img: { src: 'assets/bg/hall.webp?v=1', y: 110 }, y0: 398, y1: 512, hs: .72,
-    doors: [{ x: 386, to: 'square', name: 'Meydan', painted: true, ly: 150 }], npcs: [{ k: 'hall', x: 850, y: 440, cls: 'paladin', face: -1, name: 'Kâhya' }] },
+  // meydan (2048x1152): Belediye'nin doğusu, çeşmeli toplanma meydanı. Kaldırım 790-960. satır (Belediye ile aynı);
+  // sağda arena silueti (sağ kenar Arena Kapısı), sağ önde Liman'a inen basamaklar x 1580 (screen 990)
+  square: { name: 'Meydan', w: 1280, map: [1, 0], left: 'hall', right: 'arenagate', lamps: [],
+    img: { src: 'assets/bg/meydan.webp?v=1', y: 141, w: 2048 }, y0: 410, y1: 512, hs: .5,
+    doors: [], downs: [{ x: 990, to: 'harbor', name: 'Liman' }], npcs: [] },
+  // belediye önü (2048x1152, 2. sürüm): haritanın merkezi. Görünen pencere 235-1067. satır; kaldırım screen 340-440, kapı screen 640,
+  // solda Gözetleme Kulesi'ne çıkan merdiven screen 285, önde fenerli açıklıktan Şapel Yolu'na inen merdiven screen 865
+  hall: { name: 'Belediye', w: 1280, map: [0, 0], left: 'market', right: 'square', lamps: [], // haritanın merkezi
+    img: { src: 'assets/bg/belediye.webp?v=2', y: 235, w: 2048 }, y0: 340, y1: 440, hs: .46,
+    doors: [{ x: 285, to: 'tower', name: 'Gözetleme Kulesi', sign: true, ly: 205 }], downs: [{ x: 865, to: 'chapel', name: 'Şapel Yolu' }], npcs: [{ k: 'hall', x: 640, y: 356, cls: 'paladin', face: -1, name: 'Kâhya' }] },
+  // gözetleme kulesi (2048x1152): Belediye'nin üstündeki tepe, çıkmaz uç. Oval teras 732-935. satır; önde kasabaya inen merdiven x 865 (screen 540).
+  // xr: yürünebilen yatay aralık (iki yan uçurum)
+  tower: { name: 'Gözetleme Kulesi', w: 1280, map: [0, -1], lamps: [], xr: [150, 1150],
+    img: { src: 'assets/bg/kule.webp?v=1', y: 116, w: 2048 }, y0: 395, y1: 512, hs: .5,
+    doors: [], downs: [{ x: 540, to: 'hall', name: 'Belediye' }], npcs: [] },
+  // deniz mağarası (2048x1152, ışıksız; feneri oyun yakar): Liman'ın doğusu, çıkmaz uç. Görünen pencere 140-972. satır; tahta güverte screen 335-393;
+  // sol kenar Liman'a açılan mağara ağzı, ortada kayıklar ve batık, sağda kaçakçı sandıkları ve çapa (sağ kenar duvar)
+  seacave: { name: 'Deniz Mağarası', w: 1280, map: [3, 1], left: 'harbor', lamps: [], xr: [40, 1200],
+    img: { src: 'assets/bg/denizmagara.webp?v=1', y: 140, w: 2048 }, y0: 335, y1: 393, hs: .46, doors: [], npcs: [],
+    lights: [[1022, 180, 'l', .8]] }, // direğe asılı fener
+  // şapel yolu (2048x1152, ışıksız; ışıkları oyun yakar): Belediye ile Mezarlık arası. Görünen pencere 205-1037. satır; yol screen 344-430,
+  // ortada şapel screen 615; sağ arkada Belediye'ye çıkan merdiven screen 1184, sol önde yamaçtan Mezarlık'a inen merdiven screen 440. Yanlar kapalı
+  chapel: { name: 'Şapel Yolu', w: 1280, map: [0, 1], lamps: [], xr: [60, 1220],
+    img: { src: 'assets/bg/sapel.webp?v=2', y: 205, w: 2048 }, y0: 344, y1: 430, hs: .46,
+    doors: [{ x: 1184, to: 'hall', name: 'Belediye', sign: true, ly: 180 }], downs: [{ x: 440, to: 'graveyard', name: 'Mezarlık' }], npcs: [],
+    lights: [[453, 157, 'l'], [555, 218, 'l'], [670, 218, 'l'], [854, 208, 'l'], [222, 285, 'l', .8], [282, 393, 'l'], [524, 436, 'l'], [212, 490, 'l'], // fenerler
+      [1134, 96, 'l', .7], [1207, 117, 'l', .7], [1124, 155, 'l', .75], [1239, 186, 'l', .75], [1107, 243, 'l', .85], // Belediye merdiveni
+      [612, 150, 'w', 1.3], [509, 222, 'w', .8], [714, 222, 'w', .8]] }, // şapelin vitray ve pencereleri
+  // mezarlık (2048x1152): Şapel Yolu'nun altı, çıkmaz uç. Yol 809-922. satır; arkada sağda kasabaya çıkan merdiven x 1850 (screen 1156); ortada anıt mezar x 1024
+  graveyard: { name: 'Mezarlık', w: 1280, map: [0, 2], lamps: [], xr: [110, 1190],
+    img: { src: 'assets/bg/mezarlik.webp?v=1', y: 103, w: 2048 }, y0: 445, y1: 512, hs: .55,
+    doors: [{ x: 1150, to: 'chapel', name: 'Şapel Yolu', sign: true, ly: 330 }], npcs: [] },
+  // liman (2048x1152): Meydan'ın altı. Yürünen şerit taş bordür + tahta iskele 758-848. satır; solda Meydan'a çıkan merdiven x 110 (screen 69);
+  // sağ kenar kayalıklar boyunca Deniz Mağarası, sağ önde Bataklık'a inen tahta yol x 1690 (screen 1060)
+  harbor: { name: 'Liman', w: 1280, map: [2, 1], right: 'seacave', lamps: [], xr: [40, 1240],
+    img: { src: 'assets/bg/liman.webp?v=1', y: 120, w: 2048 }, y0: 399, y1: 455, hs: .5,
+    doors: [{ x: 72, to: 'square', name: 'Meydan', sign: true }], downs: [{ x: 1060, to: 'swamp', name: 'Bataklık' }], npcs: [] },
+  // bataklık (2048x1152, ışıksız; fenerleri oyun yakar): Liman'ın altı, çıkmaz uç. Görünen pencere 150-982. satır; tahta iskele screen 390-425;
+  // ortada kazıklı balıkçı kulübesi, sağ arkada Liman'a çıkan halatlı merdiven screen 1165
+  swamp: { name: 'Bataklık', w: 1280, map: [3, 2], lamps: [], xr: [60, 1240],
+    img: { src: 'assets/bg/bataklik.webp?v=1', y: 150, w: 2048 }, y0: 390, y1: 425, hs: .46,
+    doors: [{ x: 1165, to: 'harbor', name: 'Liman', sign: true, ly: 200 }], npcs: [],
+    lights: [[228, 178, 'l', .8], [950, 222, 'l', .8], [875, 262, 'c', .6], [605, 207, 'w', .6]] }, // iki fener, türbede mum, kulübe penceresi
   // çarşı: kaldırım 631. satır, zemin 668'den; ocak/örs x 490, simyacı kazanı x 1015, dükkânı x 1090
-  market: { name: 'Çarşı', w: 1280, map: [-1, 0], left: 'mineroad', right: 'square', lamps: [],
+  market: { name: 'Çarşı', w: 1280, map: [-1, 0], left: 'forest', right: 'hall', lamps: [],
     img: { src: 'assets/bg/market.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .58,
-    doors: [], npcs: [{ k: 'smith', x: 400, y: 452, cls: 'tank', face: 1, name: 'Demirci Usta' }, { k: 'shop', x: 655, y: 456, cls: 'support', face: 1, name: 'Gezgin Tüccar' }, { k: 'alch', x: 905, y: 452, cls: 'mage', face: -1, name: 'Simyacı' }] },
-  // maden yolu: kaya sırası 610-650. satır, toprak 655'ten; maden girişi x 620-1240, aletler x 480-600
-  mineroad: { name: 'Maden Yolu', w: 1280, map: [-2, 0], left: 'forest', right: 'market', lamps: [],
+    doors: [{ x: 230, to: 'mineroad', name: 'Maden Yolu', sign: true }], npcs: [{ k: 'smith', x: 400, y: 452, cls: 'tank', face: 1, name: 'Demirci Usta' }, { k: 'shop', x: 655, y: 456, cls: 'support', face: 1, name: 'Gezgin Tüccar' }, { k: 'alch', x: 905, y: 452, cls: 'mage', face: -1, name: 'Simyacı' }] },
+  // maden yolu: kaya sırası 610-650. satır, toprak 655'ten; maden girişi x 620-1240, aletler x 480-600; soldaki kayalıktan Dağ Geçidi'ne patika (screen 150)
+  mineroad: { name: 'Maden Yolu', w: 1280, map: [-2, -1], right: 'market', lamps: [],
     img: { src: 'assets/bg/mineroad.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
-    doors: [], npcs: [{ k: 'mine', x: 470, y: 452, cls: 'berserker', face: 1, name: 'Madenci' }] },
+    doors: [{ x: 150, to: 'mountpass', name: 'Dağ Geçidi', sign: true, ly: 300 }], npcs: [{ k: 'mine', x: 470, y: 452, cls: 'berserker', face: 1, name: 'Madenci' }] },
+  // dağ geçidi (2048x1152, ışıklı eski kural): Maden Yolu'nun üstü. Görünen pencere 150-982. satır; patika screen 345-415; ortada taş kemer,
+  // sol kenarda kristal mağara ağzı (sol kenar Kristal Mağara), sağ önde madene inen tahta basamaklar screen 920, sağ kenar kaya duvar
+  mountpass: { name: 'Dağ Geçidi', w: 1280, map: [-2, -2], left: 'crystal', lamps: [], xr: [40, 1200],
+    img: { src: 'assets/bg/dag.webp?v=1', y: 150, w: 2048 }, y0: 345, y1: 415, hs: .48,
+    doors: [], downs: [{ x: 920, to: 'mineroad', name: 'Maden Yolu' }], npcs: [] },
+  // kristal mağara (2048x1152, ışıksız; ışıkları oyun yakar): Dağ Geçidi'nin batısı, çıkmaz uç. Görünen pencere 120-952. satır; zemin screen 382-442;
+  // solda dev kristal duvarı, ortada yeraltı gölü ve terk edilmiş madenci kampı, sağ kenar Dağ Geçidi'ne açılan mağara ağzı
+  crystal: { name: 'Kristal Mağara', w: 1280, map: [-3, -2], right: 'mountpass', lamps: [], xr: [60, 1240],
+    img: { src: 'assets/bg/kristal.webp?v=1', y: 120, w: 2048 }, y0: 382, y1: 442, hs: .48, doors: [], npcs: [],
+    lights: [[81, 156, 'k', 1.4], [37, 237, 'k', 1.2], [119, 325, 'k', 1.2], [250, 94, 'k'], [469, 162, 'k', .8], [591, 287, 'k', .7], [150, 475, 'k'], [600, 481, 'k', .7],
+      [915, 131, 'k'], [940, 231, 'k', .9], [846, 306, 'k', .8], [696, 256, 'k', .6], [890, 362, 'k', .5], [1077, 350, 'k', .5], [1249, 381, 'k', .5], [990, 494, 'k', .7], [1165, 481, 'k', .5], // kristaller
+      [178, 141, 'f', .4], [999, 200, 'f', .4], [249, 211, 'l', .8], [330, 236, 'l', .8], [1107, 130, 'l', .8]] }, // duvar meşaleleri ve asılı fenerler
   // orman kenarı (1536x1024): toprak yol 650. satırdan; runlu taş kemer x 590-980 (190-640. satır), tabela x 1080;
-  // üç çıkış: sağ kenar maden yolu, ortada kemer (orman aşamaları), sol üstte derin ormana giden patika (ileride yeni bölge)
-  forest: { name: 'Orman Kenarı', w: 1280, map: [-3, 0], left: 'wolftrail', right: 'mineroad', lamps: [],
+  // çıkışlar: sağ kenar çarşı, sol kenar kurt izleri, ortada kemer (orman aşamaları), önde aşağı mantar korusu
+  forest: { name: 'Orman Kenarı', w: 1280, map: [-2, 1], left: 'wolftrail', right: 'market', lamps: [],
     img: { src: 'assets/bg/forest.webp?v=1', y: 140 }, y0: 440, y1: 512, hs: .6,
-    doors: [{ x: 640, to: '@forest', name: 'Orman Yolu · 10 aşama', painted: true, ly: 100 }], npcs: [] },
+    doors: [{ x: 640, to: '@forest', name: 'Orman Yolu · 10 aşama', painted: true, ly: 100 }], downs: [{ x: 250, to: 'mushwood', name: 'Mantar Korusu' }], npcs: [] },
   // canavar bölümleri (1280x720 resim): orman yolunun devamı, batıya doğru. mon: yolda duran canavar ve açtığı orman aşaması
-  wolftrail: { name: 'Kurt İzleri', w: 1280, map: [-4, 0], left: 'spiderwood', right: 'forest', lamps: [],
+  wolftrail: { name: 'Kurt İzleri', w: 1280, map: [-3, 1], left: 'spiderwood', right: 'forest', lamps: [],
     img: { src: 'assets/bg/map_wolf.webp?v=1', y: 20, w: 1280 }, y0: 440, y1: 512, hs: .6,
     doors: [], npcs: [{ k: 'mon', mon: 'wolf', stage: 1, x: 760, y: 470, name: 'Kurt' }] },
-  spiderwood: { name: 'Örümcek Yuvası', w: 1280, map: [-5, 0], left: 'mushwood', right: 'wolftrail', lamps: [],
+  spiderwood: { name: 'Örümcek Yuvası', w: 1280, map: [-4, 0], right: 'wolftrail', lamps: [],
     img: { src: 'assets/bg/map_spider.webp?v=1', y: 20, w: 1280 }, y0: 440, y1: 512, hs: .6,
     doors: [], npcs: [{ k: 'mon', mon: 'spider', stage: 2, x: 760, y: 470, name: 'Dev Örümcek' }] },
-  mushwood: { name: 'Mantar Korusu', w: 1280, map: [-6, 0], right: 'spiderwood', lamps: [],
+  mushwood: { name: 'Mantar Korusu', w: 1280, map: [-3, 2], left: 'goblinlair', right: 'forest', lamps: [],
     img: { src: 'assets/bg/map_mushroom.webp?v=1', y: 20, w: 1280 }, y0: 440, y1: 512, hs: .6,
     doors: [], npcs: [{ k: 'mon', mon: 'mushroom', stage: 3, x: 760, y: 470, name: 'Mantar Adam' }] },
-  // arena kapısı: kaldırım 631. satır, zemin 668'den; demir kapı x 800-1120, sol direk x 760
-  arenagate: { name: 'Arena Kapısı', w: 1280, map: [1, 0], left: 'square', lamps: [],
+  // goblin pususu (2048x1152, ışıksız; ateşi ve mantar parıltısını oyun yakar): Mantar Korusu'nun batısı, çıkmaz uç. Görünen pencere 120-952. satır;
+  // patika screen 382-452; solda kazıklı barikat, ortada kazanlı ocak screen 640, sağ kenar Mantar Korusu
+  goblinlair: { name: 'Goblin Pususu', w: 1280, map: [-4, 2], right: 'mushwood', lamps: [], xr: [80, 1240],
+    img: { src: 'assets/bg/map_goblin.webp?v=1', y: 120, w: 2048 }, y0: 382, y1: 452, hs: .5,
+    doors: [], npcs: [{ k: 'mon', mon: 'goblin', stage: 4, x: 760, y: 425, name: 'Goblin' }],
+    lights: [[640, 362, 'f', .7], [1255, 255, 'k', .45], [1240, 280, 'k', .35]] }, // kazanın altındaki ateş, sağ kenarda mavi mantarlar
+  // şampiyon salonu (2048x1152): Arena Kapısı'nın üstü, çıkmaz uç. Mermer zemin 720-868. satır; ortada kürsü, önde arenaya inen merdiven x 1010 (screen 632)
+  champions: { name: 'Şampiyon Salonu', w: 1280, map: [2, -2], lamps: [], xr: [60, 1220],
+    img: { src: 'assets/bg/sampiyon.webp?v=1', y: 130, w: 2048 }, y0: 369, y1: 461, hs: .5,
+    doors: [], downs: [{ x: 632, to: 'arenagate', name: 'Arena Kapısı' }], npcs: [] },
+  // kale (2048x1152): Arena Kapısı'nın doğusu, çıkmaz uç. Avlu taşları 745-943. satır; solda arena duvarı (sol kenar Arena Kapısı),
+  // ortada aslanlı ana kapı x 1190 (screen 744), sağ kenar kapalı kule (x 1900'den)
+  castle: { name: 'Kale', w: 1280, map: [3, -1], left: 'arenagate', lamps: [], xr: [40, 1170],
+    img: { src: 'assets/bg/kale.webp?v=1', y: 130, w: 2048 }, y0: 384, y1: 508, hs: .5,
+    doors: [], npcs: [] },
+  // arena kapısı: kaldırım 631. satır, zemin 668'den; demir kapı x 800-1120 (screen 667-933): arenanın üstündeki Şampiyon Salonu'na çıkar, sol direk x 760
+  arenagate: { name: 'Arena Kapısı', w: 1280, map: [2, -1], left: 'square', right: 'castle', lamps: [],
     img: { src: 'assets/bg/arenagate.webp?v=1', y: 140 }, y0: 444, y1: 512, hs: .6,
-    doors: [], npcs: [{ k: 'arena', x: 600, y: 452, cls: 'warrior', face: 1, name: 'Arena Görevlisi' }] },
+    doors: [{ x: 800, to: 'champions', name: 'Şampiyon Salonu', painted: true, ly: 150 }], npcs: [{ k: 'arena', x: 600, y: 452, cls: 'warrior', face: 1, name: 'Arena Görevlisi' }] },
 };
+// büyük haritada "yakında" bölgeleri: ad, x, y, bağlandığı yer (sahne kimliği ya da başka bir "yakında" bölgenin adı)
+const MAP_SOON = []; // tüm bölgeler dolu; yeni bölge eklenecekse buraya
 const monSign = n => { const b = SAVE.forest.best, k = n.stage; return `${STAGES[k - 1].n} · ${k}. aşama` + (k <= b ? ' ✔' : k > b + 1 ? ' 🔒' : ''); };
 const npcSign = k => k === 'hall' ? `Belediye · Sv ${T.hall}` : k === 'mine' ? `Altın Madeni · Sv ${T.mine} · ${mineStored()} altın` : k === 'alch' ? `Simyacı · Sv ${T.alch}`
   : k === 'smith' ? `Demirci · Sv ${T.forge} · ${SAVE.hammers} çekiç` : k === 'shop' ? 'Tüccar · seviye sınırı yok' : `Arena · Lig ${leagueOf(SAVE.league)}`;
@@ -1614,14 +1683,18 @@ function goScene(to, via) {
 function arrive(tr) {
   const S = SCENES[tr.to];
   me.sc = tr.to; setFloor(S);
-  if (tr.via === 'left') { me.x = S.w - 90; me.face = -1; }
-  else if (tr.via === 'right') { me.x = 90; me.face = 1; }
-  else if (tr.via === 'tp') { // NPC'lerden uzak ilk boş nokta, şeridin ortası
+  const from = tr.from, back = S.doors.find(d => d.to === from), down = (S.downs || []).find(d => d.to === from);
+  const edge = S.left === from ? 'L' : S.right === from ? 'R' : null, pref = tr.via === 'door' ? ['door', 'edge', 'down'] : tr.via === 'down' ? ['down', 'door', 'edge'] : ['edge', 'door', 'down'];
+  const how = tr.via === 'tp' ? 'tp' : pref.find(k => k === 'edge' ? edge : k === 'door' ? back : down) || 'mid';
+  if (how === 'edge') { me.x = edge === 'L' ? 90 : S.w - 90; me.face = edge === 'L' ? 1 : -1; }
+  else if (how === 'door') { me.x = back.x; me.y = Y0 + 22; me.face = 1; } // kapı yakınlık bölgesinin (Y0+30) içinde: tabela hemen etkin
+  else if (how === 'down') { me.x = down.x; me.y = Y1 - 14; me.face = 1; }
+  else if (how === 'tp') { // NPC'lerden uzak ilk boş nokta, şeridin ortası
     const spots = [640, 420, 860, 300, 980, 180, 1100], gap = x => Math.min(999, ...S.npcs.map(n => Math.abs(n.x - x)));
     me.x = spots.find(x => gap(x) >= 170) || spots.reduce((a, b) => gap(b) > gap(a) ? b : a); me.y = Y0 + (Y1 - Y0) * .6; me.face = 1;
     me.tpOut = 0; me.tpIn = now(); me.tp = Date.now(); tpFx.push({ sc: tr.to, x: me.x, y: me.y, t0: now() });
   }
-  else { const back = S.doors.find(d => d.to === tr.from); me.x = back ? back.x : S.w / 2; me.y = Y0 + 34; me.face = 1; }
+  else { me.x = S.w / 2; me.y = Y0 + 34; me.face = 1; }
   others.clear(); boxKey = ''; banner = { t0: now(), txt: S.name };
   for (const n of S.npcs) npcActor(n);
   lobbyPresence(); renderLobby();
@@ -1681,9 +1754,43 @@ function drawHero(A, t, dt, x, y, s, alpha = 1) {
 }
 const headY = (y, s) => y - 182 * s / HS; // karakterin başının üstü
 // geçici kapı: kaldırımın arkasında taş kemer (sahne görseli gelince resmin kendi kapısı kullanılacak)
+// ışıksız boyanmış sahnelerin ışıklarını oyun yakar. S.lights: [x, y, tür, boy] (ekran birimi; y alevin dibi).
+// l: fener (küçük alev + sıcak hale), c: mum öbeği, w: pencere/vitray (titreyen yumuşak parıltı), f: ateş (büyük alev), k: kristal (soğuk nabız)
+function drawSceneLights(S, t) {
+  if (!S.lights) return;
+  sctx.save(); sctx.globalCompositeOperation = 'lighter';
+  S.lights.forEach(([x, y, k, s = 1], i) => {
+    const sx = x - camX; if (sx < -160 || sx > SW + 160) return;
+    const fl = Math.sin(t / 90 + i * 1.7) * .5 + Math.sin(t / 37 + i * 3.1) * .3 + Math.sin(t / 151 + i) * .2; // titreme
+    if (k === 'k') { // kristal: soğuk mavi-mor, yavaş nabız gibi parlayıp söner, alev yok
+      const p = .5 + .5 * Math.sin(t / 900 + i * 2.3), R = 70 * s * (.9 + .15 * p), a = .22 + .2 * p;
+      const g = sctx.createRadialGradient(sx, y, 1, sx, y, R);
+      g.addColorStop(0, `rgba(170,150,255,${a})`); g.addColorStop(.4, `rgba(110,120,255,${a * .4})`); g.addColorStop(1, 'rgba(80,90,255,0)');
+      sctx.fillStyle = g; sctx.fillRect(sx - R, y - R, R * 2, R * 2); return;
+    }
+    const R = { l: 48, c: 36, w: 30, f: 90 }[k] * s * (1 + fl * .05), a = { l: .5, c: .45, w: .4, f: .55 }[k] * (1 + fl * .08);
+    const g = sctx.createRadialGradient(sx, y - 4 * s, 1, sx, y - 4 * s, R);
+    g.addColorStop(0, `rgba(255,196,110,${a})`); g.addColorStop(.3, `rgba(255,150,60,${a * .45})`); g.addColorStop(1, 'rgba(255,110,40,0)');
+    sctx.fillStyle = g; sctx.fillRect(sx - R, y - 4 * s - R, R * 2, R * 2);
+    if (k === 'w') return; // pencerede alev yok, yalnız içeriden vuran ışık
+    const n = k === 'c' ? 3 : 1;
+    for (let j = 0; j < n; j++) { // mum öbeğinde yan yana üç küçük alev
+      const fx = sx + (n > 1 ? (j - 1) * 5 * s : 0), hh = ({ l: 7, c: 4, f: 20 }[k]) * s * (1 + .12 * Math.sin(t / 61 + i + j * 2)), w = hh * (k === 'f' ? .7 : .5);
+      const cols = ['rgba(255,90,25,.7)', 'rgba(255,160,40,.8)', 'rgba(255,225,120,.9)', 'rgba(255,250,225,.95)'];
+      for (let q = 0; q < 4; q++) {
+        const sc = 1 - q * .22, sway = Math.sin(t / (70 + q * 23) + i * 2 + j + q) * w * .12, lift = hh * sc;
+        sctx.fillStyle = cols[q]; sctx.beginPath(); sctx.moveTo(fx - w * .5 * sc, y);
+        sctx.quadraticCurveTo(fx - w * .55 * sc, y - lift * .8, fx + sway, y - lift * 1.6);
+        sctx.quadraticCurveTo(fx + w * .55 * sc, y - lift * .8, fx + w * .5 * sc, y); sctx.closePath(); sctx.fill();
+      }
+    }
+  });
+  sctx.restore();
+}
 function drawDoor(d, t, hot) {
   const sx = d.x - camX; if (sx < -100 || sx > SW + 100) return;
   if (d.painted) { drawLabel(sx, d.ly, d.name, hot ? '#1a1205' : '#f2c14e', hot ? '#f2c14e' : null); return; } // kapı resmin içinde
+  if (d.sign) { drawLabel(sx, d.ly || Y0 - 58, '↑ ' + d.name, hot ? '#1a1205' : '#e9e4f5', hot ? '#f2c14e' : null); return; } // resimde kapı yok: yukarı giden patika tabelası
   const b = Y0 - 8, w = 74, h = 116;
   sctx.fillStyle = '#2b2433'; sctx.beginPath(); sctx.moveTo(sx - w / 2 - 10, b); sctx.lineTo(sx - w / 2 - 10, b - h + 20); sctx.arc(sx, b - h + 20, w / 2 + 10, Math.PI, 0); sctx.lineTo(sx + w / 2 + 10, b); sctx.fill();
   sctx.fillStyle = '#120d1a'; sctx.beginPath(); sctx.moveTo(sx - w / 2, b); sctx.lineTo(sx - w / 2, b - h + 20); sctx.arc(sx, b - h + 20, w / 2, Math.PI, 0); sctx.lineTo(sx + w / 2, b); sctx.fill();
@@ -1703,19 +1810,23 @@ function openWorldMap() {
 }
 function closeWorldMap() { $('wmap').hidden = true; }
 function renderWorldMap() {
-  const ids = Object.keys(SCENES), xs = ids.map(id => SCENES[id].map[0]), ys = ids.map(id => SCENES[id].map[1]);
+  const ids = Object.keys(SCENES), at = n => SCENES[n] ? SCENES[n].map : (MAP_SOON.find(s => s[0] === n) || []).slice(1, 3);
+  const all = [...ids.map(id => SCENES[id].map), ...MAP_SOON.map(s => [s[1], s[2]])], xs = all.map(p => p[0]), ys = all.map(p => p[1]);
   const x0 = Math.min(...xs), y0 = Math.min(...ys), cols = Math.max(...xs) - x0 + 1, rows = Math.max(...ys) - y0 + 1;
-  const cx = id => SCENES[id].map[0] - x0 + .5, cy = id => SCENES[id].map[1] - y0 + .5, box = $('wGrid');
+  const cx = n => at(n)[0] - x0 + .5, cy = n => at(n)[1] - y0 + .5, box = $('wGrid');
   box.style.setProperty('--wc', cols); box.style.setProperty('--wa', (cols / rows / .9).toFixed(3));
+  // yol: önce yatay sonra dikey (köşeli), gelecek bölgelere giden yol soluk
+  const road = (a, b, soon) => `<polyline class="${soon ? 'soon' : ''}" points="${cx(a)},${cy(a)} ${cx(b)},${cy(a)} ${cx(b)},${cy(b)}"/>`;
   let lines = '';
-  for (const [id, S] of Object.entries(SCENES)) for (const to of [S.right, ...S.doors.map(d => d.to)]) if (SCENES[to]) lines += `<line x1="${cx(id)}" y1="${cy(id)}" x2="${cx(to)}" y2="${cy(to)}"/>`;
+  for (const [id, S] of Object.entries(SCENES)) for (const to of [S.right, ...S.doors.map(d => d.to), ...(S.downs || []).map(d => d.to)]) if (SCENES[to]) lines += road(id, to);
+  for (const [n, , , from] of MAP_SOON) lines += road(from, n, true);
   $('wLines').setAttribute('viewBox', `0 0 ${cols} ${rows}`); $('wLines').innerHTML = lines;
   const counts = {};
   if (room) for (const p of room.peers()) if (!p.sameTab && CLASSES[p.presence?.cls]) { const sc = p.presence.sc || 'square'; counts[sc] = (counts[sc] || 0) + 1; }
   box.querySelectorAll('.wnode').forEach(n => n.remove());
   for (const id of ids) {
     const S = SCENES[id], cur = id === me.sc, b = document.createElement('button');
-    b.type = 'button'; b.className = 'wnode' + (cur ? ' cur' : ''); b.style.left = cx(id) / cols * 100 + '%'; b.style.top = cy(id) / rows * 100 + '%';
+    b.type = 'button'; b.className = 'wnode' + (cur ? ' cur' : '') + (id === 'hall' ? ' hub' : ''); b.style.left = cx(id) / cols * 100 + '%'; b.style.top = cy(id) / rows * 100 + '%';
     if (cur) b.setAttribute('aria-current', 'location');
     const im = document.createElement('i'); im.className = 'wi'; if (S.img) im.style.backgroundImage = `url("${S.img.src}")`;
     const nm = document.createElement('span'); nm.className = 'wn'; nm.textContent = S.name;
@@ -1724,6 +1835,12 @@ function renderWorldMap() {
     if (counts[id]) { const c = document.createElement('span'); c.className = 'wcount'; c.textContent = counts[id]; c.title = counts[id] + ' oyuncu'; b.append(c); }
     b.addEventListener('click', () => teleport(id));
     box.appendChild(b);
+  }
+  for (const [n, x, y] of MAP_SOON) { // henüz olmayan bölge: ışınlanılamaz
+    const b = document.createElement('div'); b.className = 'wnode soon'; b.style.left = (x - x0 + .5) / cols * 100 + '%'; b.style.top = (y - y0 + .5) / rows * 100 + '%';
+    const im = document.createElement('i'); im.className = 'wi'; im.textContent = 'yakında';
+    const nm = document.createElement('span'); nm.className = 'wn'; nm.textContent = n;
+    b.append(im, nm); b.setAttribute('aria-label', n + ', yakında'); box.appendChild(b);
   }
 }
 function teleport(to) {
@@ -1773,7 +1890,7 @@ function drawMinimap() {
   sctx.save(); sctx.beginPath(); sctx.roundRect(SW - 214, 12, 202, 76, 6); sctx.clip();
   for (const [id, S] of Object.entries(SCENES)) {
     const [x, y] = pos(id);
-    for (const to of [S.right, ...S.doors.map(d => d.to)]) if (SCENES[to]) { const [x2, y2] = pos(to); sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x2, y2); sctx.stroke(); }
+    for (const to of [S.right, ...S.doors.map(d => d.to), ...(S.downs || []).map(d => d.to)]) if (SCENES[to]) { const [x2, y2] = pos(to); sctx.beginPath(); sctx.moveTo(x, y); sctx.lineTo(x2, y2); sctx.stroke(); }
   }
   for (const id of Object.keys(SCENES)) {
     const [x, y] = pos(id), cur = id === me.sc;
@@ -1799,7 +1916,7 @@ function drawStreet(t, dt) {
   if (dx || dy) { me.target = null; me.door = null; }
   else if (me.target) {
     const ex = me.target.x - me.x, ey = (me.target.y - me.y) / .6, dist = Math.hypot(ex, ey);
-    if (dist < 4) { me.target = null; if (me.door) { const d = me.door; me.door = null; goScene(d.to, 'door'); } }
+    if (dist < 4) { me.target = null; if (me.door) { const d = me.door; me.door = null; goScene(d.to, d.via || 'door'); } }
     else { dx = ex / dist; dy = ey / dist; sp = Math.min(sp, dist); }
   }
   const len = Math.hypot(dx, dy);
@@ -1809,9 +1926,11 @@ function drawStreet(t, dt) {
     if (Math.abs(dx) > .15) me.face = dx > 0 ? 1 : -1;
   }
   me.walk = !!len;
-  // kenara gelince yan sahneye geç; çıkışı olmayan kenar duvardır
-  if (me.x < 40) me.x = 40;
-  if (me.x > S.w - 40) me.x = S.w - 40; // kenarda durur; geçmek için alttaki tuş (E)
+  const mvx = len ? dx : 0, mvy = len ? dy : 0; // bu karedeki yürüyüş yönü (çıkışa doğru mu?)
+  // çıkışı olmayan kenar duvardır
+  const xa = S.xr ? S.xr[0] : 40, xb = S.xr ? S.xr[1] : S.w - 40; // xr: yanları kapalı sahnede yürünebilen aralık
+  if (me.x < xa) me.x = xa;
+  if (me.x > xb) me.x = xb;
   if (me.A) {
     if (me.walk && me.A.cur !== 'walk') Rig.play(me.A, 'walk'); else if (!me.walk && me.A.cur === 'walk') Rig.play(me.A, 'idle');
     me.A.face = me.face; Rig.update(me.A, me.walk ? dt * WALK_RATE : dt);
@@ -1825,6 +1944,7 @@ function drawStreet(t, dt) {
   const bgi = sceneImg(S);
   if (bgi) { const nw = bgi.naturalWidth, f = nw / (S.img.w || 1536); sctx.drawImage(bgi, 0, S.img.y * f, nw, nw * SH / SW, 0, 0, SW, SH); } // resmin tam genişliği, ekran oranında yükseklik (1536 → 624 satır)
   else if (!S.img && bgFar && bgNear) { tileX(bgFar, camX * .5, STREET_Y - bgFar.height); tileX(bgNear, camX, STREET_Y); }
+  if (bgi) drawSceneLights(S, t);
   // fener direkleri kaldırımın önünde
   for (const x of S.lamps) {
     const sx = x - camX; if (sx < -40 || sx > SW + 40) continue;
@@ -1836,12 +1956,25 @@ function drawStreet(t, dt) {
   // yakındaki kapı ya da karakter
   near = null;
   for (const d of S.doors) if (Math.abs(me.x - d.x) < 60 && me.y < Y0 + 30) near = { type: 'door', d };
+  for (const d of S.downs || []) if (Math.abs(me.x - d.x) < 70 && me.y > Y1 - 30) near = { type: 'down', d };
   for (const n of S.npcs) if (Math.abs(me.x - n.x) < 110 && Math.abs(me.y - n.y) < 55) near = { type: 'npc', n };
   if (S.left && me.x < 120) near = { type: 'edge', to: S.left, via: 'left' };
   if (S.right && me.x > S.w - 120) near = { type: 'edge', to: S.right, via: 'right' };
-  // arka kenarda kapıya doğru yürüyen içeri girer
-  if (near && near.type === 'door' && (keys.u || joy.y < -.6) && me.y <= Y0 + 1) goScene(near.d.to, 'door');
+  // çıkışa yürüyen düğmesiz, kendiliğinden geçer: yan kenara dayanınca, arka kenarda kapının/tabelanın önünde yukarı,
+  // ön kenarda "↓" çıkışında aşağı. Varış noktaları (kenardan 90, Y0+22, Y1-14) bu bantların dışında kalır, geri sekmez
+  if (!trans && !me.tpOut && me.walk) {
+    const dr = mvy < 0 && me.y <= Y0 + 5 && S.doors.find(d => Math.abs(me.x - d.x) < 60), dn = mvy > 0 && me.y >= Y1 - 5 && (S.downs || []).find(d => Math.abs(me.x - d.x) < 70);
+    if (S.left && mvx < 0 && me.x <= xa + 4) goScene(S.left, 'left');
+    else if (S.right && mvx > 0 && me.x >= xb - 4) goScene(S.right, 'right');
+    else if (dr) { if (dr.to === '@forest') { me.y = Y0 + 10; me.target = null; openForest(); } else goScene(dr.to, 'door'); }
+    else if (dn) goScene(dn.to, 'down');
+  }
   for (const d of S.doors) drawDoor(d, t, near && near.d === d);
+  for (const d of S.downs || []) { const sx = d.x - camX, hot = near && near.d === d; if (sx < -100 || sx > SW + 100) continue;
+    sctx.save(); sctx.globalCompositeOperation = 'lighter'; sctx.translate(sx, Y1 + 4); sctx.scale(1, .25);
+    const g = sctx.createRadialGradient(0, 0, 4, 0, 0, 90); g.addColorStop(0, `rgba(242,193,78,${hot ? .5 : .28})`); g.addColorStop(1, 'rgba(242,193,78,0)');
+    sctx.fillStyle = g; sctx.fillRect(-90, -90, 180, 180); sctx.restore();
+    drawLabel(sx, SH - 8, '↓ ' + d.name, hot ? '#1a1205' : '#e9e4f5', hot ? '#f2c14e' : null); }
   // kenar çıkışlarının tabelaları
   if (S.left) drawLabel(110 - camX, Y0 - 24, '← ' + SCENES[S.left].name, '#e9e4f5');
   if (S.right) drawLabel(S.w - 110 - camX, Y0 - 24, SCENES[S.right].name + ' →', '#e9e4f5');
@@ -1910,8 +2043,7 @@ function streetBox() {
   if (o) { const pr = o.p.presence || {}; key = 'p' + sel + o.busy + !!pvp + !!invite; txt = `${nameOfPeer(o.p)} · ${CLASSES[pr.cls].name} · Sv ${+pr.pl || 1} · Lig ${+pr.lg || 1}`; btn = o.busy ? 'Meşgul' : 'Meydan oku'; }
   else if (near && near.type === 'npc' && near.n.mon) { const st = near.n.stage, open = st <= SAVE.forest.best + 1; key = 'm' + st + open; txt = monSign(near.n); btn = open ? 'Savaş (E)' : 'Önce önceki aşamayı geç'; }
   else if (near && near.type === 'npc') { key = 'n' + near.n.k; txt = `${near.n.name} · ${BNAME[near.n.k]}`; btn = near.n.k === 'arena' ? 'Arenaya gir (E)' : 'Konuş (E)'; }
-  else if (near && near.type === 'door') { key = 'd' + near.d.to; txt = near.d.name; btn = near.d.to === '@forest' ? 'Ormana gir (E)' : 'Kapıdan geç (E)'; }
-  else if (near && near.type === 'edge') { key = 'e' + near.to; txt = (near.via === 'left' ? '← ' : '') + SCENES[near.to].name + (near.via === 'right' ? ' →' : ''); btn = 'Geç (E)'; }
+  // kapı, kenar ve "↓" çıkışları düğme göstermez: üstüne yürüyünce kendiliğinden geçilir
   if (key === boxKey) return; boxKey = key;
   $('sbox').hidden = !key; if (!key) return;
   $('sboxT').textContent = txt; $('sboxB').textContent = btn; $('sboxI').hidden = !o;
@@ -1930,6 +2062,7 @@ function interact() {
   if (near.type === 'npc' && near.n.mon) { if (near.n.stage <= SAVE.forest.best + 1) { Sfx.play('click'); startForest(near.n.stage); } }
   else if (near.type === 'npc') enterBuilding(near.n.k);
   else if (near.type === 'edge') goScene(near.to, near.via);
+  else if (near.type === 'down') goScene(near.d.to, 'down');
   else if (near.d.to === '@forest') openForest();
   else goScene(near.d.to, 'door');
 }
@@ -1954,7 +2087,9 @@ SV.addEventListener('click', e => {
   // kapıya tıklayınca kapıya yürü ve geç
   const d = y < Y0 && S.doors.find(d => Math.abs(d.x - wx) < 60);
   if (d) { me.target = { x: d.x, y: Y0 }; me.door = d; return; }
-  me.target = { x: Math.max(40, Math.min(S.w - 40, wx)), y: Math.max(Y0, Math.min(Y1, y)) };
+  const dn = y > Y1 - 24 && (S.downs || []).find(d => Math.abs(d.x - wx) < 70);
+  if (dn) { me.target = { x: dn.x, y: Y1 }; me.door = { ...dn, via: 'down' }; return; }
+  me.target = { x: Math.max(S.xr ? S.xr[0] : 40, Math.min(S.xr ? S.xr[1] : S.w - 40, wx)), y: Math.max(Y0, Math.min(Y1, y)) };
 });
 const KEYMAP = { arrowleft: 'l', a: 'l', arrowright: 'r', d: 'r', arrowup: 'u', w: 'u', arrowdown: 'd', s: 'd' };
 addEventListener('keydown', e => {
