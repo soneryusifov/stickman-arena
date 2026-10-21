@@ -246,47 +246,91 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 /* savaşçı bilgi penceresi: ekranın büyük kısmı, kaydırmasız */
 .portrait.insp-open{cursor:zoom-in;pointer-events:auto}
 .pl img[role="button"]{cursor:zoom-in;transition:box-shadow .15s} .pl img[role="button"]:hover,.pl img[role="button"]:focus-visible{box-shadow:0 0 0 2px var(--gold);outline:none}
-.guide.insp .gc.ic{max-width:none;width:min(1120px,94vw);height:min(86vh,700px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:10px;padding:16px 18px;position:relative;overflow:hidden}
+.guide.insp .gc.ic{max-width:none;width:min(1120px,94vw);height:min(88vh,740px);display:flex;flex-direction:column;gap:10px;padding:16px 18px;position:relative;overflow:hidden}
 .ihead h2{text-align:left;font-size:21px;padding-right:48px} .ihead p{margin:2px 0 0;color:var(--muted);font-size:13.5px}
 .iclose{position:absolute;top:10px;right:10px}
-.ibody{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,2.2fr) minmax(0,1fr);gap:14px;min-height:0}
-.iitem:nth-child(-n+5){justify-content:flex-end} .iitem:nth-child(n+6){justify-content:flex-start} /* iki sıra ortada birbirine yakın */
-.guide.insp.mon #inspCv{display:none} .guide.insp.mon .ibody{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr)}
+/* karakter sayfası: kahraman ortada, eşyalar vücuttaki yerine göre iki yanında (solda kask→dizlik, sağda silah→pelerin), değerler en sağda */
+.ibody{display:grid;grid-template-columns:minmax(0,.62fr) minmax(0,1.05fr) minmax(0,.62fr) minmax(0,1.15fr);gap:4px;min-height:0}
+.guide.insp.mon #inspCv,.guide.insp.mon #inspItemsR{display:none} .guide.insp.mon .ibody{grid-template-columns:minmax(0,2.3fr) minmax(0,1fr)}
+.guide.insp.mon #inspItems{display:block}
 #inspCv{width:100%;height:100%;min-height:0;object-fit:contain;border-radius:6px;background:radial-gradient(60% 55% at 50% 60%,#2a2236,#0f0c16)}
-.iitems{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;min-height:0}
-.iitem{--lab:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:0;min-width:0;overflow:hidden;text-align:center;container-type:size}
+.iitems{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(5,minmax(0,1fr));gap:6px;min-height:0}
+.iitem{--lab:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:0;min-width:0;overflow:hidden;text-align:center;container-type:size}
 .iitem .ifr{--b:#5a3e24;--g:transparent;position:relative;flex:none;width:min(100cqw,calc(100cqh - var(--lab)));height:min(100cqw,calc(100cqh - var(--lab)));display:grid;place-items:center;border-radius:6px;border:2px solid var(--b);
   background:var(--bg);box-shadow:inset 0 0 18px rgba(0,0,0,.55),0 0 12px var(--g);overflow:hidden}
 .iitem canvas{width:100%;height:100%;min-height:0;object-fit:contain;position:relative;z-index:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
-.iitem .tn{position:absolute;top:4px;left:4px;z-index:2;min-width:1.6em;padding:2px 4px;border-radius:3px;font:800 12px/1 var(--font-body);color:#fff;background:rgba(0,0,0,.6);border:1px solid var(--b);text-align:center}
-.iitem b{display:block;max-width:100%;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iitem .tn{position:absolute;top:4px;left:4px;z-index:2;min-width:1.6em;padding:2px 4px;border-radius:3px;font:800 10.5px/1 var(--font-body);color:#fff;background:rgba(0,0,0,.6);border:1px solid var(--b);text-align:center}
+.iitem b{display:block;max-width:100%;font-size:12.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .iitem small{display:block;max-width:100%;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* seviye çerçeveleri: ahşap → taş → bakır → demir → gümüş → altın → zümrüt → safir → ametist → efsanevi ateş */
-.tr1{--b:#6b4a2b;--bg:repeating-linear-gradient(90deg,#2a1c10 0 9px,#24180d 9px 18px)}
-.tr2{--b:#6c6d74;--bg:radial-gradient(70% 70% at 50% 40%,#3a3a3f,#1c1c20)}
-.tr3{--b:#b06a3c;--bg:radial-gradient(70% 70% at 50% 40%,#4a2a17,#1d110a)}
-.tr4{--b:#7f93a8;--bg:radial-gradient(70% 70% at 50% 40%,#2c3846,#11161d)}
-.tr5{--b:#d3dae4;--g:rgba(210,220,235,.25);--bg:radial-gradient(70% 70% at 50% 40%,#454c57,#171a20)}
-.tr6{--b:#e8b94a;--g:rgba(232,185,74,.35);--bg:radial-gradient(70% 70% at 50% 40%,#5a4314,#1d1607)}
-.tr7{--b:#43d695;--g:rgba(67,214,149,.4);--bg:radial-gradient(70% 70% at 50% 40%,#145a3e,#08190f)}
-.tr8{--b:#5b97ff;--g:rgba(91,151,255,.5);--bg:radial-gradient(70% 70% at 50% 40%,#1b3a7a,#080f22)}
-.tr9{--b:#c06bff;--g:rgba(192,107,255,.55);--bg:radial-gradient(60% 60% at 50% 40%,#5a2088,#170824 75%)}
-.tr10{--b:#ffcf5a;--g:rgba(255,120,40,.7);--bg:radial-gradient(60% 60% at 50% 45%,#ffb347 0%,#c2381a 38%,#3a0a08 80%)}
+/* kademe arka planları: üstten parlayan, kademe renginden koyuya giden gradyan. seviye çerçeveleri: ahşap → taş → bakır → demir → gümüş → altın → zümrüt → safir → ametist → efsanevi ateş */
+.tr1,.sc.tr1{--b:#6b4a2b;--bg:radial-gradient(90% 70% at 50% 0%,#6b4f3555,transparent 70%),linear-gradient(170deg,#6b4f35 0%,#3a2a1b 48%,#1a120b 100%)}
+.tr2,.sc.tr2{--b:#6c6d74;--bg:radial-gradient(90% 70% at 50% 0%,#7a7c8655,transparent 70%),linear-gradient(170deg,#7a7c86 0%,#3e3f46 48%,#18181c 100%)}
+.tr3,.sc.tr3{--b:#b06a3c;--bg:radial-gradient(90% 70% at 50% 0%,#b8743f55,transparent 70%),linear-gradient(170deg,#b8743f 0%,#5c3418 48%,#1d110a 100%)}
+.tr4,.sc.tr4{--b:#7f93a8;--bg:radial-gradient(90% 70% at 50% 0%,#6f88a655,transparent 70%),linear-gradient(170deg,#6f88a6 0%,#2f3c4d 48%,#11161d 100%)}
+.tr5,.sc.tr5{--b:#d3dae4;--g:rgba(210,220,235,.25);--bg:radial-gradient(90% 70% at 50% 0%,#c8d0dc55,transparent 70%),linear-gradient(170deg,#c8d0dc 0%,#5a6170 48%,#181b21 100%)}
+.tr6,.sc.tr6{--b:#e8b94a;--g:rgba(232,185,74,.35);--bg:radial-gradient(90% 70% at 50% 0%,#e8b94a55,transparent 70%),linear-gradient(170deg,#e8b94a 0%,#7a5a18 48%,#211807 100%)}
+.tr7,.sc.tr7{--b:#43d695;--g:rgba(67,214,149,.4);--bg:radial-gradient(90% 70% at 50% 0%,#3fcf8e55,transparent 70%),linear-gradient(170deg,#3fcf8e 0%,#166646 48%,#07180f 100%)}
+.tr8,.sc.tr8{--b:#5b97ff;--g:rgba(91,151,255,.5);--bg:radial-gradient(90% 70% at 50% 0%,#5b97ff55,transparent 70%),linear-gradient(170deg,#5b97ff 0%,#1d3f85 48%,#080f22 100%)}
+.tr9,.sc.tr9{--b:#c06bff;--g:rgba(192,107,255,.55);--bg:radial-gradient(90% 70% at 50% 0%,#c06bff55,transparent 70%),linear-gradient(170deg,#c06bff 0%,#5a2088 48%,#160822 100%)}
+.tr10,.sc.tr10{--b:#ffcf5a;--g:rgba(255,120,40,.7);--bg:radial-gradient(90% 70% at 50% 0%,#ffd36a55,transparent 70%),linear-gradient(170deg,#ffd36a 0%,#e0571f 48%,#3a0a08 100%)}
 .tr9::before,.tr10::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0 20%,rgba(255,255,255,.18) 25%,transparent 30% 70%,rgba(255,255,255,.18) 75%,transparent 80%);animation:trspin 6s linear infinite}
 .tr10::before{background:conic-gradient(from 0deg,transparent 0 15%,rgba(255,230,140,.35) 22%,transparent 30% 65%,rgba(255,230,140,.35) 72%,transparent 80%);animation-duration:3.5s}
 @keyframes trspin{to{transform:rotate(1turn)}}
 @media (prefers-reduced-motion:reduce){.tr9::before,.tr10::before{animation:none}}
 .iside{display:flex;flex-direction:column;gap:10px;min-height:0;overflow:hidden}
 .istats{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0;font-size:14px} .istats.stats{grid-template-columns:auto minmax(2.5em,1fr) auto;align-items:center} .istats.stats dd.sv{text-align:right} .istats dt{color:var(--muted)} .istats dd{margin:0;font-weight:700;text-align:right;font-variant-numeric:tabular-nums}
-.iskills{flex:1 1 0;min-height:0;container-type:size}
+.iskills{flex:1 1 0;min-height:0;overflow:hidden}
+.iskills .iskg{display:flex;flex-direction:column;gap:6px}
+.iskills .isk{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:10px;padding:6px 10px;text-align:left;justify-content:stretch}
+.iskills .isk svg{width:28px;height:28px} .iskills .isk b{display:block;-webkit-line-clamp:1;white-space:nowrap;font-size:13px}
+.iskills .isk small{display:block;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .iskills .isk em{font-style:normal;font-size:11.5px;color:#8fbcff;font-weight:700;white-space:nowrap}
+.sgrp{grid-column:1/-1;margin-top:4px;font:800 11px/1 var(--font-body);letter-spacing:.14em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid rgba(242,193,78,.25);padding-bottom:3px}
+.sgrp:first-child{margin-top:0}
+.ihead{position:relative;display:flex;align-items:center;gap:14px;padding-right:56px} .ihx{flex:1;min-width:0}
+.iav{width:64px;height:64px;border-radius:50%;border:2px solid var(--gold);background:radial-gradient(circle at 50% 40%,#2a2236,#0f0c16);flex:none}
+.guide.insp.foe .iav{border-color:#c41a30}
+.ixp{display:flex;align-items:center;gap:8px;margin-top:5px} .ixp i{display:block;flex:0 1 260px;height:7px;border-radius:4px;background:linear-gradient(90deg,#c99a2a var(--p,0%),#221d30 var(--p,0%))} .ixp small{color:var(--muted);font-size:12px}
+.iact{display:flex;gap:6px;flex:none} .iact .btn{padding:.35em .9em;font-size:13px}
+.ipow{display:flex;flex-direction:column;align-items:flex-end;gap:4px;line-height:1;flex:none} .ipow .ilg{font:800 11px/1 var(--font-body);letter-spacing:.08em;text-transform:uppercase;color:#1a1208;background:var(--gold);padding:3px 8px;border-radius:999px}
+.itabs{display:flex;gap:6px} .itabs[hidden]{display:none} .itabs button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px 6px 0 0;padding:.35em 1.1em;font:700 13.5px var(--font-body);cursor:pointer}
+.itabs button[aria-selected="true"]{color:var(--gold);border-color:var(--gold-deep);background:rgba(242,193,78,.08)}
+.ipanel{display:none;flex:1 1 0;min-height:0;overflow:auto} .guide.insp .ibody{flex:1 1 0} #insp[data-tab="stat"] .ibody,#insp[data-tab="acct"] .ibody{display:none} #insp[data-tab="stat"] #inspStatTab,#insp[data-tab="acct"] #inspAcctTab{display:block}
+.ipgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+.ipgrid div{display:flex;flex-direction:column;gap:3px;padding:12px 14px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.03)} .ipgrid small{color:var(--muted);font-size:12.5px} .ipgrid b{font:800 24px var(--font-body);color:var(--text)}
+#inspAcctTab .ipbtns{display:flex;gap:8px;margin-top:14px}
+.cm .cact{padding:.1em .7em;font-size:12px;margin-left:4px} #inspAcct{display:block;margin:0}
+.isp{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:6px;border:1px solid var(--gold-deep);background:rgba(242,193,78,.06);font-weight:700} .isp:empty{display:none} .isp b{color:var(--gold)} .isp .btn{padding:.3em .9em;font-size:12.5px}
+.ibody{position:relative} .ilines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+#inspItems .iitem{align-items:flex-end;text-align:right} #inspItemsR .iitem{align-items:flex-start;text-align:left} .iitem small.ipw{color:var(--gold);font-weight:700}
+.ipow small{font-size:13px;font-weight:700;color:var(--muted)} .ipow b{font:700 26px/1 var(--font-display);color:var(--gold)}
+/* kahraman seçme penceresi: ekranın yarısı */
+.guide.hsel .gc.hsc{max-width:none;width:50vw;height:50vh;min-width:min(520px,94vw);min-height:min(320px,90vh);display:flex;flex-direction:column;gap:10px;padding:14px 16px;position:relative}
+.hsc h2{margin:0;text-align:left;font-size:20px;padding-right:44px}
+.hgrid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:8px}
+.hgrid .card{min-height:0} .hgrid .card img{flex:1 1 0;min-height:0;height:auto;aspect-ratio:auto;object-fit:contain} .hgrid .card .cn{font-size:12px;padding:2px 1px 4px}
+.hgrid .card.on{outline:2px solid var(--gold);outline-offset:1px}
+/* hediye penceresi */
+.guide.gift .gc.gfc{max-width:420px;width:94vw;display:flex;flex-direction:column;gap:10px;padding:18px;position:relative}
+.gfc h2{margin:0;text-align:left;font-size:20px;padding-right:44px} .gfto{margin:0;color:var(--muted)} .gfto b{color:var(--gold)}
+.gfrow{display:grid;grid-template-columns:80px 1fr;align-items:center;gap:10px;font-weight:700} .gfrow input{padding:.5em .7em;border-radius:6px;border:1px solid var(--line);background:#100d17;color:var(--text);font:inherit;font-size:16px}
+.gfnote{margin:0;font-size:13px;color:var(--muted);line-height:1.45} .gfnote b{color:var(--gold)} .gferr{margin:0;min-height:1.2em;color:#ff7a7a;font-size:13px;font-weight:700}
+.gfbtns{display:flex;justify-content:flex-end;gap:8px} .mlist{display:flex;flex-direction:column;gap:6px} .mlist div{padding:8px 10px;border-radius:6px;border:1px solid var(--line);background:rgba(255,255,255,.03)} .mlist b{color:var(--gold)}
+/* uyum rozeti ve "takabilecekler" */
+.iitem .ufit{position:absolute;right:4px;top:4px;z-index:2;padding:2px 5px;border-radius:3px;font:800 10.5px/1 var(--font-body);color:#1a1208;background:#f2c14e}
+.ivwear{display:flex;flex-wrap:wrap;gap:6px;align-items:center} .ivwear small{flex-basis:100%;color:var(--muted);font-size:12px}
+.ivwear .btn{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 3px;font-size:12.5px;text-transform:none;letter-spacing:0}
+.ivwear img{width:26px;height:26px;border-radius:50%;object-fit:cover;background:#0f0c16} .ivwear em{font-style:normal;font-weight:800;color:#6dff95} .ivwear .btn.ghost em{color:#f2c14e}
+.iacct{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;align-items:center} .iacct:empty{display:none}
+.iacct span{display:flex;align-items:baseline;gap:5px;padding:3px 9px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:12.5px} .iacct small{color:var(--muted)} .iacct b{color:var(--text)} .iacct .btn{padding:.25em .9em;font-size:12.5px}
+.guide.insp.foe .gc.ic{border-color:#c41a30;box-shadow:0 0 0 1px #c41a30,0 20px 60px rgba(0,0,0,.7)} .guide.insp.foe .ihead h2,.guide.insp.foe .ipow b{color:#ff6a6a}
 .iskg{--n:2;--s:min(calc((100cqw - 6px * (var(--n) - 1)) / var(--n)),calc((100cqh - 6px * (4 / var(--n) - 1)) / (4 / var(--n))));display:grid;grid-template-columns:repeat(var(--n),var(--s));grid-auto-rows:var(--s);gap:6px}
 .isk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:6px 4px;text-align:center;border-radius:6px;border:1px solid #2e2840;
   background:radial-gradient(70% 70% at 50% 35%,#221b30,#0f0c16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);min-width:0;overflow:hidden}
 .isk svg{width:clamp(18px,34%,40px);height:auto;aspect-ratio:1;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px currentColor);flex:none}
 .isk b{font-size:12.5px;line-height:1.1;color:var(--text);max-width:100%;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .isk small{font-size:11px;color:var(--muted);line-height:1.1}
-@media (max-height:520px){ .guide.insp .gc.ic{height:92vh;padding:10px 12px;gap:6px} .ibody{grid-template-columns:minmax(0,.6fr) minmax(0,2fr) minmax(0,1.15fr);gap:8px} .iitem{--lab:16px} .iitem small{display:none} .iitem b{font-size:11px} .iitems{gap:5px}
-  .istats{font-size:11.5px;gap:1px 8px} .ihead h2{font-size:17px} .ihead p{font-size:12px} .iside{gap:6px} .iskg{--n:4;gap:4px} .isk{padding:3px 2px;gap:2px} .isk b{font-size:9.5px} .isk small{display:none} }
+@media (max-height:520px){ .guide.insp .gc.ic{height:92vh;padding:10px 12px;gap:6px} .ibody{grid-template-columns:minmax(0,.55fr) minmax(0,.9fr) minmax(0,.55fr) minmax(0,1.2fr);gap:6px} .iitem{--lab:30px} .iitem small{display:none} .iitem small.ipw{display:block;font-size:9.5px} .iitem b{font-size:11px} .iitems{gap:5px}
+  .istats{font-size:11.5px;gap:1px 8px} .ihead h2{font-size:17px} .ihead p{font-size:12px} .iside{gap:6px} .iskills .isk{padding:3px 6px;gap:6px;grid-template-columns:22px minmax(0,1fr) auto} .iskills .isk svg{width:20px;height:20px} .iskills .isk b{font-size:10.5px} .iskills .isk small,.iskills .isk em{font-size:9.5px} .ipow b{font-size:18px} .sgrp{font-size:9px} }
 /* hesap penceresi */
 .acc .gc{gap:10px}
 .atabs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -317,6 +361,12 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .skill{--c:var(--gold);position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px 10px;cursor:pointer;color:var(--text);font-family:var(--font-body);
   border-radius:4px;border:1px solid var(--gold-deep);background:linear-gradient(160deg,#2b2236,#151120);box-shadow:inset 0 0 0 2px #0b0910, inset 0 0 18px rgba(242,193,78,.12);transition:transform .12s, opacity .2s}
 .skill:hover:not(:disabled){transform:translateY(-2px)}
+/* basma hissi: düğme hafifçe çöker */
+.skill.press:not(:disabled),.skill:active:not(:disabled){transform:scale(.9);transition:transform .06s}
+/* öfke: saldırı düğmelerinin çerçevesi kırmızı titrer (sonraki vuruş güçlü) */
+.skills.fury .skill.atk:not(:disabled){border-color:#ff3a1a;box-shadow:0 0 0 1px #ff3a1a,0 0 14px rgba(255,58,26,.65);animation:furyBtn .45s ease-in-out infinite}
+@keyframes furyBtn{0%,100%{translate:0 0}25%{translate:-1.5px 0}75%{translate:1.5px 0}}
+@media (prefers-reduced-motion:reduce){.skills.fury .skill.atk{animation:none}}
 .skill:disabled{opacity:.38;cursor:not-allowed;filter:grayscale(.6)}
 .skill svg{width:40px;height:40px;color:var(--c);stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px currentColor)}
 .skill .nm{font-weight:700;font-size:14px;text-align:center;line-height:1.1}
@@ -346,7 +396,12 @@ canvas#cv{display:block;width:100%;height:auto;aspect-ratio:16/9;max-width:100%}
 .stage{position:relative;width:min(100%,calc((100dvh - 74px) * 1280 / 520));container-type:inline-size}
 .stage #sv{width:100%;height:auto}
 /* sahnenin üstündeki paneller: oyuncular (sol üst, açılır) ve sohbet (sağ alt, küçültülür) */
-.ohud{position:absolute;top:10px;left:10px;z-index:6;display:flex;gap:8px;flex-wrap:wrap}
+.ohud{position:absolute;top:10px;left:10px;z-index:6;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+/* profil düğmesi: yuvarlak portre, ad ve seviye */
+.ohud .pfbtn{display:flex;align-items:center;gap:8px;padding:3px 12px 3px 3px;border-radius:999px;text-transform:none;letter-spacing:0}
+.pfbtn canvas{width:40px;height:40px;border-radius:50%;border:2px solid var(--gold);background:radial-gradient(circle at 50% 40%,#2a2236,#0f0c16);flex:none}
+.pfbtn span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1} .pfbtn b{font:800 14px var(--font-body);color:var(--text)} .pfbtn small{font-size:11.5px;color:var(--gold)}
+@media (max-height:520px){ .pfbtn canvas{width:30px;height:30px} .pfbtn b{font-size:12px} .pfbtn small{font-size:10px} }
 .ohud .btn{padding:.35em .9em;font-size:13px;background:rgba(14,11,20,.82)}
 .ohud .btn[aria-expanded="true"]{border-color:var(--gold);color:var(--gold)}
 .opanel{position:absolute;z-index:7;background:rgba(14,11,20,.88);border:1px solid var(--line);border-radius:6px;display:flex;flex-direction:column;gap:8px;padding:10px 12px;min-width:0}
@@ -424,10 +479,10 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 #battleScreen{isolation:isolate}
 #battleScreen .arena{width:min(100vw,calc(100dvh * 16 / 9));border:0;border-radius:0;box-shadow:none;container-type:inline-size}
 #battleScreen .lower,#battleScreen .hint,#teamL,#teamR{display:none}
-#battleScreen .hud{position:absolute;inset:0 0 auto 0;justify-content:center;padding:.8% 0;background:none;border:0;font-size:clamp(9px,1.05cqw,16px)}
-.bctl{position:absolute;top:1.4%;display:flex;gap:6px;z-index:7} .bctl.l{left:1.2%} .bctl.r{right:1.2%}
+#battleScreen .hud{position:absolute;inset:0 0 auto 0;z-index:3;pointer-events:none;justify-content:center;padding:.8% 0;background:none;border:0;font-size:clamp(9px,1.05cqw,16px)}
+.bctl{position:absolute;bottom:1.4%;display:flex;gap:6px;z-index:7} .bctl.l{left:1.2%} .bctl.r{right:1.2%}
 .bctl .tbtn:not([aria-pressed="true"]),.bctl .back{background:rgba(14,11,20,.75)}
-.bset{position:absolute;top:calc(100% + 6px);right:0;display:flex;flex-direction:column;gap:6px;padding:8px;min-width:170px;background:rgba(14,11,20,.95);border:1px solid var(--line);border-radius:6px}
+.bset{position:absolute;bottom:calc(100% + 6px);right:0;display:flex;flex-direction:column;gap:6px;padding:8px;min-width:170px;background:rgba(14,11,20,.95);border:1px solid var(--line);border-radius:6px}
 .bset[hidden]{display:none}
 .bset .tbtn{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:10px;width:100%;height:auto;min-height:34px;padding:4px 10px;text-transform:none} .bset .tbtn::after{content:attr(title);font-size:13px;font-weight:700}
 #battleScreen .log{display:block;position:absolute;left:50%;bottom:1.2%;transform:translateX(-50%);width:44%;max-height:15%;overflow:hidden;z-index:3;pointer-events:none;text-align:center;
@@ -439,7 +494,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
    üst düğmeler, sıra göstergesi ve savaş günlüğü kırpılan payın içine kayar */
 @media (min-aspect-ratio: 16/9){
   #battleScreen .arena{width:100vw;--crop:calc((100vw * 9 / 16 - 100dvh) / 2)}
-  #battleScreen .hud{top:var(--crop)} #battleScreen .bctl{top:calc(var(--crop) + 1.4%)} #battleScreen .log{bottom:calc(var(--crop) + 1.2%)}
+  #battleScreen .hud{top:var(--crop)} #battleScreen .bctl{bottom:calc(var(--crop) + 1.4%)} #battleScreen .log{bottom:calc(var(--crop) + 1.2%)}
 }
 /* yetenek düğmeleri kare ve biraz daha büyük: simge üstte, ad altta (telefonda da) */
 #battleScreen .skills{width:min(56%,700px)}
@@ -452,26 +507,33 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
   #battleScreen .skills .skill svg{width:2.5em;height:2.5em}
   #battleScreen .skills .skill .nm{font-size:1em}
 }
-/* kahraman plakaları: ekranın kenarlarında alt alta (kendi takımın solda, rakipler sağda), üst düğmelerin altından başlar */
+/* kahraman kartları: ekranın üst şeridi. Sol yarıda kendi takımın, sağ yarıda rakipler yan yana; ortada süre ve sıra */
 .plates{position:absolute;inset:0;pointer-events:none;z-index:2}
-.pcol{position:absolute;top:calc(var(--crop,0px) + 1.4% + 46px);display:flex;flex-direction:column;gap:.45em;font-size:clamp(9px,1.02cqw,15px)}
-.pcol.l{left:1.2%;align-items:flex-start} .pcol.r{right:1.2%;align-items:flex-end}
+.plates::before{content:'';position:absolute;left:0;right:0;top:0;height:calc(var(--crop,0px) + 6.2em);font-size:clamp(9px,1.02cqw,15px);background:linear-gradient(rgba(6,5,10,.9),rgba(6,5,10,.7) 75%,rgba(6,5,10,0))}
+.pcol{position:absolute;top:calc(var(--crop,0px) + .5em);width:45.6%;display:flex;gap:.4em;font-size:clamp(9px,1.02cqw,15px)}
+.pcol.l{left:.6%} .pcol.r{right:.6%;flex-direction:row-reverse}
+.pcol .plate{flex:1 1 0;min-width:0} /* kartlar yarıyı doldurur: ortada yalnız süre için dar boşluk */
 .plate{--pc:var(--gold);position:relative;display:flex;align-items:center;gap:.35em;padding:.22em .4em .22em .22em;
   background:rgba(8,6,12,.8);border:1px solid var(--pc);border-radius:.45em;pointer-events:auto;cursor:pointer;white-space:nowrap;transition:box-shadow .2s,opacity .3s}
-.plate .portrait{width:2.9em;height:2.9em;border-width:1px;border-radius:.3em;box-shadow:none;flex:none}
-.plate .pb{display:flex;flex-direction:column;gap:.16em;width:8.6em;min-width:0}
-.plate .pn{font-size:.72em;font-weight:700;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #000;line-height:1.1} .plate .pn b{color:var(--gold);font-family:var(--font-display)}
-.plate .bar{height:.85em;border-radius:.15em} .plate .bar span{font-size:.62em} /* can ve mana aynı kalınlıkta, ikisinde de sayı yazar */
-.plate.ally .bar.hp i{background:linear-gradient(#8af5a8,#33b85c 55%,#1f7a3c)}
-.plate .fz{display:flex;align-items:center;gap:.22em;height:.55em}
+.plate .portrait{width:4.3em;height:4.3em;border-width:1px;border-radius:.3em;box-shadow:none;flex:none}
+.plate .pb{display:flex;flex-direction:column;gap:.16em;flex:1;min-width:0}
+.plate .bar.hp b{position:absolute;left:0;top:0;bottom:0;background:#fff1c2;opacity:.75;transition:width .7s ease .35s} .plate .bar i{position:relative;z-index:1} .plate .bar span{z-index:2} /* hasar izi: kaybolan can bir an açık renkte kalır */
+.plate .pn{display:flex;gap:.3em;align-items:baseline;} .plate .pn span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis} .plate .pn .ppw{font-style:normal;color:var(--gold);flex:none} .plate .pn{font-size:.72em;font-weight:700;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #000;line-height:1.1} .plate .pn b{color:var(--gold);font-family:var(--font-display)}
+.plate .bar{height:1.7em;border-radius:.2em} .plate .bar span{font-size:.95em} /* kalın barlar (eskisinin 2 katı) */ /* can ve mana aynı kalınlıkta, ikisinde de sayı yazar */
+.plate.ally .bar.hp i{background:linear-gradient(#8ef08a,#3fbf3a 45%,#21891f 55%,#2fa62b)}
+/* parlak barlar: koyu çerçeve, üstte parlama, ortada "şimdiki / en çok" */
+.plate .bar{background:linear-gradient(#141018,#241d2c);border:1px solid #050407;box-shadow:inset 0 1px 2px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.12)}
+.plate .bar.hp i{background:linear-gradient(#ff7a6e,#e3342b 45%,#a8160f 55%,#cf2a22)} .plate .bar.mp i{background:linear-gradient(#7fb4ff,#2f78e8 45%,#1849a8 55%,#2a66cf)}
+.plate .bar i{border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.45)} .plate .bar span{font-weight:800;letter-spacing:.02em;text-shadow:0 1px 1px #000,0 0 3px #000}
+.plate .fz{display:flex;align-items:center;gap:.22em;min-height:1.05em;margin-top:.1em} /* alt satır: öfke topları ve durumlar (kanama, zehir, kalkan…) */
 .plate .fz > i{width:.5em;height:.5em;border-radius:50%;background:#3a2a2a;flex:none} .plate .fz > i.on{background:#e07a3a}
-.plate.fury .fz > i{background:#ff3a1a;box-shadow:0 0 .3em #ff3a1a} .plate.fury{border-color:#ff5a2a}
-.plate .st{font-style:normal;display:flex;gap:.3em;margin-left:.2em;font-size:.55em;font-weight:800;text-transform:uppercase} .plate .st i{font-style:normal}
+.plate.fury .fz > i.on{background:#ff3a1a;box-shadow:0 0 .3em #ff3a1a} .plate.fury{border-color:#ff5a2a}
+.plate .st{font-style:normal;display:flex;flex-wrap:wrap;gap:.3em;margin-left:auto;font-size:.72em;font-weight:800;text-transform:uppercase} .plate .st i{font-style:normal;padding:.05em .4em;border-radius:.3em;background:rgba(0,0,0,.45);border:1px solid currentColor;line-height:1.2}
 .plate.cur{box-shadow:0 0 0 1px var(--pc),0 0 1em var(--pc)}
 .plate.tgt{outline:2px solid #ff5a5a;outline-offset:1px} .plate.atgt{outline:2px solid #4be38a;outline-offset:1px}
 .plate.dead{opacity:.35;filter:grayscale(1);pointer-events:none} /* ölen kahraman listede soluk kalır */
 .pcol.r .plate{flex-direction:row-reverse;padding:.22em .22em .22em .4em} /* sağdakilerde portre dış kenarda */
-.plates.tight .pcol{gap:.35em} .plates.tight .plate .portrait{width:2.5em;height:2.5em} .plates.tight .plate .pb{width:7.4em} .plates.tight .plate{gap:.25em;padding:.18em .3em .18em .18em}
+.plates.tight .pcol{gap:.3em} .plates.tight .plate .portrait{width:3.6em;height:3.6em} .plates.tight .plate{gap:.25em;padding:.18em .3em .18em .18em}
 .plates.tight .pcol.r .plate{padding:.18em .18em .18em .3em}
 /* savaşta açılan pencereler: ortada, ekranın yarısı */
 
@@ -481,7 +543,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
   .bctl .tbtn,.bctl .back{height:30px;min-width:30px;width:auto} .bctl .back{width:30px}
   .bset{min-width:120px;padding:6px;gap:4px} .bset .tbtn{min-height:28px;padding:2px 8px} .bset .tbtn::after{font-size:11px}
   #battleScreen .log{width:56%;font-size:9px} #battleScreen .log li:nth-child(n+3){display:none}
-  .pcol{top:calc(var(--crop,0px) + 1.4% + 36px);font-size:clamp(8px,1.25cqw,12px)} .plate .pb{width:6em} .plates.tight .plate .pb{width:5.4em} /* telefonda dar kartlar: hilaldeki kahramanların üstüne binmesin */
+  .pcol,.plates::before{font-size:clamp(8px,1.25cqw,12px)} .plates.tight .plate .portrait{width:3em;height:3em} /* telefonda dar kartlar: hilaldeki kahramanların üstüne binmesin */
   #battleScreen .overlay .ocard{width:70%;min-height:60%;padding:12px}
 }
 .verbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;padding:8px 10px 8px 16px;background:var(--panel);border:1px solid var(--gold);border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6);font-weight:700}
@@ -532,7 +594,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .ivs{--c:#5a5070;position:relative;display:grid;place-items:center;padding:0;border-radius:6px;border:1px solid #2e2840;background:radial-gradient(70% 70% at 50% 40%,#1a1524,#0d0b13);box-shadow:inset 0 0 12px rgba(0,0,0,.6);font-family:var(--font-body);color:var(--text)}
 .ivs.has{cursor:pointer;border-color:color-mix(in srgb,var(--c) 55%,#2e2840);background:radial-gradient(70% 70% at 50% 40%,color-mix(in srgb,var(--c) 22%,#1a1524),#0d0b13)}
 .ivs svg,.ivinfo .big svg{width:60%;height:60%;color:var(--c);stroke:currentColor;fill:color-mix(in srgb,var(--c) 22%,transparent);stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px color-mix(in srgb,var(--c) 65%,transparent))}
-.ivs .cnt{position:absolute;right:5px;bottom:3px;font:800 14px/1 var(--font-body);text-shadow:0 1px 2px #000,0 0 4px #000}
+.ivs .cnt{position:absolute;right:5px;bottom:3px;font:800 14px/1 var(--font-body);text-shadow:0 1px 2px #000,0 0 4px #000} .ivs .cnt.tcnt{left:3px;right:3px;text-align:center;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ivs .new{position:absolute;left:4px;top:4px;padding:0 5px;border-radius:8px;background:var(--heal);color:#06210f;font:800 11px/16px var(--font-body)}
 .ivs.has:hover{border-color:var(--c)} .ivs.sel{outline:2px solid #fff;outline-offset:1px} .ivs:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .ivinfo{--c:var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;text-align:center;border:1px solid #2e2840;border-radius:8px;
@@ -555,7 +617,7 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .fgbtn svg{width:38px;height:38px;color:var(--gold);stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px currentColor)}
 .fgbtn b{font:800 15px var(--font-display);color:var(--gold);letter-spacing:.03em} .fgbtn small{color:var(--muted);font-size:12px;line-height:1.3} .fgbtn em{font-style:normal;font-weight:800;color:#ffd77a;font-size:13px}
 .fgodds{display:grid;grid-template-columns:auto repeat(9,minmax(0,1fr));gap:2px;font-size:11px;text-align:center;align-items:center}
-.fgodds .h{font:800 11px var(--font-display);color:var(--muted)} .fgodds .l{text-align:left;color:var(--muted);padding-right:6px;white-space:nowrap;font-weight:700}
+.fgodds .h{font:800 10px var(--font-body);color:var(--muted);white-space:nowrap} .fgodds .l{text-align:left;color:var(--muted);padding-right:6px;white-space:nowrap;font-weight:700}
 .fgodds .c{padding:3px 0;border-radius:3px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;background:color-mix(in srgb,var(--b) calc(var(--a) * 100%),#100d17);text-shadow:0 1px 2px #000}
 .fgodds .c::before{display:none}
 .fgup{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #2e2840;border-radius:6px;background:#100d17;font-size:13px} .fgup .btn{padding:.4em 1em;font-size:13px;white-space:nowrap}
@@ -584,7 +646,18 @@ html:has(#battleScreen:not([hidden])) .wrap{padding:0;max-width:none}
 .ivs.gear canvas{width:84%;height:84%;position:relative;z-index:1} .ivs .cnt,.ivs .new{z-index:2}
 .ivinfo .big[class*=" tr"]{position:relative;overflow:hidden;border-color:var(--b);background:var(--bg)} .ivinfo .big canvas{width:84%;height:84%;position:relative;z-index:1}
 .ivacts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center} .ivacts .btn{padding:.45em 1em;font-size:13px}
-.shopinfo .hbuy{margin-top:auto;display:flex;align-items:center;gap:8px;font-weight:700} .shopinfo .hbuy svg{width:20px;height:20px;color:var(--gold);stroke:currentColor;fill:none;stroke-width:1.8} .shopinfo .hbuy .btn{padding:.35em .9em;font-size:12.5px}
+.shopinfo .hbuy{margin-top:auto;align-self:stretch;display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--gold-deep);border-radius:6px;background:rgba(242,193,78,.06);text-align:left}
+.shopinfo .hbuy svg{width:28px;height:28px;color:var(--gold);stroke:currentColor;fill:none;stroke-width:1.8;flex:none} .shopinfo .hbuy div{flex:1;min-width:0} .shopinfo .hbuy b{font:800 18px var(--font-body);color:var(--text)} .shopinfo .hbuy small{font-size:13px;color:var(--muted)}
+.shopinfo .hbuy .btn{padding:.35em .9em;font-size:12.5px}
+.sbody{flex:1 1 0;min-height:0;width:100%;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center}
+.sleft{grid-column:1;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:0}
+#selectScreen .detail .shopinfo .shopprev{grid-column:2;grid-row:1;width:auto;height:100%;max-height:640px;max-width:100%;justify-self:center;aspect-ratio:240/300;min-height:0;contain:none;object-fit:contain;align-self:center;border-radius:8px;background:radial-gradient(60% 55% at 50% 60%,#2a2236,#0f0c16);flex:none}
+.shopinfo .stt{font-size:21px} .iname{color:#fff} .shopinfo .scap{color:var(--muted)}
+.scmp{align-self:stretch;display:flex;flex-direction:column;gap:4px;font-size:16px} .scmp div{display:grid;grid-template-columns:1fr auto 3.2em;gap:8px;align-items:center;padding:2px 6px;border-radius:4px;background:rgba(255,255,255,.03)}
+.scmp span:first-child{text-align:left;color:var(--muted)} .shopinfo .scmp b{font:inherit;font-size:inherit;color:var(--text);font-weight:800;display:inline;letter-spacing:0} .scmp em{font-style:normal;font-weight:800;text-align:right;color:var(--muted)} .scmp em.up{color:#6dff95} .scmp em.dn{color:#ff7a7a}
+.sprice{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center} .sprice svg{width:24px;height:24px;color:#ffd77a;stroke:currentColor;fill:none;stroke-width:1.8}
+.sprice b{font:800 28px var(--font-body);color:#ffd77a} .sprice small{font-size:14px} .sprice small{flex-basis:100%;color:var(--muted)} .sprice small.miss{color:#ff7a7a;font-weight:700}
+.sbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center} .sown{font-weight:800;color:#9fe6a8}
 @media (max-height:600px){.fgmodes{gap:6px} .fgbtn{padding:6px 4px;gap:2px} .fgbtn svg{width:22px;height:22px} .fgbtn small{display:none} .fgbtn b{font-size:12.5px} .fgodds{font-size:9px} .fgodds .h{font-size:9px}
   .fgup{padding:4px 8px;font-size:11px} .fgnote{display:none} .fgtop span{padding:2px 8px;font-size:11px} #selectScreen .gearlist.forgebox{gap:6px} .fcard .big{width:110px} .guide.fres p{font-size:12px}}
 .tbtn.lang{width:auto;padding:0 6px;font:700 13px var(--font-body);cursor:pointer;appearance:none;-webkit-appearance:none;text-align:center}
@@ -614,6 +687,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
 #selectScreen #modeNote{grid-column:2;grid-row:7}
 #selectScreen:not([data-mode="arena"]) .detail{grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);grid-template-rows:minmax(0,1fr) auto auto auto}
 #selectScreen:not([data-mode="arena"]) .detail canvas{grid-row:1}
+#selectScreen .detail .sc canvas,#selectScreen .detail .shopinfo .big canvas{width:84%;height:84%;background:none;aspect-ratio:auto;grid-row:auto;grid-column:auto;contain:none;align-self:center} /* eşya kutusu: genel tuval kuralı gradyanı örtmesin */
 #selectScreen:not([data-mode="arena"]) .detail h2{grid-row:2}
 #selectScreen:not([data-mode="arena"]) .detail .role{grid-row:3}
 #selectScreen:not([data-mode="arena"]) .stats{grid-column:1;grid-row:4}
@@ -632,26 +706,36 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   #selectScreen .detail h2{font-size:clamp(28px,3.6vh,42px)}
 }
 /* tüccar: solda sınıf seçimi (kadro), sağda o sınıfın 10 eşyası × 10 kademe kare kutularda; kutu boyu alana sığacak kadar */
-#selectScreen[data-mode="shop"] .select{grid-template-columns:var(--rw,300px) minmax(0,1fr)}
+#selectScreen[data-mode="shop"] .select{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+#selectScreen[data-mode="shop"] .roster{grid-template-rows:auto;padding:6px;gap:6px}
+#selectScreen[data-mode="shop"] .card img{flex:none;aspect-ratio:1;max-height:72px;width:100%;object-fit:contain} #selectScreen[data-mode="shop"] .card .cn{font-size:11px;padding:2px 1px 3px}
 #selectScreen[data-mode="shop"] #preview,#selectScreen[data-mode="shop"] .detail h2,#selectScreen[data-mode="shop"] .detail .role,#selectScreen[data-mode="shop"] .stats{display:none}
 #selectScreen[data-mode="shop"] .gear{grid-column:1/-1;grid-row:1/-1}
-#selectScreen[data-mode="shop"] .gearlist.shopbox{--nw:78px;--gp:4px;--th:16px;display:flex;flex-direction:row;gap:12px;overflow:hidden;container-type:size}
-.shopwrap{flex:none;width:min(calc(var(--nw) + 100cqh - var(--th)),calc(100cqw - 190px));height:100%;container-type:size}
-.shopg{--s:min(calc((100cqw - var(--nw) - 10 * var(--gp)) / 10),calc((100cqh - var(--th) - 10 * var(--gp)) / 10));
-  display:grid;grid-template-columns:var(--nw) repeat(10,var(--s));grid-template-rows:var(--th) repeat(10,var(--s));gap:var(--gp);justify-content:start;align-content:center;height:100%}
-.shopg .th{font:800 11px/16px var(--font-display);color:var(--muted);text-align:center}
-.shopg .rn{display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:12px;font-weight:700;color:#cfc8de;white-space:nowrap;overflow:hidden;min-width:0}
-.sc{--b:#5a3e24;--g:transparent;position:relative;display:grid;place-items:center;padding:0;border-radius:5px;border:2px solid var(--b);background:var(--bg);box-shadow:inset 0 0 10px rgba(0,0,0,.55),0 0 8px var(--g);
+#selectScreen[data-mode="shop"] .gearlist.shopbox{--nw:110px;--qb:0px;--gp:6px;--th:30px;--bar:44px;display:flex;flex-direction:row;gap:12px;overflow:hidden;container-type:size}
+/* tüccar ızgarası kaydırmalı: kutular büyük (aynı anda ~5 kademe), ad ve "Sonraki" sütunları ile başlık satırı sabit */
+.shopwrap{flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;gap:6px}
+.shopbar{display:flex;gap:6px;height:calc(var(--bar) - 6px)} .shopbar .sarr:first-of-type{margin-left:auto} .shopbar .sarr{min-width:2.4em} .shopbar .btn{padding:.3em 1.1em;font-size:16px} .shopbar .btn[aria-pressed="true"]{background:var(--gold);color:#1a1208}
+.shopgb{flex:1 1 0;min-height:0;overflow:auto;scroll-behavior:smooth;scrollbar-color:var(--gold-deep) transparent}
+.shopg{--s:var(--cell,112px);display:grid;grid-template-columns:var(--nw) repeat(10,var(--s));grid-template-rows:var(--th) repeat(10,var(--s));gap:var(--gp);width:max-content}
+.shopg > .rn,.shopg > .qb,.shopg > span:first-child{position:sticky;z-index:6;background:#16121e} .shopg > .rn,.shopg > span:first-child{left:0} .shopg > .qb{right:0;background:linear-gradient(rgba(242,193,78,.14),rgba(242,193,78,.14)),#16121e;box-shadow:-8px 0 10px #16121e} .shopg > .th.thq{right:0;z-index:8;background:#16121e} .shopg > .rn,.shopg > span:first-child,.shopg > .th{background:#16121e}
+.shopg > .th{position:sticky;top:0;z-index:5;background:#16121e} .shopg > span:first-child{top:0;z-index:9}
+.shopg .th{font:800 calc(var(--s) * .14)/var(--th) var(--font-display);color:var(--muted);text-align:center}
+.shopg .rn{display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:clamp(11px,calc(var(--s) * .13),20px);white-space:normal;text-align:right;line-height:1.15;font-weight:700;color:#cfc8de;overflow:hidden;min-width:0}
+.sc{--b:#5a3e24;--g:transparent;position:relative;isolation:isolate;display:grid;place-items:center;padding:0;border-radius:5px;border:2px solid var(--b);background:var(--bg);box-shadow:inset 0 0 10px rgba(0,0,0,.55),0 0 8px var(--g);
   overflow:hidden;cursor:pointer;container-type:inline-size;min-width:0}
 .sc canvas{width:84%;height:84%;position:relative;z-index:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6))}
-.sc small{position:absolute;left:0;right:0;bottom:0;z-index:2;display:none;font:800 10px/1.35 var(--font-body);color:#ffd77a;background:rgba(0,0,0,.62);text-align:center}
+.sc small{position:absolute;left:0;right:0;bottom:0;z-index:2;display:none;font:800 clamp(10px,calc(var(--s) * .14),22px)/1.4 var(--font-body);color:#ffd77a;background:rgba(0,0,0,.7);text-align:center}
+.sc.poor{opacity:.42;filter:grayscale(.5)} /* altın yetmiyor: soluk */ .sc.hid{visibility:hidden}
+.sc.next{box-shadow:inset 0 0 10px rgba(0,0,0,.55),0 0 0 2px #ffd77a,0 0 14px rgba(255,215,122,.7);animation:scnext 1.4s ease-in-out infinite} @keyframes scnext{50%{box-shadow:inset 0 0 10px rgba(0,0,0,.55),0 0 0 2px #ffd77a,0 0 4px rgba(255,215,122,.3)}}
+.qb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:2px;border-radius:5px;border:1px solid var(--gold-deep);background:rgba(242,193,78,.12);color:var(--gold);cursor:pointer;font:inherit}
+.qb b{font-size:clamp(10px,calc(var(--s) * .14),20px)} .qb small{font-size:clamp(9px,calc(var(--s) * .12),17px);color:#ffd77a} .qb:disabled{cursor:default;color:#6b6377;border-color:#3a3346} .qb:disabled small{color:#6b6377} .qb:hover:not(:disabled){background:var(--gold);color:#1a1208} .qb:hover:not(:disabled) small{color:#1a1208}
 @container (min-width:40px){.sc small{display:block}}
-.sc.own{filter:grayscale(.55) brightness(.62)} .sc.own small{color:#9fe6a8}
-.sc.cur{filter:none;outline:2px solid #9fe6a8;outline-offset:1px}
+.sc.own{filter:brightness(.75) saturate(.8)} .sc.own small{color:#9fe6a8}
+.sc.cur{filter:none;box-shadow:inset 0 0 0 2px #9fe6a8,0 0 10px rgba(159,230,168,.45)}
 .sc.poor small{color:#ff8a7a}
 .sc.sel{outline:2px solid #fff;outline-offset:1px;box-shadow:0 0 14px rgba(255,255,255,.55)}
 .sc:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.shopinfo{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:14px;text-align:center;overflow:hidden;
+.shopinfo{flex:none;width:50%;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding:12px;text-align:center;overflow:hidden;
   border:1px solid #2e2840;border-radius:8px;background:radial-gradient(80% 60% at 50% 30%,#1c1626,#0f0c16)}
 .shopinfo .big{position:relative;display:grid;place-items:center;width:min(150px,60%);aspect-ratio:1;border-radius:8px;border:2px solid var(--b);background:var(--bg);box-shadow:inset 0 0 18px rgba(0,0,0,.55),0 0 14px var(--g);overflow:hidden;flex:none}
 .shopinfo .big canvas{width:84%;height:84%;position:relative;z-index:1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.6))}
@@ -659,7 +743,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
 .shopinfo small{display:block;color:#cfc8de;font-size:13.5px;line-height:1.35}
 .shopinfo .price{font:800 18px var(--font-body);color:#ffd77a}
 .shopinfo .hint{color:var(--muted);font-size:13.5px;line-height:1.45;max-width:280px}
-.shopinfo .btn{padding:.55em 1.3em;font-size:15px;white-space:nowrap}
+.shopinfo .btn{padding:.6em 1.4em;font-size:17px;white-space:nowrap}
 /* dik pencere (tablet): kadro üstte, ayrıntı altta */
 @media (max-aspect-ratio:1/1){#selectScreen[data-mode] .select{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1.3fr)} #selectScreen:not([data-mode="arena"]) .gearlist{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* kısa ekran (telefon yatay, küçük dizüstü penceresi): küçük kartlar ve sıkı yazılar, açıklama gizli */
@@ -681,7 +765,9 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   #selectScreen #choose{font-size:13px;padding:.45em 1em}
   #selectScreen #modeNote{font-size:11px}
   /* tüccar: kısa eşya adları, sıkı ızgara, küçük bilgi paneli */
-  #selectScreen[data-mode="shop"] .gearlist.shopbox{--nw:50px;--gp:3px;--th:12px;gap:8px} #selectScreen[data-mode="shop"] .card .cn{font-size:9px;letter-spacing:-.02em}
+  #selectScreen[data-mode="shop"] .gearlist.shopbox{--nw:50px;--qb:0px;--gp:3px;--th:12px;--bar:24px;gap:8px} #selectScreen[data-mode="shop"] .card img{max-height:30px} #selectScreen[data-mode="shop"] .card .cn{display:none} #selectScreen[data-mode="shop"] .roster{padding:3px;gap:3px}
+  .shopg{--cell:60px} .shopinfo{width:42%} .shopbar .btn{white-space:nowrap} .shopinfo{overflow-y:auto;padding:6px} .sbtns .btn{font-size:11px;padding:.35em .7em} .shopbar .btn{font-size:10px;padding:.15em .5em} .qb b{font-size:9.5px} .qb small{font-size:8.5px}
+  #selectScreen .detail .shopinfo .shopprev{height:100%} .scmp{font-size:10.5px} .sprice b{font-size:15px} .shopinfo .hbuy{padding:4px 6px} .shopinfo .hbuy small{display:none} #selectScreen[data-mode="shop"] .card .cn{font-size:9px;letter-spacing:-.02em}
   .shopg .th{font-size:9px;line-height:12px} .shopg .rn{font-size:9.5px} .sc{border-width:1px;border-radius:3px}
   .shopinfo{padding:6px;gap:5px} .shopinfo .big{width:min(64px,50%)} .shopinfo b{font-size:13px} .shopinfo small{font-size:11px} .shopinfo .price{font-size:13px} .shopinfo .hint{font-size:11px} .shopinfo .btn{font-size:12px;padding:.4em .9em}
 }
@@ -745,6 +831,32 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
       <div class="wgrid" id="wGrid"><svg class="wlines" id="wLines" preserveAspectRatio="none" aria-hidden="true"></svg></div>
     </div>
   </div>
+  <div class="guide hsel" id="hsel" role="dialog" aria-modal="true" aria-labelledby="hselT" hidden>
+    <div class="gc hsc">
+      <button class="tbtn iclose" id="hselClose" type="button" aria-label="Kapat">✕</button>
+      <h2 id="hselT">Kahraman seç</h2>
+      <div class="hgrid" id="hselGrid"></div>
+    </div>
+  </div>
+  <div class="guide gift" id="gift" role="dialog" aria-modal="true" aria-labelledby="giftT" hidden>
+    <div class="gc gfc">
+      <button class="tbtn iclose" id="giftClose" type="button" aria-label="Kapat">✕</button>
+      <h2 id="giftT">Hediye gönder</h2>
+      <p class="gfto" id="giftTo"></p>
+      <label class="gfrow"><span>Altın</span><input id="giftGold" type="number" min="0" step="100" value="0" inputmode="numeric"></label>
+      <label class="gfrow"><span>Çekiç</span><input id="giftHam" type="number" min="0" step="1" value="0" inputmode="numeric"></label>
+      <p class="gfnote" id="giftNote"></p>
+      <p class="gferr" id="giftErr" role="alert"></p>
+      <div class="gfbtns"><button class="btn ghost" id="giftCancel" type="button">Vazgeç</button><button class="btn" id="giftGo" type="button">Gönder</button></div>
+    </div>
+  </div>
+  <div class="guide gift" id="mail" role="dialog" aria-modal="true" aria-labelledby="mailT" hidden>
+    <div class="gc gfc">
+      <h2 id="mailT">Hediye geldi</h2>
+      <div class="mlist" id="mailList"></div>
+      <div class="gfbtns"><button class="btn" id="mailGo" type="button">Al</button></div>
+    </div>
+  </div>
   <div class="guide inv" id="inv" role="dialog" aria-modal="true" aria-labelledby="invT" hidden>
     <div class="gc ivc">
       <button class="tbtn iclose" id="invClose" type="button" aria-label="Kapat">✕</button>
@@ -763,12 +875,17 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   <div class="guide insp" id="insp" role="dialog" aria-modal="true" aria-labelledby="inspT" hidden>
     <div class="gc ic">
       <button class="tbtn iclose" id="inspClose" type="button" aria-label="Kapat">✕</button>
-      <div class="ihead"><h2 id="inspT"></h2><p id="inspSub"></p></div>
+      <div class="ihead"><canvas class="iav" id="inspAv" width="96" height="96" aria-hidden="true"></canvas><div class="ihx"><h2 id="inspT"></h2><p id="inspSub"></p><div class="ixp" id="inspXp" hidden><i></i><small></small></div></div><div class="iact" id="inspAct"></div><div class="ipow" id="inspPow"></div></div>
+      <div class="itabs" id="inspTabs" role="tablist" hidden><button type="button" role="tab" data-t="char">Karakter</button><button type="button" role="tab" data-t="stat">İstatistik</button><button type="button" role="tab" data-t="acct">Hesap</button></div>
       <div class="ibody">
-        <canvas id="inspCv" width="320" height="400" aria-hidden="true"></canvas>
         <div class="iitems" id="inspItems"></div>
-        <div class="iside"><dl class="istats stats" id="inspStats"></dl><div class="iskills" id="inspSkills"></div></div>
+        <canvas id="inspCv" width="360" height="540" aria-hidden="true"></canvas>
+        <div class="iitems" id="inspItemsR"></div>
+        <div class="iside"><dl class="istats stats" id="inspStats"></dl><div class="iskills" id="inspSkills"></div><div class="isp" id="inspSp"></div></div>
+        <svg class="ilines" id="inspLines" aria-hidden="true"></svg>
       </div>
+      <div class="ipanel" id="inspStatTab"></div>
+      <div class="ipanel" id="inspAcctTab"><div class="iacct" id="inspAcct"></div></div>
     </div>
   </div>
   <div class="guide" id="guide" role="dialog" aria-modal="true" aria-labelledby="guideT" hidden>
@@ -779,7 +896,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
         <li data-i18n-html><b>Demirci</b>'de çekiçle ekipman döv, <b>Tüccar</b>'dan istediğin kademeyi altınla al. Eşya güçlendikçe karakterin görünüşü de değişir.</li>
         <li data-i18n-html><b>Belediye</b> yükseldikçe eşyalar ve diğer binalar daha yükseğe çıkabilir.</li>
         <li data-i18n-html><b>Altın Madeni</b> sen yokken de altın biriktirir; uğrayıp topla. <b>Simyacı</b> savaşa daha çok iksirle girmeni sağlar.</li>
-        <li data-i18n-html>Savaşta yetenekleri <b>1–5</b> tuşlarıyla kullanabilir, sağ üstteki düğmeyle savaşı <b>2×</b> hızlandırabilirsin.</li>
+        <li data-i18n-html>Savaşta yetenekleri <b>1–5</b> tuşlarıyla kullanabilir, sağ alttaki düğmeyle savaşı <b>2×</b> hızlandırabilirsin.</li>
       </ol>
       <button class="btn" id="guideOk" type="button">Başla</button>
     </div>
@@ -805,6 +922,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
       <div class="stage" id="stage">
         <canvas id="sv" width="1280" height="520" tabindex="0" aria-label="Kasaba meydanı. Kahramanını ok tuşlarıyla ya da W A S D ile yürüt, kenara yürüyünce yan bölüme geçersin, bir karakterin ya da kapının önünde E tuşuna bas."></canvas>
         <div class="ohud">
+          <button class="btn ghost pfbtn" id="pfBtn" type="button" aria-haspopup="dialog" aria-label="Profil"><canvas id="pfAv" width="72" height="72" aria-hidden="true"></canvas><span><b id="pfName"></b><small id="pfLv"></small></span></button>
           <button class="btn ghost" id="openTown" type="button">Kasaba ve görevler</button>
           <button class="btn ghost" id="invBtn" type="button" aria-haspopup="dialog">Envanter <span class="unread" id="invNew"></span></button>
           <button class="btn ghost" id="plToggle" type="button" aria-expanded="false" aria-controls="plPanel">Oyuncular <b id="plCount"></b></button>
@@ -900,7 +1018,7 @@ html:has(#selectScreen:not([hidden])) .wrap{height:100dvh;box-sizing:border-box;
   </section>
 </div>
 
-<script src="i18n-dict.js?v=20"></script>
+<script src="i18n-dict.js?v=21"></script>
 <script src="i18n.js?v=3"></script>
 <script src="classes.js"></script>
 <script>{const s=document.getElementById("langSel");s.value=I18N.lang;s.onchange=()=>I18N.set(s.value);}</script>
@@ -930,6 +1048,7 @@ const RC = window.RIG_CLASSES;
    anim: hangi animasyon oynar (attack / block / yok) · fx: menzilli görsel (bolt, arrow, trap, vines, meteor)
    ===================================================================== */
 const ICON = {
+  coin: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5.5"/><path d="M12 9.5v5"/>',
   sword: '<path d="M20 4 9.5 14.5"/><path d="M20 4h-4.5M20 4v4.5"/><path d="M6 12l6 6M3.5 20.5 7.5 16.5"/>',
   shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="m9 12 2 2 4-4"/>',
   bash: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M2 9h4M1 13h5M2 17h4"/>',
@@ -970,61 +1089,63 @@ const BURN = { turns: 2, dmg: 12, label: 'Yanık', color: '#ff9a4a' }, POISON = 
 // Her sınıfın bir rolü var. pow: hasar katsayısı (tank ve şifacılar düşük, savaşçı ve yıkıcı yüksek).
 // crit/dodge: 1. seviyedeki kritik ve kaçınma; cm/dm: 50. seviyede ulaştıkları değer (arası doğrusal artar).
 // Kritik ve kaçınmayı yalnız seviye artırır, ekipman artırmaz; kaçınma hiçbir zaman %30'u geçmez.
+// ar / mr: 1. seviyedeki zırh ve büyü direnci (seviye başına %2 büyür). Zırh fiziksel, büyü direnci büyü hasarını azaltır: savunma / (savunma + 1000).
 // hr: can yenileme; her tur, seviyeyle büyüyen temel canın bu oranı kadar can gelir (eşya canı sayılmaz). Tank ve şifacılarda yüksek.
 // hp ve hpg (seviye başına can artışı) düello simülasyonuyla ayarlandı: eşit seviye ve ekipmanda her sınıf ~%50 kazanır.
 const CLASSES = {
-  tank:       { name: 'Tank', role: 'Koruyucu (tank)', desc: 'En çok canı olan ön saf. Hasarı düşük ama dayanıklı; kalkanıyla rakibini sersemletir.', hp: 855, mp: 100, regen: 12, crit: .05, dodge: .03,
-    cm: .1, dm: .06, pow: .7, hr: .02, hpg: .0394, hpe: 1.0518,
+  tank:       { name: 'Tank', role: 'Koruyucu (tank)', desc: 'En çok canı olan ön saf. Hasarı düşük ama dayanıklı; kalkanıyla rakibini sersemletir.', hp: 724, mp: 100, regen: 12, crit: .05, dodge: .03,
+    cm: .1, dm: .06, pow: .7, hr: .02, ar: 140, mr: 60, hpg: .0327, hpe: .8663,
     skills: [M('Kılıç Darbesi', 0, [38, 48], 'sword'), G('Kalkan Duruşu', 20, .75, 'shield'), M('Kalkan Vuruşu', 25, [28, 36], 'bash', { stun: true }), M('Öfke Darbesi', 50, [72, 92], 'whirl', { big: true })] },
-  mage:       { name: 'Mage', role: 'Büyücü (uzak hasar)', desc: 'Uzaktan büyü yağdırır. Canı az ama büyü hasarı çok yüksek.', hp: 409, mp: 200, regen: 18, crit: .12, dodge: .04,
-    cm: .26, dm: .1, pow: 1.1, hr: .01, hpg: .0373, hpe: 1.0023,
+  mage:       { name: 'Mage', role: 'Büyücü (uzak hasar)', desc: 'Uzaktan büyü yağdırır. Canı az ama büyü hasarı çok yüksek.', hp: 403, mp: 200, regen: 18, crit: .12, dodge: .04,
+    cm: .26, dm: .1, pow: 1.1, hr: .01, ar: 20, mr: 110, hpg: .0387, hpe: 1.0149,
     skills: [Rg('Büyü Oku', 0, [26, 34], 'arcane', 'bolt'), Rg('Gizem Patlaması', 30, [50, 62], 'arcane', 'bolt', { big: true }), G('Büyü Kalkanı', 20, .5, 'shield'), Rg('Meteor', 70, [100, 125], 'meteor', 'meteor', { big: true, color: '#ff7a2a' })] },
-  warrior:    { name: 'Warrior', role: 'Savaşçı (yakın hasar)', desc: 'Kılıç ve baltayla sert vurur, rakibini kanatır. Hasarı yüksek.', hp: 459, mp: 110, regen: 12, crit: .12, dodge: .06,
-    cm: .26, dm: .12, pow: 1.12, hr: .012, hpg: .0307, hpe: 1.0289,
+  warrior:    { name: 'Warrior', role: 'Savaşçı (yakın hasar)', desc: 'Kılıç ve baltayla sert vurur, rakibini kanatır. Hasarı yüksek.', hp: 413, mp: 110, regen: 12, crit: .12, dodge: .06,
+    cm: .26, dm: .12, pow: 1.12, hr: .012, ar: 90, mr: 40, hpg: .0268, hpe: .8713,
     skills: [M('Çift Darbe', 0, [40, 50], 'sword'), M('Yarık Açan', 25, [34, 42], 'axe', { dot: BLEED }), G('Çapraz Savunma', 20, .6, 'shield'), M('Kasırga', 55, [80, 98], 'whirl', { big: true })] },
-  vampire:    { name: 'Vampire', role: 'Kan düellocusu', desc: 'Hızlı saplamalarla vurur, verdiği hasarın bir kısmını can olarak emer. Çeviktir.', hp: 364, mp: 140, regen: 14, crit: .15, dodge: .1,
-    cm: .3, dm: .22, pow: 1, hr: .01, hpg: .0178, hpe: .9035,
+  vampire:    { name: 'Vampire', role: 'Kan düellocusu', desc: 'Hızlı saplamalarla vurur, verdiği hasarın bir kısmını can olarak emer. Çeviktir.', hp: 345, mp: 140, regen: 14, crit: .15, dodge: .1,
+    cm: .3, dm: .22, pow: 1, hr: .01, ar: 40, mr: 60, hpg: .0154, hpe: .7929,
     skills: [M('Saplama', 0, [32, 40], 'sword'), M('Kan Emme', 30, [40, 50], 'fang', { drain: .5 }), G('Savuşturma', 20, .6, 'shield'), M('Kan Hasadı', 60, [80, 100], 'fang', { drain: .4, big: true })] },
-  elf:        { name: 'Elf', role: 'Okçu (uzak hasar)', desc: 'Uzaktan isabetli oklar atar; kritiği yüksek, çevik. Zehirli oklarla eritir.', hp: 421, mp: 140, regen: 14, crit: .2, dodge: .12,
-    cm: .38, dm: .26, pow: 1.05, hr: .01, hpg: .0179, hpe: .7546,
+  elf:        { name: 'Elf', role: 'Okçu (uzak hasar)', desc: 'Uzaktan isabetli oklar atar; kritiği yüksek, çevik. Zehirli oklarla eritir.', hp: 440, mp: 140, regen: 14, crit: .2, dodge: .12,
+    cm: .38, dm: .26, pow: 1.05, hr: .01, ar: 30, mr: 50, hpg: .023, hpe: .7319,
     skills: [Rg('Ok At', 0, [30, 38], 'bow', 'arrow'), Rg('Zehirli Ok', 25, [30, 40], 'drop', 'arrow', { dot: POISON }), G('Kaçın', 25, 1, 'moon'), Rg('Delici Ok', 60, [85, 105], 'arrow', 'arrow', { big: true })] },
-  support:    { name: 'Support', role: 'Şifacı (destek)', desc: 'Hasarı düşük, canı yüksek; güçlü iyileştirmesiyle savaşı uzatır.', hp: 985, mp: 180, regen: 18, crit: .05, dodge: .05,
-    cm: .1, dm: .1, pow: .72, hr: .02, hpg: .0518, hpe: 1.0416,
+  support:    { name: 'Support', role: 'Şifacı (destek)', desc: 'Hasarı düşük, canı yüksek; güçlü iyileştirmesiyle savaşı uzatır.', hp: 957, mp: 180, regen: 18, crit: .05, dodge: .05,
+    cm: .1, dm: .1, pow: .72, hr: .02, ar: 60, mr: 90, hpg: .0495, hpe: .9682,
     skills: [M('Topuz', 0, [26, 34], 'hammer'), Rg('Kutsal Işık', 25, [40, 50], 'sun', 'bolt', { color: '#ffe08a', anim: 'block' }), HL('İyileştir', 30, 140, 'heart'), M('Kutsal Ceza', 60, [80, 100], 'sun', { big: true })] },
-  assassin:   { name: 'Assassin', role: 'Suikastçı', desc: 'Kritiği ve kaçınması en yüksek sınıf; zehirli hançerlerle saldırır.', hp: 358, mp: 130, regen: 14, crit: .25, dodge: .18,
-    cm: .45, dm: .3, pow: 1.08, hr: .01, hpg: .0128, hpe: .5915,
+  assassin:   { name: 'Assassin', role: 'Suikastçı', desc: 'Kritiği ve kaçınması en yüksek sınıf; zehirli hançerlerle saldırır.', hp: 384, mp: 130, regen: 14, crit: .25, dodge: .18,
+    cm: .45, dm: .3, pow: 1.08, hr: .01, ar: 20, mr: 20, hpg: .0216, hpe: .7131,
     skills: [M('Çift Saplama', 0, [30, 38], 'dagger'), M('Zehirli Bıçak', 25, [26, 34], 'drop', { dot: POISON }), G('Gölge Adımı', 30, 1, 'moon'), M('Ölüm İşareti', 55, [85, 105], 'target', { big: true })] },
-  ranger:     { name: 'Ranger', role: 'Avcı (kontrol)', desc: 'Uzun mızrağıyla vurur, kapan fırlatıp rakibini kıstırır.', hp: 653, mp: 120, regen: 12, crit: .13, dodge: .1,
-    cm: .28, dm: .2, pow: .98, hr: .015, hpg: .0242, hpe: .8938,
+  ranger:     { name: 'Ranger', role: 'Avcı (kontrol)', desc: 'Uzun mızrağıyla vurur, kapan fırlatıp rakibini kıstırır.', hp: 657, mp: 120, regen: 12, crit: .13, dodge: .1,
+    cm: .28, dm: .2, pow: .98, hr: .015, ar: 60, mr: 40, hpg: .0249, hpe: .7427,
     skills: [M('Mızrak', 0, [34, 44], 'arrow'), Rg('Kapan At', 30, [22, 30], 'trap', 'trap', { stun: true, anim: 'block' }), HL('Bandaj', 25, 100, 'heart', { anim: null }), M('Ölümcül Mızrak', 55, [80, 100], 'target', { big: true })] },
-  paladin:    { name: 'Paladin', role: 'Kutsal şövalye (yarı tank)', desc: 'Sağlam ve dengeli; kutsal kalkanı hem korur hem iyileştirir. Hasarı orta.', hp: 610, mp: 140, regen: 14, crit: .07, dodge: .04,
-    cm: .14, dm: .08, pow: .82, hr: .015, hpg: .0371, hpe: 1.0754,
+  paladin:    { name: 'Paladin', role: 'Kutsal şövalye (yarı tank)', desc: 'Sağlam ve dengeli; kutsal kalkanı hem korur hem iyileştirir. Hasarı orta.', hp: 518, mp: 140, regen: 14, crit: .07, dodge: .04,
+    cm: .14, dm: .08, pow: .82, hr: .015, ar: 120, mr: 80, hpg: .0314, hpe: .892,
     skills: [M('Çekiç', 0, [36, 46], 'hammer'), G('Kutsal Kalkan', 25, .6, 'shield', { heal: 40 }), M('Sersemleten Çekiç', 30, [34, 44], 'bash', { stun: true }), M('Yargı Çekici', 60, [85, 105], 'sun', { big: true })] },
-  berserker:  { name: 'Berserker', role: 'Yıkıcı (en yüksek hasar)', desc: 'Savunması zayıf ama en sert vuran sınıf; öfkelenince ezer geçer.', hp: 401, mp: 90, regen: 12, crit: .15, dodge: .03,
-    cm: .3, dm: .08, pow: 1.18, hr: .012, hpg: .0297, hpe: 1.1258,
+  berserker:  { name: 'Berserker', role: 'Yıkıcı (en yüksek hasar)', desc: 'Savunması zayıf ama en sert vuran sınıf; öfkelenince ezer geçer.', hp: 393, mp: 90, regen: 12, crit: .15, dodge: .03,
+    cm: .3, dm: .08, pow: 1.18, hr: .012, ar: 70, mr: 30, hpg: .0294, hpe: .921,
     skills: [M('Yarma', 0, [42, 54], 'axe'), { name: 'Öfke', kind: 'rage', anim: 'block', cost: 20, icon: 'rage' }, M('Kan Çılgınlığı', 25, [36, 46], 'axe', { dot: BLEED }), M('Kıyım', 50, [90, 115], 'whirl', { big: true })] },
-  druid:      { name: 'Druid', role: 'Doğa şifacısı (destek)', desc: 'Sarmaşıklarla rakibini bağlar, doğanın gücüyle iyileşir. Hasarı düşük.', hp: 703, mp: 170, regen: 18, crit: .07, dodge: .07,
-    cm: .14, dm: .14, pow: .78, hr: .02, hpg: .04, hpe: 1.0412,
+  druid:      { name: 'Druid', role: 'Doğa şifacısı (destek)', desc: 'Sarmaşıklarla rakibini bağlar, doğanın gücüyle iyileşir. Hasarı düşük.', hp: 690, mp: 170, regen: 18, crit: .07, dodge: .07,
+    cm: .14, dm: .14, pow: .78, hr: .02, ar: 50, mr: 110, hpg: .0372, hpe: .9285,
     skills: [Rg('Sarmaşık', 0, [26, 34], 'leaf', 'vines'), Rg('Diken Ağı', 30, [30, 40], 'leaf', 'vines', { stun: true }), HL('Doğanın Şifası', 30, 140, 'heart'), Rg('Doğanın Gazabı', 65, [90, 110], 'leaf', 'vines', { big: true })] },
-  necromancer:{ name: 'Necromancer', role: 'Can emici büyücü', desc: 'Ruh oklarıyla vurur, rakibinin canını emip kendine aktarır.', hp: 455, mp: 180, regen: 18, crit: .1, dodge: .05,
-    cm: .22, dm: .1, pow: 1, hr: .01, hpg: .0381, hpe: .9375,
+  necromancer:{ name: 'Necromancer', role: 'Can emici büyücü', desc: 'Ruh oklarıyla vurur, rakibinin canını emip kendine aktarır.', hp: 464, mp: 180, regen: 18, crit: .1, dodge: .05,
+    cm: .22, dm: .1, pow: 1, hr: .01, ar: 25, mr: 100, hpg: .0412, hpe: .9441,
     skills: [Rg('Ruh Oku', 0, [26, 34], 'skull', 'bolt'), Rg('Can Emme', 30, [36, 46], 'skull', 'bolt', { drain: 1, anim: 'block' }), Rg('Lanet', 25, [20, 28], 'skull', 'bolt', { dot: POISON }), Rg('Ölüm Dalgası', 65, [95, 115], 'skull', 'bolt', { big: true })] },
-  monk:       { name: 'Monk', role: 'Dövüş ustası (çevik)', desc: 'Bo sopasıyla hızlı vurur, darbelerden kolayca kaçar, odaklanarak toparlanır.', hp: 520, mp: 120, regen: 14, crit: .12, dodge: .14,
-    cm: .26, dm: .28, pow: .95, hr: .015, hpg: .019, hpe: .7494,
+  monk:       { name: 'Monk', role: 'Dövüş ustası (çevik)', desc: 'Bo sopasıyla hızlı vurur, darbelerden kolayca kaçar, odaklanarak toparlanır.', hp: 496, mp: 120, regen: 14, crit: .12, dodge: .14,
+    cm: .26, dm: .28, pow: .95, hr: .015, ar: 50, mr: 50, hpg: .0187, hpe: .682,
     skills: [M('Sopa Dalgası', 0, [32, 42], 'fist'), HL('Odak', 25, 70, 'heart', { block: .4 }), M('Sersemletici Darbe', 25, [28, 36], 'fist', { stun: true }), M('Yüz Darbe', 55, [80, 100], 'whirl', { big: true })] },
-  inquisitor: { name: 'Inquisitor', role: 'Avcı yargıç (uzak kontrol)', desc: 'Arbaletiyle uzaktan vurur, gümüş kazığıyla rakibini sersemletir.', hp: 430, mp: 130, regen: 14, crit: .15, dodge: .07,
-    cm: .3, dm: .14, pow: 1, hr: .01, hpg: .0215, hpe: .9654,
+  inquisitor: { name: 'Inquisitor', role: 'Avcı yargıç (uzak kontrol)', desc: 'Arbaletiyle uzaktan vurur, gümüş kazığıyla rakibini sersemletir.', hp: 449, mp: 130, regen: 14, crit: .15, dodge: .07,
+    cm: .3, dm: .14, pow: 1, hr: .01, ar: 50, mr: 70, hpg: .0238, hpe: .8519,
     skills: [Rg('Arbalet', 0, [30, 38], 'crossbow', 'bolt'), Rg('Kutsal Ok', 25, [40, 50], 'crossbow', 'bolt', { dot: BURN }), M('Gümüş Kazık', 30, [36, 46], 'dagger', { stun: true, anim: 'block' }), Rg('Arınma', 60, [85, 105], 'sun', 'bolt', { big: true })] },
-  shadow:     { name: 'Shadow', role: 'Gölge savaşçısı (çevik)', desc: 'Dumana dönüşüp rakibinin önünde belirir, iki orakla keser. Kaçınması yüksek.', hp: 412, mp: 140, regen: 14, crit: .2, dodge: .16,
-    cm: .4, dm: .3, pow: 1.05, hr: .01, hpg: .0142, hpe: .6858,
+  shadow:     { name: 'Shadow', role: 'Gölge savaşçısı (çevik)', desc: 'Dumana dönüşüp rakibinin önünde belirir, iki orakla keser. Kaçınması yüksek.', hp: 442, mp: 140, regen: 14, crit: .2, dodge: .16,
+    cm: .4, dm: .3, pow: 1.05, hr: .01, ar: 25, mr: 30, hpg: .0209, hpe: .7086,
     skills: [M('Gölge Kesiği', 0, [34, 44], 'moon'), G('Gölgeye Karış', 25, 1, 'moon'), M('Karanlık Yara', 30, [30, 38], 'dagger', { dot: BLEED }), M('Gölge Fırtınası', 60, [85, 105], 'whirl', { big: true })] }
 };
 const ORDER = ['tank', 'warrior', 'mage', 'vampire', 'elf', 'support', 'assassin', 'ranger', 'paladin', 'berserker', 'druid', 'necromancer', 'monk', 'inquisitor', 'shadow'];
 const POTION = { name: 'Can İksiri', kind: 'potion', cost: 0, heal: 130, color: '#4be38a', icon: 'flask' };
 const glowOf = id => RC[id].glow;
-const skillDesc = s => s.kind === 'guard' ? (s.block >= 1 ? 'Sonraki saldırıdan kaçar' : `Sonraki hasar −%${Math.round(s.block * 100)}`) + (s.heal ? ` · +${s.heal} can` : '')
-  : s.kind === 'heal' ? `+${s.heal} can` + (s.block ? ` · hasar −%${Math.round(s.block * 100)}` : '') : s.kind === 'rage' ? `Sonraki saldırı +%${Math.round(((s.rage || 1.6) - 1) * 100)}` : s.kind === 'potion' ? `+${s.heal} can`
-  : `${s.dmg[0] * DMG_SCALE}–${s.dmg[1] * DMG_SCALE}` + (s.stun ? ' · sersem' : '') + (s.dot ? ' · ' + s.dot.label.toLowerCase() : '') + (s.drain ? ' · can emer' : '');
+// yetenek yazıları yaklaşık (~): savaşta her etki sapmalıdır (hasar zarı, iyileştirme, kalkan, süreli hasar, iksir ±%10-15); kahraman değerleri kesin kalır
+const skillDesc = s => s.kind === 'guard' ? (s.block >= 1 ? 'Sonraki saldırıdan kaçar' : `Sonraki hasar ~−%${Math.round(s.block * 100)}`) + (s.heal ? ` · ~+${s.heal} can` : '')
+  : s.kind === 'heal' ? `~+${s.heal} can` + (s.block ? ` · hasar ~−%${Math.round(s.block * 100)}` : '') : s.kind === 'rage' ? '+5 öfke' : s.kind === 'potion' ? `~+${s.heal} can`
+  : `~${Math.round((s.dmg[0] + s.dmg[1]) / 2 * DMG_SCALE)}` + ((s.mag ?? isMag(s)) ? ' · büyü' : ' · fiziksel') + (s.stun ? ' · sersem' : '') + (s.dot ? ' · ' + s.dot.label.toLowerCase() : '') + (s.drain ? ' · can emer' : '');
 
 /* =====================================================================
    ARENA ÇİZİMİ
@@ -1046,7 +1167,42 @@ const fx = { spark: s => parts.push({ ...s, life: 0, size: 2.5, g: 0 }) };
 function burst(x, y, color, n = 24, sp = 260) {
   for (let i = 0; i < n; i++) { const a = Math.random() * 7, s = rnd(.3, 1) * sp; parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 0, max: rnd(.4, .9), color, size: rnd(2, 5), g: 300 }); }
 }
-function floatText(A, txt, color, size = 36) { texts.push({ x: A.x + A.off * A.face + rnd(-20, 20), y: (A.gy || GY) + (A.offY || 0) - (A.topH || 362) * .91 * (A.sc || 1), txt, color, size, life: 0, max: 1.3 }); }
+// ekrandaki sayılar 2,3 sn kalır; aynı kahramanın üst üste gelen yazıları (hasar + kanama gibi) alt alta dizilir; üst şeridin altında kalır
+// enerji kalkanı: kahramanın önünde (yüzü rakibe dönük) yarım kubbe, içi altıgen petek. Güçlü kalkan daha parlak;
+// darbe alınca petekler bir an parlar ve çatlak çizgileri görünür
+function hexPath(c, cx, cy, r) { c.moveTo(cx + r, cy); for (let i = 1; i <= 6; i++) c.lineTo(cx + r * Math.cos(i * Math.PI / 3), cy + r * Math.sin(i * Math.PI / 3)); }
+function drawShield(f, fx0, gy, k, t) {
+  const face = f.A.face, rx = 64 * k, ry = 160 * k, cx = fx0 + face * 44 * k, cy = gy - 145 * k, col = f.shieldColor || '#8ad';
+  const hitK = Math.max(0, 1 - (now() - (f.shieldHitT || -1e9)) / 380), pw = Math.min(1, f.shield / .75);
+  const a0 = .18 + pw * .5, a = a0 + hitK * .4 + Math.sin(t / 260) * .05;
+  ctx.save();
+  ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, face > 0 ? -Math.PI / 2 : Math.PI / 2, face > 0 ? Math.PI / 2 : Math.PI * 1.5); ctx.closePath();
+  const g = ctx.createRadialGradient(cx - face * rx, cy, 4, cx - face * rx, cy, ry);
+  g.addColorStop(0, col + '10'); g.addColorStop(.7, col + '40'); g.addColorStop(1, col + '99');
+  ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = Math.min(1, a); ctx.fillStyle = g; ctx.fill();
+  ctx.save(); ctx.clip(); ctx.strokeStyle = col; ctx.lineWidth = 1.5; ctx.globalAlpha = Math.min(1, a * .8 + hitK * .4);
+  const r = 13 * k, dx = r * 1.5, dy = r * Math.sqrt(3); ctx.beginPath();
+  for (let i = -1, xx = cx - rx; xx < cx + rx + dx; xx += dx, i++) for (let yy = cy - ry - dy; yy < cy + ry + dy; yy += dy) hexPath(ctx, xx, yy + (i % 2 ? dy / 2 : 0), r);
+  ctx.stroke();
+  if (hitK > 0) { // çatlaklar
+    ctx.globalAlpha = hitK; ctx.lineWidth = 2; ctx.strokeStyle = '#fff'; ctx.beginPath();
+    const ox = cx + face * rx * .55, oy = cy - ry * .2;
+    for (let j = 0; j < 5; j++) { const an = j * 1.3 + 0.4; ctx.moveTo(ox, oy); ctx.lineTo(ox + Math.cos(an) * 26 * k, oy + Math.sin(an) * 34 * k); ctx.lineTo(ox + Math.cos(an + .3) * 48 * k, oy + Math.sin(an + .3) * 60 * k); }
+    ctx.stroke();
+  }
+  ctx.restore();
+  // kenar: parlak çizgi ve üzerinde dolaşan ışık
+  ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, face > 0 ? -Math.PI / 2 : Math.PI / 2, face > 0 ? Math.PI / 2 : Math.PI * 1.5);
+  ctx.globalAlpha = Math.min(1, a + .15); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.stroke();
+  const sp = (t / 900) % 1, an0 = (face > 0 ? -Math.PI / 2 : Math.PI / 2) + Math.PI * sp;
+  ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, an0, an0 + .35); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.globalAlpha = .7 * pw + .2; ctx.stroke();
+  ctx.restore();
+}
+function floatText(A, txt, color, size = 36) {
+  const near = texts.filter(t => t.A === A && t.life < 1.2).length;
+  const y = (A.gy || GY) + (A.offY || 0) - (A.topH || 362) * .91 * (A.sc || 1) + near * size * .9;
+  texts.push({ A, x: A.x + A.off * A.face + rnd(-14, 14), y: Math.max(175, y), txt, color, size, life: 0, max: 2.3 });
+}
 function shake(m) { if (!reduceMotion) { shakeT = now(); shakeMag = m; } }
 const TORCH_X = [46, 1234]; // duvar dipleri: en arkadaki kahramanın başının arkasına düşmesin
 const bg = hiCanvas();
@@ -1157,6 +1313,11 @@ const ITEM_W = { head: .74, chest: 1.36, sleeve: .42, bracer: .75, glove: .86, k
 const SHOP_BASE = 900, SHOP_STEP = 2;
 const SHOP_PRICE = (k, n) => n <= 1 ? 0 : Math.round(SHOP_BASE * SHOP_STEP ** (n - 2) * ITEM_W[k] / 10) * 10;
 const HAMMER_PRICE = 1500; // tüccarda çekiç
+// kademe adları (malzemeden bağımsız, her sınıfa uyar) ve yazı renkleri (çerçeve renklerinin okunur hâli)
+const TIER_NAMES = ['Sıradan', 'Sağlam', 'Kaliteli', 'Usta işi', 'Nadir', 'Seçkin', 'Kahraman', 'Destansı', 'Mitik', 'Efsanevi'];
+const TIER_COLORS = ['#c09a72', '#c3c6cf', '#e8a06a', '#a9bdd4', '#eef2f8', '#f2c14e', '#5fe0a4', '#7fb0ff', '#d08bff', '#ff9a3c'];
+const tierName = n => TIER_NAMES[Math.max(1, Math.min(10, n | 0)) - 1];
+const tierSpan = n => `<span class="tname" style="color:${TIER_COLORS[Math.max(1, Math.min(10, n | 0)) - 1]}">${tierName(n)}</span>`; // ayrı düğüm: çeviri ayrı yapılır
 const SELL_PRICE = (k, n) => Math.floor(SHOP_PRICE(k, n) / 2); // eşya satışı: tüccar fiyatının yarısı (1. kademe satılmaz)
 const goldShort = v => v >= 1e4 ? Math.round(v / 1e3) + 'k' : v >= 1e3 ? (Math.round(v / 100) / 10) + 'k' : String(v); // kutu içi kısa fiyat
 // iki yönlü arena ligi: galibiyet +1, yenilgi -1 puan; her 3 puan bir lig; rakip seviyesi ve ödül lige göre
@@ -1170,11 +1331,11 @@ const HEAL_FATIGUE = .85;
 // Değerler sabit sayıdır (yüzde değil): can, hasar (her vuruşa eklenir), mana, yenilenme. Tablo 10. kademenin değeri;
 // her kademe bir öncekinden %25 fazla verir (1. kademe dahil: 10. kademenin 1,25^-9'u).
 const PERK = {
-  head: { hp: 175 }, chest: { hp: 320 }, sleeve: { hp: 100 }, bracer: { hp: 90, dmg: 3 }, glove: { dmg: 7 },
-  knee: { hp: 125 }, boot: { hp: 80 }, main: { dmg: 25 }, off: { hp: 120, dmg: 8 }, cape: { mp: 60, regen: 5 }
+  head: { hp: 175, mr: 40 }, chest: { hp: 320, ar: 60 }, sleeve: { hp: 100 }, bracer: { hp: 90, dmg: 3, mr: 25 }, glove: { dmg: 7 },
+  knee: { hp: 125, ar: 30 }, boot: { hp: 80, ar: 25 }, main: { dmg: 25 }, off: { hp: 120, dmg: 8 }, cape: { mp: 60, regen: 5, mr: 35 }
 };
 const perkVal = (k, s, n) => Math.round(PERK[k][s] * 1.25 ** (Math.max(1, Math.min(10, n)) - 10));
-const PERK_TXT = { hp: 'can', dmg: 'hasar', mp: 'mana', regen: 'mana yenileme' };
+const PERK_TXT = { hp: 'can', dmg: 'hasar', mp: 'mana', regen: 'mana yenileme', ar: 'zırh', mr: 'büyü direnci' };
 const perkText = (k, n) => Object.keys(PERK[k]).map(s => [s, perkVal(k, s, n)]).filter(([, v]) => v > 0).map(([s, v]) => `+${v} ${PERK_TXT[s]}`).join(', ') || '—';
 let SAVE = { gold: 300, gear: {}, town: null };
 try { const s = JSON.parse(localStorage.getItem('sa.save')); if (s && typeof s.gold === 'number') SAVE = { ...s, gear: s.gear || {}, league: s.league || 0 }; } catch (e) {}
@@ -1187,6 +1348,7 @@ SAVE.league = SAVE.league || 0;
 /* ---------- Görevler ve başarımlar ---------- */
 // istatistikler (başarımlar buradan okunur)
 SAVE.sp = SAVE.sp && typeof SAVE.sp === 'object' ? SAVE.sp : {}; // sınıf başına beceri puanı dağılımı
+SAVE.gearSrc = SAVE.gearSrc && typeof SAVE.gearSrc === 'object' ? SAVE.gearSrc : {}; // takılı eşyanın asıl sahibi (yoksa kendisi)
 SAVE.stats = { battles: 0, wins: 0, crits: 0, dmg: 0, upgrades: 0, mines: 0, bestLeague: 1, won: {}, ...(SAVE.stats || {}) };
 SAVE.ach = SAVE.ach || {};
 const DAILY_POOL = [
@@ -1314,7 +1476,7 @@ async function cloudInit() {
     } else if (r.status === 401) logoutLocal();
   }
   try { sessionStorage.removeItem('sa.adopted'); } catch (e) {}
-  renderAcc();
+  renderAcc(); setTimeout(checkMail, 1500);
   let skip = false; try { skip = !!localStorage.getItem('sa.accSkip'); } catch (e) {}
   if (!ACC.token && !skip) { if ($('guide').hidden) openAcc(); else ACC.after = true; }
 }
@@ -1337,6 +1499,19 @@ $('accForm').addEventListener('submit', async e => {
   // girişte hesabın kaydı esas alınır (hesap yeniyse buradaki ilerleme hesaba yüklenir)
   if (r.body.save) adoptSave(r.body.save); else { cloudPush(true); setTimeout(() => location.reload(), 400); }
 });
+// ortak ekipman: zırh ailesi ve silah türü; eşyanın asıl sahibi kendi sınıfında %100, aynı aile/türde %80 (SHARE_FIT), başka aile takamaz
+const ARMOR_FAM = { tank: 'agir', paladin: 'agir', warrior: 'agir', berserker: 'agir', assassin: 'hafif', shadow: 'hafif', monk: 'hafif', vampire: 'hafif', elf: 'hafif', ranger: 'hafif', inquisitor: 'hafif', mage: 'kumas', necromancer: 'kumas', druid: 'kumas', support: 'kumas' };
+const WEAPON_FAM = { warrior: 'kilic', berserker: 'kilic', tank: 'cekic', paladin: 'cekic', support: 'cekic', elf: 'yay', inquisitor: 'yay', mage: 'asa', necromancer: 'asa', druid: 'asa', assassin: 'hancer', shadow: 'hancer', vampire: 'hancer', ranger: 'mizrak', monk: 'mizrak' };
+const FAM_NAMES = { agir: 'Ağır zırh', hafif: 'Hafif zırh', kumas: 'Kumaş', kilic: 'Kılıç ve balta', cekic: 'Çekiç ve topuz', yay: 'Yay ve arbalet', asa: 'Asa ve büyü kitabı', hancer: 'Hançer ve orak', mizrak: 'Mızrak ve sopa' };
+const SHARE_FIT = .8;
+const famOf = (cls, k) => (k === 'main' || k === 'off' ? WEAPON_FAM : ARMOR_FAM)[cls];
+const fitOf = (src, to, k) => src === to ? 1 : famOf(src, k) === famOf(to, k) ? SHARE_FIT : 0;
+const wearers = (src, k) => ORDER.filter(id => fitOf(src, id, k) > 0);
+const gearSrcOf = id => (SAVE.gearSrc[id] = SAVE.gearSrc[id] || {});
+// takılı eşyaların uyumu: 10 yuva, 1 = başka sınıfın eşyası (%80). Çevrimiçi maçlarda ve lobide ekipmanla birlikte gider
+const myUy = id => ITEMS.map(k => { const s = (SAVE.gearSrc[id] || {})[k]; return s && s !== id ? 1 : 0; });
+const cleanU = a => Array.isArray(a) && a.length === ITEMS.length ? a.map(v => v ? 1 : 0) : null;
+const perkTextFit = (k, n, fit) => Object.keys(PERK[k]).map(s => [s, Math.round(perkVal(k, s, n) * fit)]).filter(([, v]) => v > 0).map(([s, v]) => `+${v} ${PERK_TXT[s]}`).join(', ') || '—';
 const gearOf = id => { const g = SAVE.gear[id] = SAVE.gear[id] || {}; ITEMS.forEach(k => { if (!(g[k] >= 1 && g[k] <= 10)) g[k] = 1; }); return g; };
 const gearLevel = g => Math.round(ITEMS.reduce((s, k) => s + g[k], 0) / ITEMS.length);
 // tecrübe: seviye n'den n+1'e 100 + 50(n-1) EXP; en yüksek seviye MAX_LVL (99)
@@ -1348,40 +1523,45 @@ const myLevel = () => xpLevel(SAVE.xp);
 const LV_BONUS = { mp: .02, dmg: .015 }, LV_TOP = 50, DODGE_CAP = .30;
 // beceri puanı: her seviye atlayışta 1, her 5. seviyede (5, 10 … 95) 1 yerine 3 puan; seviye sınırı 99 (toplam 136 puan).
 // Her sınıf kendi puanını dağıtır: 4 savaş yeteneğinin her biri 1-15. seviye (her seviye %3 güç), 5 değerin her biri 0-15 puan (her puan %3).
-// Kritik ve kaçınmaya puan verilmez (onlar sınıfa ve seviyeye bağlı). sp = [yetenek 1-4 seviyesi, can, mana, mana yenileme, can yenileme, hasar puanı]
-const MAX_LVL = 99, SK_MAX = 15, ST_MAX = 15, SK_STEP = .03, ST_STEP = .03, SP_STATS = ['hp', 'mp', 'regen', 'hregen', 'dmg'], SP0 = [1, 1, 1, 1, 0, 0, 0, 0, 0];
+// Kritik ve kaçınmaya puan verilmez (onlar sınıfa ve seviyeye bağlı). sp = [yetenek 1-4 seviyesi, can, mana, mana yenileme, can yenileme, hasar, zırh, büyü direnci puanı]
+const MAX_LVL = 99, SK_MAX = 15, ST_MAX = 15, SK_STEP = .03, ST_STEP = .03, SP_STATS = ['hp', 'mp', 'regen', 'hregen', 'dmg', 'ar', 'mr'], SP0 = [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0];
 const spOf = lvl => { let p = 0; for (let l = 2; l <= Math.min(MAX_LVL, lvl); l++) p += l % 5 ? 1 : 3; return p; };
 const spUsed = sp => sp.slice(0, 4).reduce((s, v) => s + v - 1, 0) + sp.slice(4).reduce((s, v) => s + v, 0);
 // bozuk ya da seviyesine göre fazla harcanmış puanlar sıfırlanır
 function cleanSp(a, lvl) {
-  if (!Array.isArray(a) || a.length !== 9) return SP0.slice();
+  if (Array.isArray(a) && a.length === 9) a = [...a, 0, 0]; // zırh ve büyü direnci satırları sonradan eklendi
+  if (!Array.isArray(a) || a.length !== 11) return SP0.slice();
   const s = a.map((v, i) => Math.max(i < 4 ? 1 : 0, Math.min(i < 4 ? SK_MAX : ST_MAX, v | 0)));
   return spUsed(s) > spOf(lvl) ? SP0.slice() : s;
 }
 // botlar: puanlar sırayla yeteneklere ve değerlere eşit dağılır
-const SP_ORDER = [0, 4, 3, 8, 1, 5, 2, 7, 6];
+const SP_ORDER = [0, 4, 9, 3, 8, 10, 1, 5, 2, 7, 6];
 function autoSp(lvl) {
   const s = SP0.slice(); let p = spOf(lvl);
-  for (let i = 0; p > 0 && i < 400; i++) { const k = SP_ORDER[i % 9]; if (s[k] < (k < 4 ? SK_MAX : ST_MAX)) { s[k]++; p--; } }
+  for (let i = 0; p > 0 && i < 400; i++) { const k = SP_ORDER[i % SP_ORDER.length]; if (s[k] < (k < 4 ? SK_MAX : ST_MAX)) { s[k]++; p--; } }
   return s;
 }
 // yetenek seviyesi: hasar (zar ve süreli hasar), iyileştirme ve kalkan güçlenir; kaçış yeteneği (tam kaçınma) güçlenemez, manası azalır
+// hasar türü: uzaktan büyü (büyü oku, ışık, sarmaşık, ruh, spor) büyü hasarıdır; yakın dövüş, ok, arbalet ve kapan fiziksel. Yanık her zaman büyü.
+const isMag = sk => !!sk.dmg && sk.kind === 'ranged' && sk.fx !== 'arrow' && sk.fx !== 'trap' && sk.icon !== 'crossbow';
+const DEF_K = 1000, defCut = v => (v > 0 ? v / (v + DEF_K) : 0); // savunmanın azalttığı pay (250 → %20)
 function skillAt(sk, n) {
-  n = Math.max(1, Math.min(SK_MAX, n | 0 || 1)); const m = 1 + SK_STEP * (n - 1), s = { ...sk, lv: n }; if (n === 1) return s;
+  n = Math.max(1, Math.min(SK_MAX, n | 0 || 1)); const m = 1 + SK_STEP * (n - 1), s = { ...sk, lv: n, mag: isMag(sk) }; if (n === 1) return s;
   if (s.dmg) s.dmg = [Math.round(s.dmg[0] * m), Math.round(s.dmg[1] * m)];
   if (s.dot) s.dot = { ...s.dot, dmg: Math.round(s.dot.dmg * m) };
   if (s.heal) s.heal = Math.round(s.heal * m);
   if (s.block && s.block < 1) s.block = Math.round((1 - (1 - s.block) / m) * 100) / 100; // aldığı hasar m kat azalır
   if (s.kind === 'guard' && s.block >= 1) s.cost = Math.round(s.cost / m);
-  if (s.kind === 'rage') s.rage = Math.round((1 + .6 * m) * 100) / 100;
+  if (s.kind === 'rage') s.cost = Math.round(s.cost / m); // öfke yeteneği: hep +5 öfke topu; seviye manasını azaltır
   return s;
 }
-function gearStats(c, g, lvl = 1, sp = SP0) {
-  const b = { hp: 0, dmg: 0, mp: 0, regen: 0 }, L = Math.max(0, (lvl | 0) - 1), t = Math.min(1, L / (LV_TOP - 1));
+function gearStats(c, g, lvl = 1, sp = SP0, uy = null) {
+  const b = { hp: 0, dmg: 0, mp: 0, regen: 0, ar: 0, mr: 0 }, L = Math.max(0, (lvl | 0) - 1), t = Math.min(1, L / (LV_TOP - 1));
   const P = k => 1 + ST_STEP * (sp[4 + SP_STATS.indexOf(k)] || 0); // beceri puanı: kendi değerin yüzdesi (eşya payı büyümez)
-  for (const k of ITEMS) for (const s of Object.keys(PERK[k])) b[s] += perkVal(k, s, g[k]);
+  for (const [i, k] of ITEMS.entries()) if (g[k] > 0) for (const s of Object.keys(PERK[k])) b[s] += Math.round(perkVal(k, s, g[k]) * (uy && uy[i] ? SHARE_FIT : 1)); // 0: yuva boş; uy: başka sınıfın eşyası %80
   const hp0 = c.hp * (1 + c.hpg * (LV_TOP - 1) * (L / (LV_TOP - 1)) ** c.hpe) * P('hp'), mp0 = c.mp * (1 + LV_BONUS.mp * L) * P('mp');
   return { hp: Math.round(hp0 + b.hp), mp: Math.round(mp0 + b.mp), regen: Math.round(c.regen * P('regen')) + b.regen, hregen: Math.round(hp0 * (c.hr || 0) * P('hregen')), dmgAdd: b.dmg, gb: b, // gb: eşyalardan gelen
+    ar: Math.round((c.ar || 0) * (1 + .02 * L) * P('ar')) + b.ar, mr: Math.round((c.mr || 0) * (1 + .02 * L) * P('mr')) + b.mr,
     crit: c.crit + (c.cm - c.crit) * t, dodge: Math.min(DODGE_CAP, c.dodge + (c.dm - c.dodge) * t), dmgMul: c.pow * (1 + LV_BONUS.dmg * L) * P('dmg') };
 }
 // rakip, oyuncunun ortalama seviyesinde gelir; her eşya ±1 oynar
@@ -1389,9 +1569,9 @@ function foeGear(L) { const out = {}; ITEMS.forEach(k => out[k] = Math.max(1, Ma
 // beceri puanları: gelen (çevrimiçi rakip/arkadaş) ya da benimki; botlar eşit dağıtır
 const mySp = id => cleanSp((SAVE.sp || {})[id], myLevel());
 const mkFighter = (id, team, gear, alch = T.alch, o = {}) => {
-  const c = CLASSES[id], lvl = Math.max(1, Math.min(99, o.lvl | 0 || 1)), sp = o.sp ? cleanSp(o.sp, lvl) : o.ctrl === 'me' ? mySp(id) : autoSp(lvl), st = gearStats(c, gear, lvl, sp);
+  const c = CLASSES[id], lvl = Math.max(1, Math.min(99, o.lvl | 0 || 1)), sp = o.sp ? cleanSp(o.sp, lvl) : o.ctrl === 'me' ? mySp(id) : autoSp(lvl), uy = o.uy ? cleanU(o.uy) : o.ctrl === 'me' ? myUy(id) : null, st = gearStats(c, gear, lvl, sp, uy);
   return { team, side: 'enemy', ctrl: o.ctrl || 'ai', id, cls: c, gear, lvl, name: o.name || c.name, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp,
-    regen: st.regen, hregen: st.hregen, gb: st.gb, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd, skills: [...c.skills.map((s, i) => skillAt({ ...s, color: s.color || glowOf(id), snd: id + '_' + i }, sp[i])), { ...POTION, heal: potionHeal(alch) }],
+    regen: st.regen, hregen: st.hregen, gb: st.gb, ar: st.ar, mr: st.mr, sp, uy, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd, skills: [...c.skills.map((s, i) => skillAt({ ...s, color: s.color || glowOf(id), snd: id + '_' + i }, sp[i])), { ...POTION, heal: potionHeal(alch) }],
     healMul: 1 + (st.hp / c.hp - 1) * .5, heals: 0,
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: potionCount(alch || 1),
     A: Rig.actor(id, 260, 1, gear) }; // konum ve yön newBattle'da dizilime göre verilir
@@ -1424,6 +1604,13 @@ function frame(t) {
   if (F) {
     for (const f of F.list) Rig.update(f.A, dt * SPD);
     // seçili hedefler: rakip kırmızı, arkadaş yeşil halka (yalnızca senin sıranda)
+    for (const f of F.list) if (isAlive(f)) { // takım zemini
+      const x = f.A.x + f.A.off * f.A.face, y = footY(f) + 3, col = f.side === 'player' ? '242,193,78' : '255,80,80';
+      ctx.save(); const g = ctx.createRadialGradient(x, y, 2, x, y, 70 * f.sc);
+      g.addColorStop(0, `rgba(${col},.32)`); g.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(x, y, 70 * f.sc, 15 * f.sc, 0, 0, 7); ctx.fill();
+      ctx.strokeStyle = `rgba(${col},.55)`; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(x, y, 58 * f.sc, 12 * f.sc, 0, 0, 7); ctx.stroke(); ctx.restore();
+    }
     const ring = (f, col) => { if (!f || !isAlive(f)) return; ctx.save(); ctx.strokeStyle = col; ctx.lineWidth = 3; ctx.globalAlpha = .75 + Math.sin(t / 200) * .2; ctx.beginPath(); ctx.ellipse(f.A.x + f.A.off * f.A.face, footY(f) + 4, 78 * f.sc, 16 * f.sc, 0, 0, 7); ctx.stroke(); ctx.restore(); };
     if (myTurn() && S2.waiting) { ring(S2.foe, '#ff5a5a'); ring(S2.ally, '#4be38a'); }
     skBar.classList.toggle('show', myTurn() && S2.waiting && !S2.busy);
@@ -1436,13 +1623,7 @@ function frame(t) {
     }
     const order = F.list.slice().sort((a, b) => (footY(a) - footY(b)) || (Math.abs(a.A.off) - Math.abs(b.A.off)));
     for (const f of order) {
-      const gy = footY(f), s = S * f.sc, fx0 = f.A.x + f.A.off * f.A.face;
-      if (f.shield && !f.A.ANIMS[f.A.cur].hold) {
-        const a = .45 + Math.sin(t / 180) * .15;
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.strokeStyle = f.shieldColor;
-        ctx.beginPath(); ctx.ellipse(fx0, gy - 170 * f.sc, 120 * f.sc, 200 * f.sc, 0, 0, 7);
-        ctx.globalAlpha = a * .3; ctx.lineWidth = 16; ctx.stroke(); ctx.globalAlpha = a; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
-      }
+      const gy = footY(f), s = S * f.sc * LAYOUT.depth(gy) / LAYOUT.depth(f.gy || GY), fx0 = f.A.x + f.A.off * f.A.face;
       if (f.furyReady && isAlive(f)) { // öfke modu: titreyen kırmızı hale
         const a = .5 + Math.sin(t / 90) * .2;
         ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -1456,7 +1637,12 @@ function frame(t) {
         Rig.draw(lctx, f.A, t, dt, f.A.x, gy, s, null);
         lctx.globalCompositeOperation = 'source-atop'; lctx.fillStyle = `rgba(255,255,255,${fl * .75})`; lctx.fillRect(0, 0, W, H);
         lctx.globalCompositeOperation = 'source-over'; ctx.drawImage(layer, 0, 0, W, H);
+      } else if (f.shield >= 1 && isAlive(f)) { // kaçış: yarı saydam, arkasında silik ikinci görüntü
+        lctx.setTransform(HR, 0, 0, HR, 0, 0); lctx.clearRect(0, 0, W, H); Rig.draw(lctx, f.A, t, 0, f.A.x - f.A.face * 22 * s / S, gy, s, fx);
+        ctx.save(); ctx.globalAlpha = .22 + Math.sin(t / 120) * .06; ctx.drawImage(layer, 0, 0, W, H);
+        lctx.clearRect(0, 0, W, H); Rig.draw(lctx, f.A, t, dt, f.A.x, gy, s, fx); ctx.globalAlpha = .55; ctx.drawImage(layer, 0, 0, W, H); ctx.restore();
       } else Rig.draw(ctx, f.A, t, dt, f.A.x, gy, s, fx);
+      if (f.shield > 0 && f.shield < 1 && isAlive(f) && !f.A.ANIMS[f.A.cur].hold) drawShield(f, fx0, gy, s / S, t);
     }
   }
   ctx.globalCompositeOperation = 'lighter';
@@ -2295,9 +2481,7 @@ function fitRoster() {
   const w = r.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight), h = r.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
   if (mode === 'shop') {
     const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
-    const side = Math.max(28, (h - gap * 4) / 5 - lab);
-    r.parentElement.style.setProperty('--rw', Math.ceil(side * 3 + gap * 2 + padX) + 'px');
-    r.style.setProperty('--rc', 3); r.style.setProperty('--rr', 5); return;
+    r.style.setProperty('--rc', n); r.style.setProperty('--rr', 1); return; // tüccarda sınıflar üstte tek sıra
   }
   let best = -1, bc = 5;
   for (let c = 2; c <= 8; c++) {
@@ -2309,7 +2493,7 @@ function fitRoster() {
 if (window.ResizeObserver) new ResizeObserver(fitRoster).observe($('roster'));
 addEventListener('resize', fitRoster);
 function drawIcon(cv, id, k, n) {
-  const x = cv.getContext('2d'), sp = Rig.tierSprite(id, k, n); x.clearRect(0, 0, cv.width, cv.height);
+  const x = cv.getContext('2d'), sp = Rig.tierSprite(id, k, n); x.clearRect(0, 0, cv.width, cv.height); x.imageSmoothingQuality = 'high';
   if (!sp) return;
   const s = Math.min(cv.width / sp.w, cv.height / sp.h) * .92;
   x.drawImage(sp.c, (cv.width - sp.w * s) / 2, (cv.height - sp.h * s) / 2, sp.w * s, sp.h * s);
@@ -2317,59 +2501,107 @@ function drawIcon(cv, id, k, n) {
 /* Tüccar: demirciden farkı, her eşyanın istenen kademesi seviye/Belediye sınırı ve malzeme olmadan doğrudan altınla alınır.
    Fiyat için SHOP_PRICE'a bakınız; demirciden pahalıdır. */
 let shopPick = null; // seçili kutu: { key, k, n }
+let shopFilt = { afford: false, up: false }, shopScroll = null, shopRO = null;
+try { Object.assign(shopFilt, JSON.parse(localStorage.getItem('sa.shopf') || '{}')); } catch (e) {}
 function renderShop() {
   const key = chosen, g = gearOf(key), names = Object.fromEntries(RC[key].items);
   $('gearHint').textContent = 'Kademeye dokun, sonra satın al'; $('gold').textContent = `${CLASSES[key].name} · ${SAVE.gold} Altın`;
   if (shopPick && shopPick.key !== key) shopPick = null;
   const list = $('gearList'); list.innerHTML = ''; list.className = 'gearlist shopbox';
   const wrap = document.createElement('div'); wrap.className = 'shopwrap';
+  // filtreler
+  const bar = document.createElement('div'); bar.className = 'shopbar';
+  for (const [f, t] of [['up', 'Yalnız yükseltmeler']]) { // alınamayanlar zaten soluk: ayrı süzgece gerek yok
+    const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn ghost'; bt.textContent = t; bt.setAttribute('aria-pressed', !!shopFilt[f]);
+    bt.addEventListener('click', () => { shopFilt[f] = !shopFilt[f]; try { localStorage.setItem('sa.shopf', JSON.stringify(shopFilt)); } catch (e) {} renderShop(); });
+    bar.appendChild(bt);
+  }
+  const gb = document.createElement('div'); gb.className = 'shopgb';
+  for (const [t, d] of [['◀', -1], ['▶', 1]]) { const ab = document.createElement('button'); ab.type = 'button'; ab.className = 'btn ghost sarr'; ab.textContent = t; ab.setAttribute('aria-label', d < 0 ? 'Düşük kademeler' : 'Yüksek kademeler'); ab.addEventListener('click', () => { const s = grid.querySelector('.sc'); gb.scrollLeft += d * 3 * ((s ? s.offsetWidth : 80) + 4); }); bar.appendChild(ab); }
   const grid = document.createElement('div'); grid.className = 'shopg';
   grid.appendChild(document.createElement('span'));
-  for (let n = 1; n <= 10; n++) { const th = document.createElement('span'); th.className = 'th'; th.textContent = n; grid.appendChild(th); }
+  for (let n = 1; n <= 10; n++) { const th = document.createElement('span'); th.className = 'th'; th.style.color = TIER_COLORS[n - 1]; th.textContent = tierName(n); grid.appendChild(th); }
   for (const k of ITEMS) {
     const rn = document.createElement('span'); rn.className = 'rn'; rn.textContent = names[k]; rn.title = names[k]; grid.appendChild(rn);
     for (let n = 1; n <= 10; n++) {
-      const own = n <= g[k], price = SHOP_PRICE(k, n), b = document.createElement('button'); b.type = 'button';
-      b.className = `sc tr${n}` + (own ? ' own' : '') + (n === g[k] ? ' cur' : '') + (!own && SAVE.gold < price ? ' poor' : '') + (shopPick && shopPick.k === k && shopPick.n === n ? ' sel' : '');
-      const cv = document.createElement('canvas'); cv.width = cv.height = 68; drawIcon(cv, key, k, n);
-      const pr = document.createElement('small'); pr.textContent = own ? (n === g[k] ? 'Takılı' : 'Var') : goldShort(price);
-      b.append(cv, pr); b.title = `${names[k]} · ${n}. kademe · ${perkText(k, n)}` + (own ? '' : ` · ${price} altın`);
-      b.setAttribute('aria-label', `${names[k]} ${n}. kademe, ` + (own ? 'sende var' : price + ' altın'));
+      const own = n <= g[k], price = SHOP_PRICE(k, n), poor = !own && SAVE.gold < price, b = document.createElement('button'); b.type = 'button';
+      b.className = `sc tr${n}` + (own ? ' own' : '') + (n === g[k] ? ' cur' : '') + (poor ? ' poor' : '') + (n === g[k] + 1 ? ' next' : '')
+        + (shopPick && shopPick.k === k && shopPick.n === n ? ' sel' : '') + (shopFilt.up && own ? ' hid' : '');
+      const cv = document.createElement('canvas'); cv.width = cv.height = 240; drawIcon(cv, key, k, n); // büyük kutuda bulanık olmasın
+      b.append(cv); if (own) { const pr = document.createElement('small'); pr.textContent = n === g[k] ? 'Takılı' : 'Var'; b.appendChild(pr); } // fiyat kutuda yazmaz: dokununca sağ panelde b.title = `${tierName(n)} · ${names[k]}`;
+      b.setAttribute('aria-label', `${tierName(n)} · ${names[k]}` + (own ? ', sende var' : ''));
       b.addEventListener('click', () => { shopPick = { key, k, n }; grid.querySelectorAll('.sc.sel').forEach(e => e.classList.remove('sel')); b.classList.add('sel'); shopInfo(); });
       grid.appendChild(b);
     }
   }
-  wrap.appendChild(grid); list.appendChild(wrap);
+  gb.appendChild(grid); wrap.append(bar, gb); list.appendChild(wrap);
+  // açılınca en düşük takılı kademeye kayar (yükseltmeler görünür); önceki kaydırma korunur
+  // aynı anda 5 kademe görünür: kutu boyu ızgaranın genişliğinden (geri kalanı kaydırılır)
+  const fit = () => { const cs = getComputedStyle(list), nw = parseFloat(cs.getPropertyValue('--nw')) || 120, qb = parseFloat(cs.getPropertyValue('--qb')) || 78, gp = parseFloat(cs.getPropertyValue('--gp')) || 5;
+    grid.style.setProperty('--cell', Math.max(52, Math.min(130, Math.floor((gb.clientWidth - nw - qb - 7 * gp - 10) / 5))) + 'px'); };
+  fit(); if (window.ResizeObserver) { if (shopRO) shopRO.disconnect(); shopRO = new ResizeObserver(fit); shopRO.observe(gb); }
+  requestAnimationFrame(() => { if (shopScroll != null) { gb.style.scrollBehavior = 'auto'; gb.scrollLeft = shopScroll; gb.style.scrollBehavior = ''; } else { const lo = Math.min(...ITEMS.map(k => g[k])), s = grid.querySelector('.sc'); gb.scrollLeft = Math.max(0, lo - 1) * ((s ? s.offsetWidth : 80) + 4); } });
+  gb.addEventListener('scroll', () => { shopScroll = gb.scrollLeft; });
   const info = document.createElement('div'); info.className = 'shopinfo'; info.id = 'shopInfo'; list.appendChild(info);
   shopInfo();
 }
-// alttaki bilgi şeridi: seçili kademenin görünümü, katkısı ve satın al
 function buyHammer() { if (SAVE.gold < HAMMER_PRICE) return; SAVE.gold -= HAMMER_PRICE; SAVE.hammers++; persist(); Sfx.play('coin'); renderShop(); invBadge(); }
+// sağ panel: seçili eşyayı kahramanın üstünde dener, takılı olanla karşılaştırır, fiyat ve kalan altın; en altta çekiç kutusu
+let shopA = null;
 function shopInfo() {
-  const box = $('shopInfo'); if (!box) return; box.innerHTML = '';
-  const hb = document.createElement('div'); hb.className = 'hbuy'; hb.innerHTML = `${svg('hammer')}<span></span>`; hb.querySelector('span').textContent = `${SAVE.hammers} çekiç`;
+  const box = $('shopInfo'); if (!box) return; box.innerHTML = ''; shopA = null;
+  const hb = document.createElement('div'); hb.className = 'hbuy';
+  hb.innerHTML = `${svg('hammer')}<div><b></b><small>Demircide 1 çekiç = 1 eşya</small></div>`; hb.querySelector('b').textContent = `${SAVE.hammers} çekiç`;
   const hbb = document.createElement('button'); hbb.type = 'button'; hbb.className = 'btn ghost'; hbb.textContent = `Çekiç al · ${HAMMER_PRICE}`; hbb.disabled = SAVE.gold < HAMMER_PRICE; hbb.addEventListener('click', buyHammer);
-  hb.appendChild(hbb); setTimeout(() => box.appendChild(hb)); // panelin en altında
+  hb.appendChild(hbb);
   const key = chosen, g = gearOf(key), p = shopPick && shopPick.key === key ? shopPick : null;
-  if (!p) { const t = document.createElement('span'); t.className = 'hint'; t.textContent = 'Bir kutuya dokun: kademenin görünümünü, katkısını ve fiyatını gör. Seviye sınırı yok, malzeme gerekmez.'; box.appendChild(t); return; }
+  if (!p) { const t = document.createElement('span'); t.className = 'hint'; t.textContent = 'Bir kutuya dokun: eşyayı kahramanının üstünde dene, takılı olanla karşılaştır. Seviye sınırı yok, malzeme gerekmez.'; box.append(t, hb); return; }
   const names = Object.fromEntries(RC[key].items), own = p.n <= g[p.k], price = SHOP_PRICE(p.k, p.n), rich = SAVE.gold >= price;
-  const fr = document.createElement('div'); fr.className = 'big tr' + p.n;
-  const cv = document.createElement('canvas'); cv.width = cv.height = 160; drawIcon(cv, key, p.k, p.n); fr.appendChild(cv);
-  const tb = document.createElement('b'), ts = document.createElement('small'), tp = document.createElement('span');
-  tb.textContent = `${names[p.k]} · ${p.n}. kademe`; ts.textContent = perkText(p.k, p.n) + ` (şimdiki: ${g[p.k]}. kademe)`;
-  tp.className = 'price'; tp.textContent = own ? '' : '◆ ' + price.toLocaleString('tr-TR') + ' altın';
-  const tx = document.createElement('div'); tx.append(tb, ts);
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'btn';
-  b.textContent = own ? (p.n === g[p.k] ? 'Takılı' : 'Sende daha iyisi var') : rich ? `Satın al · ${price}` : `Altın yetmiyor · ${price}`; b.disabled = own || !rich;
-  b.addEventListener('click', () => buyItem(p.k, p.n));
-  box.append(fr, tx); if (!own) box.append(tp); box.append(b);
+  // deneme: kahraman bu eşyayla
+  const pv = document.createElement('canvas'); pv.className = 'shopprev'; pv.width = 480; pv.height = 600; pv.id = 'shopPrev';
+  shopA = Rig.actor(key, 0, 1, { ...g, [p.k]: p.n });
+  const tb = document.createElement('b'); tb.className = 'stt'; tb.innerHTML = tierSpan(p.n) + ' <span class="iname"></span>'; tb.lastChild.textContent = names[p.k];
+  // karşılaştırma: takılı → bu
+  const cmp = document.createElement('div'); cmp.className = 'scmp';
+  const rows = Object.keys(PERK[p.k]).map(s => [PERK_TXT[s], perkVal(p.k, s, g[p.k]), perkVal(p.k, s, p.n)]);
+  rows.push(['güç', itemPower(key, p.k, g[p.k]), itemPower(key, p.k, p.n)]);
+  for (const [l, a1, b1] of rows) {
+    const d = b1 - a1, r = document.createElement('div');
+    r.innerHTML = `<span></span><span>${a1} → <b>${b1}</b></span><em class="${d > 0 ? 'up' : d < 0 ? 'dn' : ''}">${d > 0 ? '+' + d : d < 0 ? d : '='}</em>`;
+    r.firstChild.textContent = l.charAt(0).toLocaleUpperCase('tr-TR') + l.slice(1); cmp.appendChild(r);
+  }
+  const cap = document.createElement('small'); cap.className = 'scap'; cap.innerHTML = '<span>Takılı:</span> ' + tierSpan(g[p.k]);
+  // solda bilgiler (ad, karşılaştırma, fiyat, düğmeler), sağda kahraman; çekiç kutusu altta tam genişlik
+  const body = document.createElement('div'); body.className = 'sbody'; const left = document.createElement('div'); left.className = 'sleft';
+  body.append(left, pv); box.append(body); left.append(tb, cap, cmp);
+  if (own) { const s = document.createElement('div'); s.className = 'sown'; s.textContent = p.n === g[p.k] ? 'Takılı' : 'Sende daha iyisi var'; left.append(s); box.append(hb); }
+  else {
+    const pr = document.createElement('div'); pr.className = 'sprice'; pr.innerHTML = `${svg('coin')}<b></b><small></small>`;
+    pr.querySelector('b').textContent = price.toLocaleString('tr-TR');
+    const sm = pr.querySelector('small'); sm.textContent = rich ? `Kalan: ${(SAVE.gold - price).toLocaleString('tr-TR')} altın` : `${(price - SAVE.gold).toLocaleString('tr-TR')} altın eksik`; sm.classList.toggle('miss', !rich);
+    const bt = document.createElement('div'); bt.className = 'sbtns';
+    const b1 = document.createElement('button'); b1.type = 'button'; b1.className = 'btn ghost'; b1.textContent = 'Satın al'; b1.disabled = !rich || invFree() <= 0; b1.title = invFree() > 0 ? 'Envantere koyar' : 'Envanter dolu';
+    b1.addEventListener('click', () => buyItem(p.k, p.n, false));
+    const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn'; b2.textContent = 'Satın al ve tak'; b2.disabled = !rich;
+    b2.addEventListener('click', () => buyItem(p.k, p.n, true));
+    bt.append(b1, b2); left.append(pr, bt); box.append(hb);
+  }
+  requestAnimationFrame(drawShopPrev);
 }
-function buyItem(k, to) {
+function drawShopPrev(t) {
+  const c = $('shopPrev'); if (!c || !shopA || !c.isConnected) return;
+  const x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height);
+  Rig.update(shopA, 16); Rig.draw(x, shopA, t, 16, c.width / 2 - 12, c.height - 24, 1.56, null); // tuval büyük çizilir: büyük panelde net kalır
+  requestAnimationFrame(drawShopPrev);
+}
+// equip: al ve tak (eskisi envantere); değilse envantere koyar
+function buyItem(k, to, equip = true) {
   const g = gearOf(chosen), price = SHOP_PRICE(k, to);
-  if (to <= g[k] || to > 10 || SAVE.gold < price) return;
-  SAVE.gold -= price; g[k] = to; SAVE.stats.upgrades++; persist(); track('upgrade'); Sfx.play('coin');
-  renderShop(); renderStats();
-  if (pA && Rig.sprites[chosen]) { pA = Rig.actor(chosen, 0, 1, g); pNext = now() + 600; }
+  if (to <= g[k] || to > 10 || SAVE.gold < price || (!equip && invFree() <= 0)) return;
+  SAVE.gold -= price; SAVE.stats.upgrades++; track('upgrade'); Sfx.play('coin');
+  if (equip) { equipItem({ c: chosen, k, n: to }); shopPick = null; } else SAVE.items.push({ c: chosen, k, n: to, new: 1 });
+  persist(); invBadge(); renderShop(); renderStats();
+  if (equip && pA && Rig.sprites[chosen]) { pA = Rig.actor(chosen, 0, 1, g); pNext = now() + 600; }
   lobbyPresence();
 }
 /* ---------- Demirci: çekiçle ekipman dövme ----------
@@ -2404,7 +2636,7 @@ function renderForge() {
   // ihtimal tablosu: kademe 2-10, iki kip
   const odds = document.createElement('div'); odds.className = 'fgodds';
   odds.appendChild(document.createElement('span'));
-  for (let n = 2; n <= 10; n++) { const h = document.createElement('span'); h.className = 'h'; h.textContent = n; odds.appendChild(h); }
+  for (let n = 2; n <= 10; n++) { const h = document.createElement('span'); h.className = 'h'; h.style.color = TIER_COLORS[n - 1]; h.textContent = tierName(n); odds.appendChild(h); }
   for (const own of [false, true]) {
     const p = forgeOdds(L, own), l = document.createElement('span'); l.className = 'l'; l.textContent = own ? CLASSES[key].name : 'Rastgele'; odds.appendChild(l);
     p.slice(1).forEach((v, i) => { const c = document.createElement('span'); c.className = 'c tr' + (i + 2); c.textContent = fmtPct(v); c.style.setProperty('--a', Math.min(.55, .08 + v)); odds.appendChild(c); });
@@ -2462,8 +2694,8 @@ function showForged() {
   const big = $('fBig'); big.className = 'big tr' + it.n; big.innerHTML = '';
   const cv = document.createElement('canvas'); cv.width = cv.height = 160; drawIcon(cv, it.c, it.k, it.n); big.appendChild(cv);
   big.style.animation = 'none'; void big.offsetWidth; big.style.animation = '';
-  $('fresT').textContent = `${names[it.k]} · ${it.n}. kademe`;
-  $('fresP').textContent = `${CLASSES[it.c].name} eşyası · ${perkText(it.k, it.n)} · takılı olan: ${cur}. kademe`;
+  $('fresT').innerHTML = tierSpan(it.n) + ' <span class="iname"></span>'; $('fresT').lastChild.textContent = names[it.k];
+  $('fresP').textContent = `${CLASSES[it.c].name} eşyası · ${perkText(it.k, it.n)} · +${itemPower(it.c, it.k, it.n)} güç · takılı olan: ${tierName(cur)}`;
   $('fresBtns').innerHTML = '';
   const first = better ? fresBtn(`Tak (${CLASSES[it.c].name})`, '', () => forgedTo('equip')) : null;
   const keep = fresBtn(room ? 'Envantere koy' : 'Envanter dolu', 'ghost', () => forgedTo('keep'), !room);
@@ -2492,8 +2724,8 @@ function renderMulti() {
     card.className = 'fmi' + (it.done ? ' done' : '');
     const big = document.createElement('div'); big.className = 'big tr' + it.n; if (it.shown) big.style.animation = 'none'; it.shown = 1;
     const cv = document.createElement('canvas'); cv.width = cv.height = 120; drawIcon(cv, it.c, it.k, it.n); big.appendChild(cv);
-    const b = document.createElement('b'); b.textContent = `${names[it.k]} · ${it.n}. kademe`;
-    const s = document.createElement('small'); s.textContent = `${CLASSES[it.c].name} · takılı ${cur}`;
+    const b = document.createElement('b'); b.innerHTML = tierSpan(it.n) + ' <span class="iname"></span>'; b.lastChild.textContent = names[it.k];
+    const s = document.createElement('small'); s.textContent = `${CLASSES[it.c].name} · takılı: ${tierName(cur)}`;
     card.append(big, b, s);
     if (it.done) { const st = document.createElement('span'); st.className = 'st'; st.textContent = it.done; card.appendChild(st); }
     else {
@@ -2517,26 +2749,28 @@ function renderMulti() {
     (again || close).focus();
   }
 }
-function equipItem(it) {
-  const g = gearOf(it.c), old = g[it.k];
-  g[it.k] = it.n;
-  if (old >= 2) { if (invFree() > 0) SAVE.items.push({ c: it.c, k: it.k, n: old }); else SAVE.gold += SELL_PRICE(it.k, old); } // envanter doluysa eskisi yarı fiyatına satılır; 1. kademe başlangıç eşyası atılır
+// to: takılacak sınıf (aynı aile/tür); eskisi asıl sahibiyle envantere döner
+function equipItem(it, to = it.c) {
+  if (!fitOf(it.c, to, it.k)) return;
+  const g = gearOf(to), src = gearSrcOf(to), old = g[it.k], oldC = src[it.k] || to;
+  g[it.k] = it.n; if (it.c === to) delete src[it.k]; else src[it.k] = it.c;
+  if (old >= 2) { if (invFree() > 0) SAVE.items.push({ c: oldC, k: it.k, n: old }); else SAVE.gold += SELL_PRICE(it.k, old); } // envanter doluysa eskisi yarı fiyatına satılır; 1. kademe başlangıç eşyası atılır
   Sfx.play('upgrade');
-  if (it.c === chosen) { if (pA && Rig.sprites[chosen]) { pA = Rig.actor(chosen, 0, 1, g); pNext = now() + 600; } streetActor(); lobbyPresence(); }
+  if (to === chosen) { if (pA && Rig.sprites[chosen]) { pA = Rig.actor(chosen, 0, 1, g); pNext = now() + 600; } streetActor(); lobbyPresence(); }
 }
 function renderGear() {
   if (mode === 'shop') return renderShop();
   renderForge();
 }
 function renderStats() {
-  const c = CLASSES[chosen], xp = xpProgress(SAVE.xp), sp = mySp(chosen), g = gearOf(chosen), st = gearStats(c, g, xp.lvl, sp), free = spOf(xp.lvl) - spUsed(sp);
+  const c = CLASSES[chosen], xp = xpProgress(SAVE.xp), sp = mySp(chosen), g = gearOf(chosen), uy = myUy(chosen), st = gearStats(c, g, xp.lvl, sp, uy), free = spOf(xp.lvl) - spUsed(sp);
   $('dRole').textContent = `${c.role} · Sv ${xp.lvl} · ` + (xp.lvl >= MAX_LVL ? 'MAKS' : `${xp.cur}/${xp.need} EXP`);
   const sks = c.skills.map((s, i) => skillAt(s, sp[i])), view = (s2, sk) => ({ ...s2, maxHp: s2.hp, maxMp: s2.mp, skills: sk });
   // "+" düğmesi: bir puan daha verilince değerin kaç artacağı (sayı olarak)
-  const gain = SP_STATS.map((k, j) => { const sp2 = sp.slice(); sp2[4 + j]++; const a = view(st, sks), b = view(gearStats(c, g, xp.lvl, sp2), sks);
+  const gain = SP_STATS.map((k, j) => { const sp2 = sp.slice(); sp2[4 + j]++; const a = view(st, sks), b = view(gearStats(c, g, xp.lvl, sp2, uy), sks);
     return k === 'dmg' ? basicHit(b, b.dmgAdd) - basicHit(a, a.dmgAdd) : b[k] - a[k]; });
   $('dStats').classList.add('ed');
-  $('dStats').innerHTML = `<div class="sphead"><span>Beceri puanı: <b>${free}</b></span>${spUsed(sp) ? '<button type="button" class="spr" data-spr="1">Sıfırla</button>' : ''}</div>`
+  $('dStats').innerHTML = `<div class="sphead"><span>Güç: <b>${heroPower(chosen, g, xp.lvl, sp, uy)}</b></span><span>Beceri puanı: <b>${free}</b></span>${spUsed(sp) ? '<button type="button" class="spr" data-spr="1">Sıfırla</button>' : ''}</div>`
     + statRows(view(st, sks), { sp, free, gain });
   renderSkillTiles(c, sp, free);
 }
@@ -2559,21 +2793,45 @@ for (const el of ['dStats', 'dSkills']) $(el).addEventListener('click', e => {
 });
 // her kahraman ve canavar için aynı yedi değer, renkli çubukla. Eşyadan gelen kısım yeşil "+sayı" (değer = kendi + eşya).
 // Hasar: temel vuruşun (ilk saldırı yeteneği) ortalaması; eşyanın ek hasarı da güç çarpanıyla büyüyerek "+" kısmında.
-const MAXS = { hp: 1500, mp: 290, regen: 25, hregen: 40, crit: .45, dodge: .30, dmg: 250 }; // çubukların dolu sayıldığı değerler
+const MAXS = { hp: 1500, mp: 290, regen: 25, hregen: 40, crit: .45, dodge: .30, ar: 400, mr: 400, dmg: 250 }; // çubukların dolu sayıldığı değerler
 const basicHit = (f, add) => { const sk = f.skills.find(s => s.dmg); return sk ? Math.round(((sk.dmg[0] + sk.dmg[1]) / 2 + add) * (f.dmgMul || 1) * DMG_SCALE) : 0; };
 // ed (seçim ekranı): her değerin yanında puan sayısı ve "+" düğmesi (kritik ve kaçınma hariç)
-function statRows(f, ed) {
+// grouped (bilgi penceresi): Saldırı / Savunma / Kaynak başlıklarıyla
+const STAT_GROUPS = [['Saldırı', ['dmg', 'crit']], ['Savunma', ['hp', 'ar', 'mr', 'dodge']], ['Kaynak', ['mp', 'regen', 'hregen']]];
+function statRows(f, ed, grouped) {
   const g = f.gb || {}, k = f.hand || 1, gHp = Math.round((g.hp || 0) * k), gDmg = basicHit(f, f.dmgAdd || 0) - basicHit(f, 0);
-  let n = 0; const keys = ['hp', 'mp', 'regen', 'hregen', null, null, 'dmg'];
-  const row = (l, v, m, base, plus, unit = '') => {
-    const key = keys[n++], j = SP_STATS.indexOf(key), pts = ed && j >= 0 ? ed.sp[4 + j] : 0;
+  const tip = { hp: 'Kahramanın canı; bitince savaş dışı kalır', mp: 'Yetenekler için harcanan mana', regen: 'Her tur gelen mana', hregen: 'Her tur gelen can',
+    crit: `Vuruşların %${Math.round((f.crit || 0) * 100)}'i 1,6 kat vurur`, dodge: `Saldırıların %${Math.round((f.dodge || 0) * 100)}'inden kaçar`,
+    ar: `Fiziksel hasarı ~%${Math.round(defCut(f.ar || 0) * 100)} azaltır`, mr: `Büyü hasarını ~%${Math.round(defCut(f.mr || 0) * 100)} azaltır`, dmg: 'Temel vuruşun ortalama hasarı' };
+  const row = (key, l, v, m, base, plus, unit = '') => {
+    const j = SP_STATS.indexOf(key), pts = ed && j >= 0 ? ed.sp[4 + j] : 0;
     const btn = !ed ? '' : j < 0 ? '<dd></dd>' : `<dd><button type="button" class="spb" data-sp="${4 + j}" ${ed.free > 0 && pts < ST_MAX ? '' : 'disabled'} title="${pts}/${ST_MAX} · +${ed.gain[j]}">+</button></dd>`;
-    return `<dt>${l}${pts ? ` <small class="spn">${pts}</small>` : ''}</dt><dd class="sbw"><div class="sb"><i style="width:${Math.min(100, Math.round(v / m * 100))}%"></i></div></dd><dd class="sv">${base}${unit}${plus > 0 ? `<em>+${plus}</em>` : ''}</dd>` + btn;
+    return `<dt title="${tip[key] || ''}">${l}${pts ? ` <small class="spn">${pts}</small>` : ''}</dt><dd class="sbw"><div class="sb"><i style="width:${Math.min(100, Math.round(v / m * 100))}%"></i></div></dd><dd class="sv">${base}${unit}${plus > 0 ? `<em>+${plus}</em>` : ''}</dd>` + btn;
   };
-  return row('Can', f.maxHp, MAXS.hp, f.maxHp - gHp, gHp) + row('Mana', f.maxMp, MAXS.mp, f.maxMp - (g.mp || 0), g.mp || 0)
-    + row('Mana yenileme', f.regen, MAXS.regen, f.regen - (g.regen || 0), g.regen || 0) + row('Can yenileme', f.hregen || 0, MAXS.hregen, f.hregen || 0, 0)
-    + row('Kritik', f.crit, MAXS.crit, Math.round(f.crit * 100), 0, '%') + row('Kaçınma', f.dodge, MAXS.dodge, Math.round(f.dodge * 100), 0, '%')
-    + row('Hasar', basicHit(f, f.dmgAdd || 0), MAXS.dmg, basicHit(f, 0), gDmg);
+  const R = {
+    hp: row('hp', 'Can', f.maxHp, MAXS.hp, f.maxHp - gHp, gHp), mp: row('mp', 'Mana', f.maxMp, MAXS.mp, f.maxMp - (g.mp || 0), g.mp || 0),
+    regen: row('regen', 'Mana yenileme', f.regen, MAXS.regen, f.regen - (g.regen || 0), g.regen || 0), hregen: row('hregen', 'Can yenileme', f.hregen || 0, MAXS.hregen, f.hregen || 0, 0),
+    crit: row('crit', 'Kritik', f.crit, MAXS.crit, Math.round(f.crit * 100), 0, '%'), dodge: row('dodge', 'Kaçınma', f.dodge, MAXS.dodge, Math.round(f.dodge * 100), 0, '%'),
+    ar: row('ar', 'Zırh', f.ar || 0, MAXS.ar, (f.ar || 0) - (g.ar || 0), g.ar || 0), mr: row('mr', 'Büyü direnci', f.mr || 0, MAXS.mr, (f.mr || 0) - (g.mr || 0), g.mr || 0),
+    dmg: row('dmg', 'Hasar', basicHit(f, f.dmgAdd || 0), MAXS.dmg, basicHit(f, 0), gDmg),
+  };
+  if (grouped) return STAT_GROUPS.map(([t, ks]) => `<div class="sgrp">${t}</div>` + ks.map(x => R[x]).join('')).join('');
+  return ['hp', 'mp', 'regen', 'hregen', 'crit', 'dodge', 'ar', 'mr', 'dmg'].map(x => R[x]).join('');
+}
+// güç puanı: dayanıklılık (can, savunmalar, kaçınma) × vuruş gücü (temel vuruş, kritik); iki savaşçıyı karşılaştırmak için tek sayı
+function powerOf(f) {
+  const ehp = f.maxHp / (1 - (defCut(f.ar || 0) + defCut(f.mr || 0)) / 2) / (1 - (f.dodge || 0)), hit = basicHit(f, f.dmgAdd || 0) * (1 + .6 * (f.crit || 0));
+  return Math.round(Math.sqrt(ehp * hit) * 2);
+}
+// kahramanın gücü (sınıf, seviye, eşya, beceri puanı) ve bir eşyanın verdiği güç: yalnız o eşyayı takan ile hiç eşyası olmayanın farkı
+const NOGEAR = Object.fromEntries(ITEMS.map(k => [k, 0]));
+function heroPower(cid, gear, lvl, sp, uy = null) {
+  const c = CLASSES[cid], st = gearStats(c, gear, lvl, sp, uy);
+  return powerOf({ ...st, maxHp: st.hp, maxMp: st.mp, skills: c.skills.map((s, i) => skillAt(s, sp[i])) });
+}
+function itemPower(cid, k, n, lvl = myLevel(), sp = null, fit = 1) {
+  sp = sp || cleanSp((SAVE.sp || {})[cid], lvl);
+  return n > 0 ? heroPower(cid, { ...NOGEAR, [k]: n }, lvl, sp, fit < 1 ? ITEMS.map(x => x === k ? 1 : 0) : null) - heroPower(cid, NOGEAR, lvl, sp) : 0;
 }
 let pickToken = 0;
 async function pick(key) {
@@ -2831,8 +3089,13 @@ const LAYOUTS = {
 let LAYOUT = LAYOUTS.tall;
 const layoutFor = () => LAYOUTS.tall; // tüm arka planlar (arena3, kurt ini 2) aynı derin C hilal düzeninde
 // plakalar ekranın kenarında durduğu için hilalin dışa şişen kısmı (x < 270) içeri sıkıştırılır: oradaki kahramanlar plakaların altında kalmaz
+// diziliş (sol takım; sağdaki aynalanır): her kalabalıkta zigzag (içeri-dışarı sırayla, en üstteki içeride). Sen (yer 0) en öndesin.
+// Öndeki x, ortadaki yetenek düğmelerinin soluna kalır.
+// en alttaki (en öndeki) kahraman ekranın altına yakın; zigzag uçları içeride (ortaya yakın), aradakiler dışarıda.
+const FORM_TOP = { 1: 640, 2: 480, 3: 360, 4: 305, 5: 305 }, FORM_FRONT = 665;
 function arcSpot(n, slot, N) {
-  const [x0, y] = pathPoint(LAYOUT.T[n][slot], LAYOUT.path), x = x0 < 270 ? 270 - (270 - x0) * .4 : x0;
+  const i = n - 1 - slot, k = n > 1 ? i / (n - 1) : 1, y = FORM_TOP[n] + (FORM_FRONT - FORM_TOP[n]) * k;
+  const x = n === 1 ? 225 : i % 2 ? 85 : 250; // her kalabalıkta zigzag
   return { x, y, s: SIZE[N] * LAYOUT.depth(y) };
 }
 const SIZE = { 1: .76, 2: .67, 3: .59, 4: .53, 5: .48 }; // savaşta kahramanlar eskisinden %20 küçük
@@ -2925,7 +3188,7 @@ function buildHUD() {
   for (const f of F.list) {
     const mine = f.side === 'player', u = document.createElement('div');
     u.className = 'plate ' + (mine ? 'ally' : 'foe'); f.ui = u;
-    u.innerHTML = `<canvas class="portrait" width="72" height="72"></canvas><div class="pb"><div class="pn"><b>Sv ${f.lvl}</b> <span></span></div><div class="bar hp"><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="fz">${'<i></i>'.repeat(FURY_HITS)}<em class="st"></em></div></div>`;
+    u.innerHTML = `<canvas class="portrait" width="72" height="72"></canvas><div class="pb"><div class="pn"><b>Sv ${f.lvl}</b> <span></span><em class="ppw">Güç: ${powerOf(f)}</em></div><div class="bar hp"><b></b><i></i><span></span></div><div class="bar mp"><i></i><span></span></div><div class="fz">${'<i></i>'.repeat(FURY_DOTS)}<em class="st"></em></div></div>`;
     u.querySelector('.pn span').textContent = f.name.replace(/^(Müttefik|Rakip) /, '');
     u.title = f.name; u.setAttribute('role', 'button'); u.tabIndex = 0; u.setAttribute('aria-label', (mine ? 'Takım arkadaşı: ' : 'Rakip: ') + f.name + ' (hedef seç)');
     const col = mine ? glowOf(f.id) : '#c41a30', pc = u.querySelector('canvas'); u.style.setProperty('--pc', mine ? '#f2c14e' : '#c41a30'); pc.style.setProperty('--c', col);
@@ -2947,7 +3210,9 @@ function buildSkillButtons() {
     const b = document.createElement('button'); b.className = 'skill'; b.id = 'sk-' + i; b.type = 'button'; b.title = skillDesc(sk);
     b.style.setProperty('--c', sk.color);
     b.innerHTML = `<span class="key">${i + 1}</span>${svg(sk.icon)}<span class="nm">${sk.name}</span><span class="cost"></span>`;
-    b.addEventListener('click', () => playerAct(i)); el.appendChild(b);
+    if (sk.kind === 'melee' || sk.kind === 'ranged') b.classList.add('atk');
+    b.addEventListener('pointerdown', () => { if (b.disabled) return; b.classList.add('press'); setTimeout(() => b.classList.remove('press'), 140); });
+    b.addEventListener('click', () => { if (!b.disabled) Sfx.play('click'); playerAct(i); }); el.appendChild(b);
   });
 }
 addEventListener('keydown', e => { if (screen !== 'battle') return; const n = +e.key; if (n >= 1 && n <= 5) playerAct(n - 1); });
@@ -2966,13 +3231,15 @@ function updateHUD() {
   for (const f of F.list) {
     const u = f.ui; if (!u) continue;
     f.A.kneel = !f.mon && isAlive(f) && f.hp < f.maxHp * KNEEL_AT; // yaralı: tek diz üstü
-    u.querySelector('.hp i').style.width = (f.hp / f.maxHp * 100) + '%'; u.querySelector('.hp span').textContent = f.hp;
-    u.querySelector('.mp i').style.width = (f.mp / f.maxMp * 100) + '%'; u.querySelector('.mp span').textContent = f.mp;
-    u.querySelectorAll('.fz > i').forEach((d, i) => d.classList.toggle('on', f.furyReady || i < f.fury));
+    u.querySelector('.hp i').style.width = u.querySelector('.hp b').style.width = (f.hp / f.maxHp * 100) + '%'; u.querySelector('.hp span').textContent = f.hp + ' / ' + f.maxHp;
+    u.querySelector('.mp i').style.width = (f.mp / f.maxMp * 100) + '%'; u.querySelector('.mp span').textContent = Math.round(f.mp) + ' / ' + f.maxMp;
+    const lit = f.furyReady ? FURY_HITS + Math.round(((f.furyMul || FURY_MUL) - FURY_MUL) / FURY_STEP) : f.fury; // öfkeliyken büyüme de toplarla görünür
+    u.querySelectorAll('.fz > i').forEach((d, i) => d.classList.toggle('on', i < lit));
     u.querySelector('.st').innerHTML = statusChips(f); u.classList.toggle('fury', f.furyReady);
     u.classList.toggle('dead', !isAlive(f)); u.classList.toggle('cur', S2.cur === f && !S2.over);
     u.classList.toggle('tgt', mine && S2.foe === f); u.classList.toggle('atgt', mine && S2.ally === f);
   }
+  $('skills').classList.toggle('fury', !!(F.me && F.me.furyReady && isAlive(F.me)));
   $('turnLbl').textContent = 'TUR ' + S2.turn;
   $('timer').textContent = mine ? S2.timer : '–'; $('timer').classList.toggle('low', mine && S2.timer <= 5);
   const c = S2.cur, w = $('whose');
@@ -2982,7 +3249,7 @@ function updateHUD() {
   const p = F.me;
   p.skills.forEach((sk, i) => {
     const b = $('sk-' + i); if (!b) return;
-    b.querySelector('.cost').textContent = sk.kind === 'potion' ? `${p.potions} adet · +${sk.heal}` : sk.cost ? sk.cost + ' Mana' : 'Mana yok';
+    b.querySelector('.cost').textContent = sk.kind === 'potion' ? `${p.potions} adet · ~+${sk.heal}` : sk.cost ? sk.cost + ' Mana' : 'Mana yok';
     b.disabled = !(mine && S2.waiting && !S2.busy) || p.mp < sk.cost || (sk.kind === 'potion' && (p.potions <= 0 || p.hp >= p.maxHp));
   });
 }
@@ -3000,7 +3267,8 @@ function tweenOff(A, to, ms, toY) {
   return new Promise(res => { const step = () => { const k = Math.min(1, (now() - t0) / ms), e = ease(k); A.off = lerp(from, to, e); if (toY !== undefined) A.offY = lerp(fromY, toY, e); k < 1 ? requestAnimationFrame(step) : res(); }; step(); });
 }
 // yetenekle iyileştirme (iksir hariç): ölçeklenir ve her kullanımda zayıflar
-function skillHeal(f, sk) { return Math.round(sk.heal * f.healMul * HEAL_FATIGUE ** f.heals++); }
+const vary = (v, p = .1) => Math.round(v * (1 + (crng() * 2 - 1) * p)); // sapma (çevrimiçi maçta herkeste aynı: crng ortak tohumlu)
+function skillHeal(f, sk) { return vary(sk.heal * f.healMul * HEAL_FATIGUE ** f.heals++); }
 function heal(f, amount, color = '#4be38a') {
   const h = Math.min(amount, f.maxHp - f.hp); if (h <= 0) return 0;
   f.hp += h; const [x] = body(f), gy = f.gy || GY, s = f.sc || 1;
@@ -3012,9 +3280,9 @@ const sfxSkill = (sk, fallback) => { if (!(sk.snd && Sfx.skill(sk.snd))) Sfx.pla
 // savaş zarları: çok oyunculu savaşta tüm ekranlar aynı sonucu bulsun diye ortak tohumlu üreteç (botların kararları da)
 let crng = Math.random;
 const seeded = s => () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-// öfke: 5 darbe yiyen öfkelenir (sonraki saldırısı 2 kat); öfkeliyken yediği her darbe +0,2 (en çok 3 kat). Ekranda çarpan yazılmaz, yalnız "Öfke".
+// öfke: 5 darbe yiyen öfkelenir (sonraki saldırısı 2 kat); kartta 10 top: ilk 5 öfkelenmeye, sonraki 5 öfkenin büyümesine (10. darbede 3 kat, sınır); öfkeliyken yediği her darbe +0,2 (en çok 3 kat). Ekranda çarpan yazılmaz, yalnız "Öfke".
 // Canı ilk kez %25'in altına inen kahraman diz çöker ve hemen öfkelenir (savaş başına bir kez; zaten öfkeliyse öfkesi büyür).
-const FURY_HITS = 5, FURY_MUL = 2, FURY_STEP = .2, FURY_MAX = 3, KNEEL_AT = .25;
+const FURY_HITS = 5, FURY_DOTS = 10, FURY_MUL = 2, FURY_STEP = .2, FURY_MAX = 3, KNEEL_AT = .25;
 function kneelFury(f) {
   if (f.mon || f.kneelFury || !isAlive(f) || f.hp >= f.maxHp * KNEEL_AT) return;
   f.kneelFury = true;
@@ -3023,6 +3291,9 @@ function kneelFury(f) {
   setTimeout(() => { floatText(f.A, 'ÖFKE!', '#ff3a1a', 40); burst(hx, hy, '#ff3a1a', 36, 260); Sfx.play('big'); }, 420);
   log(`${f.name} diz çöktü ve öfkelendi!`, f.side);
 }
+const SHIELD_DECAY = .5, SHIELD_MIN = .15;
+// öfke topu ekler (öfke yeteneği +5): ilk 5 top öfkelendirir, sonrakiler öfkeyi büyütür (top başına +0,2, en çok 3 kat)
+function addFury(f, n) { for (let k = 0; k < n; k++) { if (f.furyReady) f.furyMul = Math.min(FURY_MAX, (f.furyMul || FURY_MUL) + FURY_STEP); else if (++f.fury >= FURY_HITS) { f.fury = 0; f.furyReady = true; f.furyMul = FURY_MUL; } } }
 function hit(a, d, sk) {
   const [hx, hy] = body(d), nm = sk.name;
   if (d.shield >= 1) { d.shield = 0; Sfx.play('miss'); floatText(d.A, 'KAÇTI', '#cfd6ff'); burst(hx, hy, d.shieldColor, 18, 200); log(`${nm}: ${d.name} saldırıdan tamamen kaçtı!`, d.side); return; }
@@ -3032,7 +3303,11 @@ function hit(a, d, sk) {
   if (a.rage) { dmg = Math.round(dmg * a.rage); a.rage = 0; }
   const furyHit = a.furyReady; if (furyHit) { dmg = Math.round(dmg * (a.furyMul || FURY_MUL)); a.furyReady = false; a.furyMul = 0; } // öfke: tek seferlik büyük vuruş
   let blocked = false;
-  if (d.shield) { dmg = Math.round(dmg * (1 - d.shield)); d.shield = 0; blocked = true; }
+  if (d.shield) { // kalkan kalıcı: her darbede gücü yarıya iner, %15'in altına inince kırılır
+    dmg = Math.round(dmg * (1 - d.shield)); blocked = true; d.shield = Math.round(d.shield * SHIELD_DECAY * 100) / 100; d.shieldHitT = now();
+    if (d.shield < SHIELD_MIN) { d.shield = 0; const col = d.shieldColor; setTimeout(() => { burst(hx, hy, col, 40, 300); floatText(d.A, 'KALKAN KIRILDI', col, 26); }, 120); }
+  }
+  const mag = sk.mag ?? isMag(sk); dmg = Math.max(1, Math.round(dmg * (1 - defCut(mag ? d.mr : d.ar)))); // zırh / büyü direnci
   d.hp = Math.max(0, d.hp - dmg);
   if (d.hp > 0) {
     if (d.furyReady) { d.furyMul = Math.min(FURY_MAX, (d.furyMul || FURY_MUL) + FURY_STEP); setTimeout(() => burst(hx, hy, '#ff3a1a', 16, 180), 380); } // öfkeliyken yenen darbe öfkeyi büyütür
@@ -3054,7 +3329,7 @@ function hit(a, d, sk) {
   if (a.ctrl === 'me') { SAVE.stats.dmg += dmg; track('dmg', dmg); if (crit) { SAVE.stats.crits++; track('crit'); } }
   let extra = '';
   if (sk.stun && d.hp > 0) { d.stunned = true; extra += ', sersemledi'; setTimeout(() => { Sfx.play('stun'); floatText(d.A, 'SERSEM', '#ffd27a', 30); }, 250); }
-  if (sk.dot && d.hp > 0) { d.dot = { ...sk.dot, dmg: Math.round(sk.dot.dmg * (a.dmgMul || 1) * DMG_SCALE) }; extra += ', ' + sk.dot.label.toLowerCase() + ' etkisi'; }
+  if (sk.dot && d.hp > 0) { d.dot = { ...sk.dot, dmg: Math.round(sk.dot.dmg * (a.dmgMul || 1) * DMG_SCALE * (1 - defCut(mag || sk.dot.label === 'Yanık' ? d.mr : d.ar))) }; extra += ', ' + sk.dot.label.toLowerCase() + ' etkisi'; }
   if (sk.drain) { const h = heal(a, Math.round(dmg * sk.drain), '#ff4a6a'); if (h) extra += `, ${h} can emdi`; }
   log(`${nm}: ${d.name} ${dmg} hasar aldı${furyHit ? ' (ÖFKE!)' : ''}${crit ? ' (kritik!)' : ''}${blocked ? ', kalkan hasarı azalttı' : ''}${extra}.`, a.side);
   if (d.hp <= 0) Rig.play(d.A, 'death'); else Rig.play(d.A, 'hit');
@@ -3090,7 +3365,9 @@ async function act(f, idx, tgt) {
     const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
     hit(f, o, sk);
     await end; if (!live()) return;
-    Rig.play(A, 'walk'); await tweenOff(A, 0, ms, 0); if (!live()) return;
+    // dönüşte yürüdüğü yöne bakar (yön ve uzaklık birlikte çevrilir, yeri değişmez), yerine varınca yine rakibe döner
+    const face0 = A.face; A.face = -face0; A.off = -A.off;
+    Rig.play(A, 'walk'); await tweenOff(A, 0, ms, 0); A.face = face0; A.off = 0; if (!live()) return;
     Rig.play(A, 'idle');
   } else if (sk.kind === 'ranged') {
     const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
@@ -3100,9 +3377,9 @@ async function act(f, idx, tgt) {
     await end;
   } else if (sk.kind === 'guard' || sk.kind === 'rage') {
     const end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return;
-    if (sk.kind === 'rage') { f.rage = sk.rage || 1.6; sfxSkill(sk, 'rage'); floatText(A, 'ÖFKE', '#ff5a3a', 36); burst(body(f)[0], body(f)[1], '#ff3a2a', 30, 220); log(`${sk.name}: ${f.name} öfkelendi, sonraki saldırısı çok daha sert.`, who); }
+    if (sk.kind === 'rage') { addFury(f, 5); sfxSkill(sk, 'rage'); floatText(A, 'ÖFKE', '#ff5a3a', 36); burst(body(f)[0], body(f)[1], '#ff3a2a', 30, 220); log(`${sk.name}: ${f.name} öfkelendi (+5 öfke).`, who); }
     else {
-      f.shield = sk.block; f.shieldColor = sk.color; sfxSkill(sk, 'shield');
+      f.shield = sk.block >= 1 ? 1 : Math.max(Math.min(.9, Math.round(vary(sk.block * 100)) / 100), f.shield < 1 ? f.shield : 0); f.shieldColor = sk.color; sfxSkill(sk, 'shield'); // güçlü olan kalır
       burst(body(f)[0], body(f)[1], sk.color, 30, 200);
       floatText(A, sk.block >= 1 ? 'KAÇIŞ' : 'KALKAN', sk.color, 34);
       if (sk.heal) heal(f, skillHeal(f, sk), sk.color);
@@ -3113,11 +3390,11 @@ async function act(f, idx, tgt) {
     let end = Promise.resolve();
     if (anim) { end = Rig.play(A, anim); await Rig.waitAct(A); if (!live()) return; }
     const h = heal(o, skillHeal(f, sk), sk.color); sfxSkill(sk, 'heal');
-    if (sk.block) { o.shield = sk.block; o.shieldColor = sk.color; }
+    if (sk.block) { o.shield = Math.max(Math.min(.9, vary(sk.block * 100) / 100), o.shield < 1 ? o.shield : 0); o.shieldColor = sk.color; }
     log(o === f ? `${sk.name}: ${f.name} ${h} can yeniledi.` : `${sk.name}: ${f.name}, ${o.name} için ${h} can yeniledi.`, who);
     await end; if (!anim) await wait(700);
   } else if (sk.kind === 'potion') {
-    f.potions--; Sfx.play('potion'); if (f.ctrl === 'me') track('potion'); const h = heal(f, sk.heal); log(`${sk.name}: ${f.name} ${h} can yeniledi.`, who); await wait(700);
+    f.potions--; Sfx.play('potion'); if (f.ctrl === 'me') track('potion'); const h = heal(f, vary(sk.heal)); log(`${sk.name}: ${f.name} ${h} can yeniledi.`, who); await wait(700);
   }
   if (!live()) return;
   S2.busy = false; updateHUD();
@@ -3134,9 +3411,9 @@ async function beginTurn(f, first) {
     const hr = Math.min(f.hregen || 0, f.maxHp - f.hp); // can yenileme
     if (hr > 0 && f.hp > 0) { f.hp += hr; floatText(f.A, '+' + hr, '#4be38a', 24); }
     if (f.dot) { // süreli hasar (yanık, zehir, kanama)
-      const d = f.dot; f.hp = Math.max(0, f.hp - d.dmg); f.A.hitT = now(); kneelFury(f);
-      floatText(f.A, '-' + d.dmg, d.color, 30); burst(body(f)[0], body(f)[1], d.color, 14, 160);
-      log(`${f.name}: ${d.label.toLowerCase()} etkisiyle ${d.dmg} hasar.`, f.side === 'player' ? 'enemy' : 'player');
+      const d = f.dot, dd = vary(d.dmg, .15); f.hp = Math.max(0, f.hp - dd); f.A.hitT = now(); kneelFury(f);
+      floatText(f.A, '-' + dd, d.color, 30); burst(body(f)[0], body(f)[1], d.color, 14, 160);
+      log(`${f.name}: ${d.label.toLowerCase()} etkisiyle ${dd} hasar.`, f.side === 'player' ? 'enemy' : 'player');
       if (--d.turns <= 0) f.dot = null;
       updateHUD();
       if (f.hp <= 0) { Rig.play(f.A, 'death'); if (checkEnd()) return; await wait(450); if (g !== S2.gid) return; return nextTurn(f); }
@@ -3245,37 +3522,91 @@ renderModes();
 /* ---------- savaşçı bilgi penceresi: ekipmanlar (seviye, bonus) ve değerler ---------- */
 let inspA = null;
 // yetenekler kare kutularda: simge, ad, mana
+// yetenek listesi: simge, ad ve seviye, değer (ör. 82–104 · fiziksel), mana
 function skillTiles(list) {
   const g = document.createElement('div'); g.className = 'iskg';
-  for (const sk of list) { const d = document.createElement('div'); d.className = 'isk'; d.style.color = sk.color; d.title = skillDesc(sk); d.innerHTML = `${svg(sk.icon)}<b></b><small></small>`; d.querySelector('b').textContent = sk.name; d.querySelector('small').textContent = (sk.lv > 1 ? `Sv ${sk.lv} · ` : '') + (sk.cost ? sk.cost + ' mana' : 'Mana yok'); g.appendChild(d); }
+  for (const sk of list) {
+    const d = document.createElement('div'); d.className = 'isk'; d.style.color = sk.color; d.title = skillDesc(sk);
+    d.innerHTML = `${svg(sk.icon)}<div><b></b><small></small></div><em></em>`;
+    d.querySelector('b').textContent = sk.name + (sk.lv > 1 ? ` · Sv ${sk.lv}` : ''); d.querySelector('small').textContent = skillDesc(sk);
+    d.querySelector('em').textContent = sk.cost ? sk.cost + ' mana' : 'Mana yok'; g.appendChild(d);
+  }
   $('inspSkills').innerHTML = ''; $('inspSkills').appendChild(g);
 }
+// başlık: güç puanı; rakipse kırmızı, takım arkadaşı ya da sensen altın çerçeve
+function inspHead(f) {
+  $('inspPow').innerHTML = `<span><small>Güç:</small> <b>${powerOf(f)}</b></span>` + (f.league ? `<span class="ilg">Lig ${f.league}</span>` : '');
+  $('insp').classList.toggle('foe', f.side === 'enemy');
+  inspGlow = f.mon ? (f.mon.color || '#c41a30') : glowOf(f.id);
+  try { Rig.portrait($('inspAv'), f.id, 1, inspGlow, f.gear); } catch (e) {}
+  requestAnimationFrame(() => requestAnimationFrame(drawInspLines));
+}
+let inspGlow = '#f2c14e';
+// eşya kutularından kahramandaki yerine ince çizgiler (kahraman tuvalin ortasında, 1,2 ölçekte; noktalar tuvale göre oran)
+const BODY_AT = { head: [.5, .27], chest: [.5, .45], sleeve: [.4, .43], bracer: [.38, .55], knee: [.47, .8], main: [.63, .56], off: [.67, .48], glove: [.62, .6], boot: [.53, .94], cape: [.42, .4] };
+function drawInspLines() {
+  const svg = $('inspLines'); if (!svg || $('insp').hidden) return; svg.innerHTML = '';
+  if ($('insp').classList.contains('mon')) return;
+  const base = svg.getBoundingClientRect(), cv = $('inspCv').getBoundingClientRect(); if (!cv.width) return;
+  const s = Math.min(cv.width / 360, cv.height / 540), ox = cv.left + (cv.width - 360 * s) / 2, oy = cv.top + (cv.height - 540 * s) / 2;
+  let d = '';
+  for (const it of document.querySelectorAll('#inspItems .iitem, #inspItemsR .iitem')) {
+    const k = it.dataset.k, at = BODY_AT[k], fr = it.querySelector('.ifr'); if (!at || !fr) continue;
+    const r = fr.getBoundingClientRect(), left = !!it.closest('#inspItems');
+    const x1 = (left ? r.right : r.left) - base.left, y1 = r.top + r.height / 2 - base.top;
+    const x2 = ox + at[0] * 360 * s - base.left, y2 = oy + at[1] * 540 * s - base.top;
+    d += `M${x1.toFixed(1)} ${y1.toFixed(1)} L${x2.toFixed(1)} ${y2.toFixed(1)} `;
+  }
+  svg.innerHTML = `<path d="${d}" fill="none" stroke="rgba(242,193,78,.28)" stroke-width="1.2" stroke-dasharray="4 4"/>`;
+}
+addEventListener('resize', () => { if (!$('insp').hidden) drawInspLines(); });
+// sekmeler (yalnız kendi profilinde görünür)
+$('inspTabs').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]'); if (!b) return;
+  $('insp').dataset.tab = b.dataset.t; $('inspTabs').querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', x === b));
+  if (b.dataset.t === 'char') requestAnimationFrame(drawInspLines);
+});
 // haritadaki oyuncunun profili: varlığından (sınıf, oyuncu seviyesi, ekipman) değerleri hesaplanır
 async function inspectPeer(o, name) {
   const pr = (o.p && o.p.presence) || {}, id = pr.cls, c = CLASSES[id]; if (!c) return;
-  const gear = cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(pr.g) ? pr.g[i] : 1]))), lvl = Math.max(1, Math.min(99, +pr.pl || 1)), sp = cleanSp(pr.sp, lvl), st = gearStats(c, gear, lvl, sp);
+  const gear = cleanGear(Object.fromEntries(ITEMS.map((k, i) => [k, Array.isArray(pr.g) ? pr.g[i] : 1]))), lvl = Math.max(1, Math.min(99, +pr.pl || 1)), sp = cleanSp(pr.sp, lvl), uy = cleanU(pr.u), st = gearStats(c, gear, lvl, sp, uy);
   try { await Promise.all([Rig.load(id), Rig.loadTiers(id)]); } catch (e) { return; }
   Sfx.play('click');
-  openInspect({ id, cls: c, name: name || nameOfPeer(o.p), lvl, gear, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp, regen: st.regen, hregen: st.hregen, gb: st.gb, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd,
-    skills: c.skills.map((s, i) => skillAt({ ...s, color: s.color || glowOf(id) }, sp[i])), potions: null }, `${c.name} · ${c.role} · Sv ${lvl} · Lig ${+pr.lg || 1} · ekipman ortalaması ${gearLevel(gear)}`);
+  openInspect({ id, cls: c, name: name || nameOfPeer(o.p), lvl, gear, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp, regen: st.regen, hregen: st.hregen, gb: st.gb, ar: st.ar, mr: st.mr, sp, uy, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd,
+    skills: c.skills.map((s, i) => skillAt({ ...s, color: s.color || glowOf(id) }, sp[i])), potions: null, league: +pr.lg || 1 }, `${c.name} · ${c.role} · Sv ${lvl} · ekipman ortalaması ${gearLevel(gear)}`);
+  if (o.p && !o.p.sameTab && room) { // başka oyuncu: düello ve takım maçı daveti
+    const nm = name || nameOfPeer(o.p), act = $('inspAct');
+    const b1 = document.createElement('button'); b1.type = 'button'; b1.className = 'btn ghost'; b1.textContent = 'Düelloya çağır'; b1.disabled = !!(pvp || invite);
+    b1.addEventListener('click', () => { closeInspect(); challenge(o.p, nm); });
+    const b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn ghost'; b2.textContent = 'Takım maçına davet et'; b2.disabled = !!(pvp || (myMatch && !myMatch.host));
+    b2.addEventListener('click', () => { closeInspect(); inviteToMatch(o.p, nm); });
+    act.append(b1, b2);
+    if (ACC.on) { const b3 = document.createElement('button'); b3.type = 'button'; b3.className = 'btn ghost'; b3.textContent = 'Hediye gönder'; b3.addEventListener('click', () => { closeInspect(); openGift(nm); }); act.appendChild(b3); }
+  }
 }
 function openInspect(f, sub) {
+  // her açılışta sıfırlanır: sekmeler, hesap, istatistik, beceri puanı ve davet düğmeleri yalnız kendi profilinde / başka oyuncuda doldurulur
+  $('insp').dataset.tab = 'char'; $('inspTabs').hidden = true; $('inspAcct').innerHTML = ''; $('inspStatTab').innerHTML = ''; $('inspSp').innerHTML = ''; $('inspAct').innerHTML = ''; $('inspXp').hidden = true; $('inspLines').innerHTML = '';
+  $('inspTabs').querySelectorAll('button').forEach(x => x.setAttribute('aria-selected', x.dataset.t === 'char'));
   if (f.mon) return openMonInspect(f);
   $('insp').classList.remove('mon');
   const names = Object.fromEntries(RC[f.id].items);
   $('inspT').textContent = f.name;
   $('inspSub').textContent = sub || `${f.cls.name} · Sv ${f.lvl} · ekipman ortalaması ${gearLevel(f.gear)} · ${f.side === 'player' ? (f === F.me ? 'sen' : 'takım arkadaşın') : 'rakip'}` + (f.hand ? ` · kalabalık takım: güç %${Math.round(f.hand * 100)}` : '');
-  const grid = $('inspItems'); grid.innerHTML = '';
-  for (const k of ITEMS) {
-    const n = f.gear[k], it = document.createElement('div'); it.className = 'iitem'; it.title = `${names[k] || k} · ${n}. seviye · ${perkText(k, n)}`;
+  const grid = $('inspItems'), gridR = $('inspItemsR'); grid.innerHTML = gridR.innerHTML = '';
+  const LEFT = ['head', 'chest', 'sleeve', 'bracer', 'knee'], RIGHT = ['main', 'off', 'glove', 'boot', 'cape']; // vücuttaki yerine göre
+  for (const k of [...LEFT, ...RIGHT]) {
+    const n = f.gear[k], fit = f.uy && f.uy[ITEMS.indexOf(k)] ? SHARE_FIT : 1, it = document.createElement('div'); it.className = 'iitem'; it.dataset.k = k; it.title = `${tierName(n)} · ${names[k] || k} · ${perkTextFit(k, n, fit)}` + (fit < 1 ? ` · uyum %${Math.round(fit * 100)} (başka sınıfın eşyası)` : '');
     const fr = document.createElement('div'); fr.className = 'ifr tr' + Math.max(1, Math.min(10, n));
     const cv = document.createElement('canvas'); cv.width = cv.height = 160; drawIcon(cv, f.id, k, n);
-    const tn = document.createElement('span'); tn.className = 'tn'; tn.textContent = n;
+    const tn = document.createElement('span'); tn.className = 'tn'; tn.textContent = tierName(n); tn.style.color = TIER_COLORS[Math.max(1, Math.min(10, n)) - 1];
     const b = document.createElement('b'), s = document.createElement('small');
-    b.textContent = names[k] || k; s.textContent = perkText(k, n);
-    fr.append(cv, tn); it.append(fr, b, s); grid.appendChild(it);
+    b.textContent = names[k] || k; s.textContent = perkTextFit(k, n, fit).split(', ')[0]; // altta ana değer; tamamı üstüne gelince
+    if (fit < 1) { const u = document.createElement('span'); u.className = 'ufit'; u.textContent = '%' + Math.round(fit * 100); fr.appendChild(u); }
+    const pw = document.createElement('small'); pw.className = 'ipw'; pw.textContent = `+${itemPower(f.id, k, n, f.lvl, f.sp || SP0, fit)} güç`; it.title += ' · ' + pw.textContent;
+    fr.append(cv, tn); it.append(fr, b, s, pw); (LEFT.includes(k) ? grid : gridR).appendChild(it);
   }
-  $('inspStats').style.setProperty('--c', glowOf(f.id)); $('inspStats').innerHTML = statRows(f);
+  $('inspStats').style.setProperty('--c', glowOf(f.id)); $('inspStats').innerHTML = statRows(f, null, true); inspHead(f);
   skillTiles(f.skills.slice(0, 4));
   inspA = Rig.actor(f.id, 0, 1, f.gear);
   $('insp').hidden = false; $('inspClose').focus();
@@ -3290,14 +3621,20 @@ function openMonInspect(f) {
   const it = document.createElement('div'); it.className = 'imon';
   const cv = document.createElement('canvas'); cv.width = cv.height = 240; Rig.portrait(cv, f.id);
   const p = document.createElement('p'); p.textContent = d.desc; it.append(cv, p); grid.appendChild(it);
-  $('inspStats').style.setProperty('--c', d.color); $('inspStats').innerHTML = statRows(f);
+  $('inspStats').style.setProperty('--c', d.color); $('inspStats').innerHTML = statRows(f, null, true); inspHead(f);
   skillTiles(f.skills.slice(0, 4));
   inspA = null; $('insp').hidden = false; $('inspClose').focus();
 }
 function drawInspect(t) {
   if (!inspA || $('insp').hidden) return;
   const c = $('inspCv'), x = c.getContext('2d'); x.clearRect(0, 0, c.width, c.height);
-  Rig.update(inspA, 16); Rig.draw(x, inspA, t, 16, c.width / 2 - 8, c.height - 12, 1.75, null);
+  // arkada sınıf renginde hale, ayağının altında platform
+  const cx = c.width / 2 - 8, fy = c.height - 24, gl = x.createRadialGradient(cx, fy - 220, 10, cx, fy - 220, 230);
+  gl.addColorStop(0, inspGlow + '55'); gl.addColorStop(1, inspGlow + '00'); x.fillStyle = gl; x.fillRect(0, 0, c.width, c.height);
+  x.save(); x.beginPath(); x.ellipse(cx, fy + 2, 120, 22, 0, 0, 7); const pg = x.createRadialGradient(cx, fy, 4, cx, fy, 120);
+  pg.addColorStop(0, inspGlow + '66'); pg.addColorStop(.7, inspGlow + '22'); pg.addColorStop(1, inspGlow + '00'); x.fillStyle = pg; x.fill();
+  x.strokeStyle = inspGlow + '88'; x.lineWidth = 2; x.beginPath(); x.ellipse(cx, fy + 2, 96, 16, 0, 0, 7); x.stroke(); x.restore();
+  Rig.update(inspA, 16); Rig.draw(x, inspA, t, 16, c.width / 2 - 8, c.height - 24, 1.2, null);
   requestAnimationFrame(drawInspect);
 }
 function closeInspect() { $('insp').hidden = true; inspA = null; }
@@ -3439,7 +3776,7 @@ function lobbyPresence() {
   if (!room) return;
   const g = gearOf(chosen);
   room.presence({ cls: chosen, lv: gearLevel(g), pl: myLevel(), lg: leagueOf(SAVE.league), st: pvp ? 'duel' : screen === 'battle' ? 'battle' : 'lobby',
-    sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, tp: me.tp || 0, g: ITEMS.map(k => g[k]), sp: mySp(chosen), m: typeof matchPub === 'function' ? matchPub() : undefined }).catch(() => {});
+    sc: me.sc, x: Math.round(me.x), y: Math.round(me.y), f: me.face, w: me.walk ? 1 : 0, tp: me.tp || 0, g: ITEMS.map(k => g[k]), sp: mySp(chosen), u: myUy(chosen), m: typeof matchPub === 'function' ? matchPub() : undefined }).catch(() => {});
 }
 const lobbyOthers = () => room ? room.peers().filter(p => !p.isMe && p.kind === 'viewer').length : 0;
 function openLobby() { invBadge(); showScreen('lobby'); streetActor(); $('lobbyCls').textContent = CLASSES[chosen].name; renderLobby(); renderChat(); }
@@ -3481,8 +3818,8 @@ async function renderLobby() {
 }
 /* ---------- sohbet ---------- */
 let unread = 0;
-function addChat(by, text, peer, sys) {
-  chatLog.push({ by, text, peer, sys }); if (chatLog.length > 60) chatLog.shift(); renderChat();
+function addChat(by, text, peer, sys, act) {
+  chatLog.push({ by, text, peer, sys, act }); if (chatLog.length > 60) chatLog.shift(); renderChat();
   if (!sys && $('chatBox').classList.contains('min')) { unread++; $('chNew').textContent = unread; }
 }
 // sohbet kutusu küçültülür/açılır (dokunmatikte küçük başlar); oyuncular paneli düğmeyle açılır
@@ -3531,7 +3868,7 @@ async function renderChat() {
   box.innerHTML = '';
   for (const c of chatLog) {
     const d = document.createElement('div'); d.className = 'cm' + (c.sys ? ' sys' : '');
-    if (c.sys) d.textContent = c.text;
+    if (c.sys) { d.textContent = c.text; if (c.act) { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ghost cact'; b.textContent = c.act.label; b.addEventListener('click', () => { c.act.fn(); c.act = null; renderChat(); }); d.append(' ', b); } }
     else { const b = document.createElement('b'); b.textContent = ((c.by && prof[c.by] && prof[c.by].name) || 'Oyuncu') + ': '; d.append(b, document.createTextNode(c.text)); }
     box.appendChild(d);
   }
@@ -3548,7 +3885,7 @@ function challenge(p, name) {
   if (!room || pvp || invite) return;
   const id = Math.random().toString(36).slice(2, 10);
   invite = { mine: true, id, to: p.peer, name };
-  room.emit('duel', { t: 'ask', id, to: p.peer, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), sp: mySp(chosen) }).catch(() => { invite = null; addChat(null, 'Meydan okuma gönderilemedi.', null, true); });
+  room.emit('duel', { t: 'ask', id, to: p.peer, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), sp: mySp(chosen), u: myUy(chosen) }).catch(() => { invite = null; addChat(null, 'Meydan okuma gönderilemedi.', null, true); });
   addChat(null, name + ' oyuncusuna meydan okundu, cevap bekleniyor…', null, true);
   setTimeout(() => { if (invite && invite.id === id && invite.mine) { invite = null; addChat(null, name + ' cevap vermedi.', null, true); renderLobby(); } }, 25000);
   renderLobby();
@@ -3559,16 +3896,20 @@ const cleanGear = g => Object.fromEntries(ITEMS.map(k => [k, Math.max(1, Math.mi
 async function onDuelMsg(m) {
   const d = m.data || {}; if (m.isMe || !d.t) return;
   if (d.t === 'mjoin' || d.t === 'mleave' || d.t === 'mstart' || d.t === 'mswap') return onMatchLobby(m, d);
+  if (d.t === 'minv' && d.to === myPeer() && d.mid) { // takım maçı daveti: sohbette "Katıl"
+    addChat(null, `${String(d.n || 'Bir oyuncu').slice(0, 20)} seni ${String(d.mode || '').slice(0, 5)} takım maçına çağırıyor.`, null, true, { label: 'Katıl', fn: () => joinMatch(m.peer, d.mid, 'A') });
+    return;
+  }
   if (d.t === 'ask' && d.to === myPeer()) {
     if (pvp || invite || myMatch || !CLASSES[d.cls]) { room.emit('duel', { t: 'no', id: d.id, to: m.peer, busy: true }).catch(() => {}); return; }
     const prof = m.by && user ? await user.profiles([m.by]) : {}, name = (m.by && prof[m.by] && prof[m.by].name) || 'Bir oyuncu';
-    invite = { mine: false, id: d.id, from: m.peer, by: m.by, name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), sp: d.sp };
+    invite = { mine: false, id: d.id, from: m.peer, by: m.by, name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), sp: d.sp, u: d.u };
     $('invT').textContent = `${name} seni ${CLASSES[d.cls].name} ile düelloya çağırıyor. Sen ${CLASSES[chosen].name} ile savaşacaksın.`;
     $('invite').hidden = false; $('invYes').focus(); Sfx.play('stun');
     setTimeout(() => { if (invite && invite.id === d.id && !invite.mine) declineInvite(); }, 20000);
   } else if (d.t === 'yes' && invite && invite.mine && d.id === invite.id && m.peer === invite.to && CLASSES[d.cls]) {
     const inv = invite; invite = null;
-    startDuel({ id: inv.id, opp: m.peer, oppBy: m.by, oppName: inv.name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), sp: d.sp, seed: d.seed >>> 0, first: true });
+    startDuel({ id: inv.id, opp: m.peer, oppBy: m.by, oppName: inv.name, cls: d.cls, gear: cleanGear(d.gear), alch: Math.max(1, Math.min(8, +d.alch || 1)), lv: Math.max(1, Math.min(99, d.lv | 0 || 1)), sp: d.sp, u: d.u, seed: d.seed >>> 0, first: true });
   } else if (d.t === 'no' && invite && invite.mine && d.id === invite.id) {
     addChat(null, invite.name + (d.busy ? ' şu an meşgul.' : ' meydan okumayı reddetti.'), null, true); invite = null; renderLobby();
   }
@@ -3578,8 +3919,8 @@ $('invNo').addEventListener('click', declineInvite);
 $('invYes').addEventListener('click', () => {
   if (!invite || invite.mine) return; const inv = invite; invite = null; $('invite').hidden = true;
   const seed = (Math.random() * 4294967296) >>> 0;
-  room.emit('duel', { t: 'yes', id: inv.id, to: inv.from, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), sp: mySp(chosen), seed }).catch(() => {});
-  startDuel({ id: inv.id, opp: inv.from, oppBy: inv.by, oppName: inv.name, cls: inv.cls, gear: inv.gear, alch: inv.alch, lv: inv.lv, sp: inv.sp, seed, first: false });
+  room.emit('duel', { t: 'yes', id: inv.id, to: inv.from, cls: chosen, gear: gearOf(chosen), alch: T.alch, lv: myLevel(), sp: mySp(chosen), u: myUy(chosen), seed }).catch(() => {});
+  startDuel({ id: inv.id, opp: inv.from, oppBy: inv.by, oppName: inv.name, cls: inv.cls, gear: inv.gear, alch: inv.alch, lv: inv.lv, sp: inv.sp, u: inv.u, seed, first: false });
 });
 /* ---------- çok oyunculu maç (düello = 1v1 maç) ----------
    Kadro (roster) her ekranda aynı sırayla kurulur: [{ team, slot, peer|null, id, g: [10 eşya], a, name }].
@@ -3606,7 +3947,7 @@ async function startMatch(o) { // o = { id, room, kind: 'duel'|'team', mode, see
   crng = seeded(pvp.seed);
   for (const k of ids) Sfx.loadSkills(k);
   const cfg = { A: [], B: [] };
-  for (const r of o.roster) cfg[r.team][r.slot] = { id: r.id, gear: gearObj(r.g), alch: Math.max(1, Math.min(8, r.a | 0 || 1)), peer: r.peer || null, lvl: Math.max(1, Math.min(99, r.lv | 0 || 1)), sp: r.sp || null,
+  for (const r of o.roster) cfg[r.team][r.slot] = { id: r.id, gear: gearObj(r.g), alch: Math.max(1, Math.min(8, r.a | 0 || 1)), peer: r.peer || null, lvl: Math.max(1, Math.min(99, r.lv | 0 || 1)), sp: r.sp || null, uy: cleanU(r.u),
     ctrl: r.peer === mine ? 'me' : r.peer ? 'remote' : 'ai', name: r.peer === mine ? 'Sen · ' + CLASSES[r.id].name : (r.peer ? r.name : 'Bot') + ' · ' + CLASSES[r.id].name };
   showScreen('battle');
   newBattle(cfg);
@@ -3672,8 +4013,8 @@ setInterval(() => {
 }, 1000);
 // düello: meydan okuyan A, kabul eden B
 function startDuel(o) {
-  const me = { peer: myPeer(), id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, lv: myLevel(), sp: mySp(chosen), name: 'Sen' };
-  const them = { peer: o.opp, id: o.cls, g: gearArr(o.gear), a: o.alch, lv: o.lv, sp: cleanSp(o.sp, o.lv), name: o.oppName };
+  const me = { peer: myPeer(), id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, lv: myLevel(), sp: mySp(chosen), u: myUy(chosen), name: 'Sen' };
+  const them = { peer: o.opp, id: o.cls, g: gearArr(o.gear), a: o.alch, lv: o.lv, sp: cleanSp(o.sp, o.lv), u: cleanU(o.u), name: o.oppName };
   const [A, B] = o.first ? [me, them] : [them, me];
   startMatch({ id: o.id, room: 'duel-' + o.id, kind: 'duel', mode: '1v1', seed: o.seed, roster: [{ team: 'A', slot: 0, ...A }, { team: 'B', slot: 0, ...B }] });
 }
@@ -3691,17 +4032,78 @@ function matchPub() {
   const pub = s => s ? { p: s.p, n: s.n, c: s.c, l: s.l, v: s.v } : 0;
   return { id: myMatch.id, md: myMatch.mode, A: myMatch.A.map(pub), B: myMatch.B.map(pub) };
 }
+// takım maçı daveti: kurduğun maç yoksa seçili kipte (en az 2v2) kurulur, sonra davet gider; karşı taraf sohbette "Katıl" ile senin takımına girer
+function inviteToMatch(p, name) {
+  if (!room || pvp) return;
+  if (!myMatch) { const [a, b] = MODES[battleMode] || [2, 2]; createMatch(a > 1 || b > 1 ? battleMode : '2v2'); }
+  if (!myMatch || !myMatch.host) return;
+  room.emit('duel', { t: 'minv', mid: myMatch.id, mode: myMatch.mode, to: p.peer, n: myName() }).catch(() => {});
+  addChat(null, `${name} takım maçına davet edildi.`, null, true);
+}
+// ---------- hediye: gönderme penceresi ve gelen hediyeler (aktarım sunucuda) ----------
+let giftTo = null, giftLeft = null;
+async function openGift(name) {
+  giftTo = name; $('giftErr').textContent = ''; $('giftGold').value = 0; $('giftHam').value = 0; $('giftGo').disabled = true;
+  $('giftTo').innerHTML = 'Alıcı: <b></b>'; $('giftTo').querySelector('b').textContent = name;
+  $('giftNote').textContent = 'Yükleniyor…'; $('gift').hidden = false; $('giftGold').focus();
+  if (!ACC.name) { $('giftNote').textContent = 'Hediye göndermek için giriş yapmalısın.'; return; }
+  const r = await api('GET', '/api/gift'); if (!r.ok) { $('giftNote').textContent = r.body.error || 'Sunucuya ulaşılamadı.'; return; }
+  giftLeft = r.body; giftInfo();
+  if (r.body.lvl < r.body.minLvl) { $('giftErr').textContent = `Hediye göndermek için en az ${r.body.minLvl}. seviye olmalısın.`; return; }
+  $('giftGo').disabled = false;
+}
+function giftInfo() {
+  if (!giftLeft) return;
+  const g = Math.max(0, +$('giftGold').value | 0), net = Math.floor(g * (1 - giftLeft.fee));
+  $('giftNote').innerHTML = `Bugün kalan: <b>${giftLeft.left.gold}</b> altın, <b>${giftLeft.left.hammers}</b> çekiç · %${Math.round(giftLeft.fee * 100)} vergi: karşıya <b>${net}</b> altın ulaşır.`;
+}
+for (const id of ['giftGold', 'giftHam']) $(id).addEventListener('input', giftInfo);
+async function sendGift() {
+  const gold = Math.max(0, +$('giftGold').value | 0), ham = Math.max(0, +$('giftHam').value | 0);
+  if (!gold && !ham) { $('giftErr').textContent = 'Bir miktar seç.'; return; }
+  if (gold > SAVE.gold || ham > SAVE.hammers) { $('giftErr').textContent = 'Yeterli altının ya da çekicin yok.'; return; }
+  $('giftGo').disabled = true; $('giftErr').textContent = '';
+  clearTimeout(pushT); await api('PUT', '/api/save', { save: SAVE }); // önce son ilerleme sunucuya
+  const r = await api('POST', '/api/gift', { to: giftTo, gold, hammers: ham });
+  $('giftGo').disabled = false;
+  if (!r.ok) { $('giftErr').textContent = r.body.error || 'Gönderilemedi.'; return; }
+  SAVE.gold -= gold; SAVE.hammers -= ham; persist(); invBadge(); Sfx.play('coin');
+  addChat(null, `${giftTo} oyuncusuna hediye gönderildi: ${r.body.net} altın${ham ? ', ' + ham + ' çekiç' : ''}.`, null, true);
+  $('gift').hidden = true;
+}
+$('giftGo').addEventListener('click', sendGift);
+for (const id of ['giftClose', 'giftCancel']) $(id).addEventListener('click', () => { $('gift').hidden = true; });
+$('gift').addEventListener('keydown', e => { if (e.key === 'Escape') $('gift').hidden = true; });
+// gelen hediyeler: giriş yapınca ve dakikada bir bakılır; "Al" ile kayda eklenir
+let mailOpen = false;
+async function checkMail() {
+  if (!ACC.name || mailOpen) return;
+  const r = await api('GET', '/api/mail'); if (!r.ok || !(r.body.mail || []).length) return;
+  const box = $('mailList'); box.innerHTML = '';
+  for (const m of r.body.mail) { const d = document.createElement('div'); d.innerHTML = '<b></b> sana <span></span> gönderdi.'; d.firstChild.textContent = m.from; d.querySelector('span').textContent = [m.gold ? m.gold + ' altın' : '', m.hammers ? m.hammers + ' çekiç' : ''].filter(Boolean).join(' ve '); box.appendChild(d); }
+  mailOpen = true; $('mail').hidden = false; $('mailGo').focus(); Sfx.play('coin');
+}
+$('mailGo').addEventListener('click', async () => {
+  $('mailGo').disabled = true;
+  clearTimeout(pushT); await api('PUT', '/api/save', { save: SAVE });
+  const r = await api('POST', '/api/mail/claim');
+  $('mailGo').disabled = false; $('mail').hidden = true; mailOpen = false;
+  if (!r.ok) return;
+  SAVE.gold += r.body.gold || 0; SAVE.hammers += r.body.hammers || 0; persist(); invBadge(); Sfx.play('coin');
+  if (screen === 'select') renderGear();
+});
+setInterval(checkMail, 60000);
 function createMatch(mode) {
   if (!room || pvp || myMatch) return;
   const [na, nb] = MODES[mode], id = Math.random().toString(36).slice(2, 10), g = gearOf(chosen), p = myPeer();
   myMatch = { host: true, id, mode, A: Array(na).fill(0), B: Array(nb).fill(0), info: {} };
-  myMatch.A[0] = { p, n: myName(), c: chosen, l: gearLevel(g), v: myLevel() }; myMatch.info[p] = { g: gearArr(g), a: T.alch, id: chosen, lv: myLevel(), sp: mySp(chosen) };
+  myMatch.A[0] = { p, n: myName(), c: chosen, l: gearLevel(g), v: myLevel() }; myMatch.info[p] = { g: gearArr(g), a: T.alch, id: chosen, lv: myLevel(), sp: mySp(chosen), u: myUy(chosen) };
   lobbyPresence(); renderMatches();
 }
 function joinMatch(hostPeer, mid, team) {
   if (!room || pvp || myMatch) return;
   myMatch = { host: false, id: mid, hostPeer, team, t0: Date.now() };
-  room.emit('duel', { t: 'mjoin', mid, team, to: hostPeer, id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, l: gearLevel(gearOf(chosen)), lv: myLevel(), sp: mySp(chosen), n: myName() }).catch(() => {});
+  room.emit('duel', { t: 'mjoin', mid, team, to: hostPeer, id: chosen, g: gearArr(gearOf(chosen)), a: T.alch, l: gearLevel(gearOf(chosen)), lv: myLevel(), sp: mySp(chosen), u: myUy(chosen), n: myName() }).catch(() => {});
   lobbyPresence(); renderMatches();
 }
 function leaveMatch() {
@@ -3735,7 +4137,7 @@ function startTeamMatch() {
   for (const team of ['A', 'B']) {
     const bg = fill(team, 'l', tgtGear, maxGear, 10), bl = fill(team, 'v', tgtLv, maxLv, 99);
     M[team].forEach((s, slot) => {
-      if (s) { const inf = M.info[s.p] || {}; roster.push({ team, slot, peer: s.p, id: inf.id || s.c, g: inf.g, a: inf.a, lv: inf.lv || s.v || 1, sp: inf.sp ? cleanSp(inf.sp, inf.lv || 1) : SP0, name: s.n }); }
+      if (s) { const inf = M.info[s.p] || {}; roster.push({ team, slot, peer: s.p, id: inf.id || s.c, g: inf.g, a: inf.a, lv: inf.lv || s.v || 1, sp: inf.sp ? cleanSp(inf.sp, inf.lv || 1) : SP0, u: cleanU(inf.u), name: s.n }); }
       else { const id = pool.pop() || ORDER[0]; roster.push({ team, slot, peer: null, id, g: gearArr(foeGear(bg)), a: T.alch, lv: bl, name: 'Bot' }); }
     });
   }
@@ -3751,7 +4153,7 @@ function onMatchLobby(m, d) {
     const arr = M[d.team === 'B' ? 'B' : 'A'], k = arr.findIndex(s => !s); if (k < 0) return;
     const lv = Math.max(1, Math.min(99, d.lv | 0 || 1));
     arr[k] = { p: m.peer, n: String(d.n || 'Oyuncu').slice(0, 20), c: d.id, l: Math.max(1, Math.min(10, d.l | 0)), v: lv };
-    M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id, lv, sp: cleanSp(d.sp, lv) };
+    M.info[m.peer] = { g: gearArr(gearObj(d.g)), a: Math.max(1, Math.min(8, d.a | 0 || 1)), id: d.id, lv, sp: cleanSp(d.sp, lv), u: cleanU(d.u) };
     lobbyPresence(); renderMatches();
   } else if (d.t === 'mswap' && M && M.host && d.to === myPeer() && d.mid === M.id && (d.team === 'A' || d.team === 'B')) {
     if (moveSlot(M, m.peer, d.team)) { lobbyPresence(); renderMatches(); }
@@ -3872,12 +4274,15 @@ const STAGES = [
 const stagePow = k => 1 + .17 * (k - 1); // aşama güçlendikçe can ve hasar artar
 // ormanda her aşamada tek canavar çıkar (sürünün ilki; boss aşamasında boss). Aşama eskisi kadar zor kalsın diye o tek canavar
 // sürünün toplam gücünü taşır: eski n'li sürü kalabalık cezasıyla n^0,45 canavar kadardı, tek canavarın canı ve hasarı o kadar katlanır
+// canavar savunmaları [zırh, büyü direnci] (aşamayla büyür): Ent ve Yaban Domuzu zırhlı, Orman Ruhu ve Cadı büyüye dirençli
+const MON_DEF = { wolf: [50, 30], spider: [40, 50], goblin: [40, 30], mushroom: [40, 90], boar: [140, 30], wisp: [20, 160], treant: [160, 40], alpha: [90, 50], witch: [50, 150] };
 const packPow = st => Math.pow(st.pack.length, .45);
 function mkMonster(m, team) {
   const d = MONSTERS[m.id], k = m.stage || 1, pw = stagePow(k) * (m.pow || 1), hp = Math.round(d.hp * pw), topH = Math.round(d.h * 300 + 50);
   return { team, side: 'enemy', ctrl: 'ai', id: m.id, mon: d, stage: k, cls: { name: d.name, hp: d.hp }, gear: null, lvl: m.lvl || k * 2, name: d.name,
     hp, maxHp: hp, mp: d.mp, maxMp: d.mp, regen: d.regen, hregen: Math.round(hp * (d.hr || .01)), crit: d.crit, dodge: d.dodge, dmgMul: pw * .95, // can yenileme: canın %1'i (hr)
-    skills: [...d.skills.map((s, i) => ({ ...s, color: s.color || d.color, snd: m.id + '_' + i })), { ...POTION, heal: 0 }], healMul: 1, heals: 0, // ses: assets/sfx/skills/<canavar>_<0-3>.mp3 (yoksa genel vuruş sesi)
+    ar: Math.round((MON_DEF[m.id] || [40, 40])[0] * stagePow(k)), mr: Math.round((MON_DEF[m.id] || [40, 40])[1] * stagePow(k)),
+    skills: [...d.skills.map((s, i) => ({ ...s, color: s.color || d.color, snd: m.id + '_' + i, mag: isMag(s) })), { ...POTION, heal: 0 }], healMul: 1, heals: 0, // ses: assets/sfx/skills/<canavar>_<0-3>.mp3 (yoksa genel vuruş sesi)
     shield: 0, shieldColor: '', stunned: false, dot: null, rage: 0, fury: 0, furyReady: false, potions: 0, topH, A: monActor(m.id, topH) };
 }
 setMonsterData(MONSTERS); loadMonsterImgs(Object.keys(MONSTERS)); // iskeleti olmayanlar için tek parça resim (assets/mon/<id>.webp)
@@ -3926,6 +4331,56 @@ function invBadge() {
 }
 let invSel = null;
 const entKey = e => e.t === 'mat' ? 'mat:' + e.m : e.t === 'gear' ? 'gear:' + SAVE.items.indexOf(e.it) : e.t;
+// profil: lobideki düğme (portre, ad, seviye) ve pencere
+function profileChip() {
+  const c = $('pfAv'); if (!c) return;
+  $('pfName').textContent = myName(); $('pfLv').textContent = `Sv ${myLevel()} · ${CLASSES[chosen].name}`;
+  try { if (Rig.sprites[chosen]) Rig.portrait(c, chosen, 1, glowOf(chosen), gearOf(chosen)); } catch (e) {}
+}
+// profil = bilgi penceresinin aynısı (kendi kahramanın); ek olarak yalnız sana görünen hesap bilgileri (altın, çekiç, savaşlar).
+// Başka oyuncuları incelerken bu kısım görünmez; onların eşyaları, değerleri ve yetenekleri görünür.
+async function openOwnProfile() {
+  const id = chosen, c = CLASSES[id], gear = gearOf(id), lvl = myLevel(), sp = mySp(id), uy = myUy(id), st = gearStats(c, gear, lvl, sp, uy), xp = xpProgress(SAVE.xp), S0 = SAVE.stats || {};
+  try { await Promise.all([Rig.load(id), Rig.loadTiers(id)]); } catch (e) { return; }
+  Sfx.play('click'); keys.l = keys.r = keys.u = keys.d = 0;
+  openInspect({ id, cls: c, name: myName(), lvl, gear, hp: st.hp, maxHp: st.hp, mp: st.mp, maxMp: st.mp, regen: st.regen, hregen: st.hregen, gb: st.gb, ar: st.ar, mr: st.mr, sp, uy, crit: st.crit, dodge: st.dodge, dmgMul: st.dmgMul, dmgAdd: st.dmgAdd,
+    skills: c.skills.map((s, i) => skillAt({ ...s, color: s.color || glowOf(id) }, sp[i])), potions: null, side: 'player', league: leagueOf(SAVE.league) }, `${c.name} · ${c.role} · Sv ${lvl}`);
+  // EXP çubuğu
+  const xb = $('inspXp'); xb.hidden = false; xb.style.setProperty('--p', (lvl >= MAX_LVL ? 100 : Math.round(xp.cur / xp.need * 100)) + '%');
+  xb.querySelector('i').style.setProperty('--p', xb.style.getPropertyValue('--p')); xb.querySelector('small').textContent = lvl >= MAX_LVL ? 'MAKS' : `${xp.cur}/${xp.need} EXP`;
+  // sekmeler
+  $('inspTabs').hidden = false;
+  const grid = (el, cells) => { const g = document.createElement('div'); g.className = 'ipgrid'; for (const [l, v] of cells) { const d = document.createElement('div'); d.innerHTML = '<small></small><b></b>'; d.firstChild.textContent = l; d.lastChild.textContent = v; g.appendChild(d); } el.appendChild(g); };
+  const wins = S0.wins || 0, bt = S0.battles || 0, won = Object.keys(S0.won || {}).length;
+  grid($('inspStatTab'), [['Savaş', bt], ['Galibiyet', wins], ['Kazanma oranı', bt ? Math.round(wins / bt * 100) + '%' : '—'], ['Düello galibiyeti', S0.duelWins || 0], ['Takım maçı galibiyeti', S0.teamWins || 0],
+    ['Orman galibiyeti', S0.forestWins || 0], ['Orman', `${(SAVE.forest || {}).best || 0}. aşama`], ['Toplam kritik', (S0.crits || 0).toLocaleString('tr-TR')], ['Toplam hasar', (S0.dmg || 0).toLocaleString('tr-TR')],
+    ['En iyi lig', S0.bestLeague || 1], ['Dövülen ve alınan eşya', S0.upgrades || 0], ['Galibiyet alınan sınıf', `${won}/${ORDER.length}`]]);
+  const mats = Object.values((SAVE.forest || {}).mats || {}).reduce((s, v) => s + (v || 0), 0);
+  grid($('inspAcct'), [['Altın', (SAVE.gold || 0).toLocaleString('tr-TR')], ['Çekiç', SAVE.hammers || 0], ['Envanterdeki eşya', (SAVE.items || []).length], ['Malzeme', mats], ['EXP', lvl >= MAX_LVL ? 'MAKS' : `${xp.cur}/${xp.need}`]]);
+  const pb = document.createElement('div'); pb.className = 'ipbtns';
+  const hb = document.createElement('button'); hb.type = 'button'; hb.className = 'btn'; hb.textContent = 'Kahraman değiştir'; hb.addEventListener('click', () => { closeInspect(); openHeroPick(); });
+  pb.appendChild(hb); $('inspAcct').appendChild(pb);
+  // beceri puanı özeti
+  const free = spOf(lvl) - spUsed(sp), spb = $('inspSp');
+  spb.innerHTML = `<span>Beceri puanı: <b>${free}</b></span>`;
+  const db = document.createElement('button'); db.type = 'button'; db.className = 'btn ghost'; db.textContent = 'Dağıt'; db.addEventListener('click', () => { closeInspect(); openSelect('arena'); }); spb.appendChild(db);
+}
+$('pfBtn').addEventListener('click', openOwnProfile);
+function openHeroPick() {
+  const g = $('hselGrid'); g.innerHTML = '';
+  for (const id of ORDER) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'card' + (id === chosen ? ' on' : ''); b.style.setProperty('--c', glowOf(id));
+    const img = document.createElement('img'); img.alt = ''; img.src = `assets/baked/${id}_portrait.png?v=40`;
+    const n = document.createElement('span'); n.className = 'cn'; n.textContent = CLASSES[id].name;
+    b.append(img, n); b.addEventListener('click', async () => { $('hsel').hidden = true; pick(id); streetActor(); lobbyPresence(); profileChip(); await openOwnProfile(); });
+    g.appendChild(b);
+  }
+  Sfx.play('click'); $('hsel').hidden = false; $('hselClose').focus();
+}
+$('hselClose').addEventListener('click', () => { $('hsel').hidden = true; });
+$('hsel').addEventListener('click', e => { if (e.target === $('hsel')) $('hsel').hidden = true; });
+$('hsel').addEventListener('keydown', e => { if (e.key === 'Escape') $('hsel').hidden = true; });
+setInterval(() => { if (screen === 'lobby') profileChip(); }, 1500); // ad, seviye ve kahraman değişince güncel kalsın
 function openInventory() {
   if (screen !== 'lobby') return;
   Sfx.play('click'); keys.l = keys.r = keys.u = keys.d = 0;
@@ -3948,8 +4403,8 @@ function renderInventory() {
       const it = e.it, nm = Object.fromEntries(RC[it.c].items)[it.k];
       b.classList.add('gear', 'tr' + it.n);
       const cv = document.createElement('canvas'); cv.width = cv.height = 68; drawGearIcon(cv, it); b.appendChild(cv);
-      b.insertAdjacentHTML('beforeend', `<span class="cnt">${it.n}</span>` + (it.new ? '<span class="new">yeni</span>' : ''));
-      label = `${nm} · ${CLASSES[it.c].name} · ${it.n}. kademe`;
+      b.insertAdjacentHTML('beforeend', `<span class="cnt tcnt" style="color:${TIER_COLORS[it.n - 1]}">${tierName(it.n)}</span>` + (it.new ? '<span class="new">yeni</span>' : ''));
+      label = `${tierName(it.n)} · ${nm} · ${CLASSES[it.c].name}`;
     } else {
       const inf = INV_INFO[e.t === 'mat' ? e.m : e.t], name = e.t === 'mat' ? MATS[e.m][0] : inf.name, col = e.t === 'mat' ? MATS[e.m][1] : inf.color;
       const n = e.t === 'mat' ? SAVE.forest.mats[e.m] : SAVE.hammers, nw = e.t === 'mat' ? invNewOf(e.m) : 0;
@@ -3974,15 +4429,23 @@ function invInfo() {
     const it = e.it, nm = Object.fromEntries(RC[it.c].items)[it.k], cur = gearOf(it.c)[it.k];
     big.classList.add('tr' + it.n); const cv = document.createElement('canvas'); cv.width = cv.height = 160; drawGearIcon(cv, it); big.appendChild(cv);
     box.style.setProperty('--c', getComputedStyle(big).getPropertyValue('--b') || 'var(--gold)');
-    b.textContent = `${nm} · ${it.n}. kademe`; p.textContent = `${CLASSES[it.c].name} eşyası · ${perkText(it.k, it.n)}`;
-    row('Takılı olan', `${cur}. kademe`);
+    b.innerHTML = tierSpan(it.n) + ' <span class="iname"></span>'; b.lastChild.textContent = nm; p.textContent = `${CLASSES[it.c].name} eşyası (${FAM_NAMES[famOf(it.c, it.k)]}) · ${perkText(it.k, it.n)} · +${itemPower(it.c, it.k, it.n)} güç`;
+    row('Takılı olan', tierName(cur));
     const acts = document.createElement('div'); acts.className = 'ivacts';
-    const eq = document.createElement('button'); eq.type = 'button'; eq.className = 'btn'; eq.textContent = it.n > cur ? `Tak (${CLASSES[it.c].name})` : 'Takılı olan daha iyi'; eq.disabled = it.n <= cur;
-    eq.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); delete it.new; equipItem(it); persist(); invSel = null; renderInventory(); invBadge(); });
+    // kimler takabilir: asıl sahibi %100, aynı aile/tür %80; her sınıf için düğme (o sınıfta takılı kademe başlıkta)
+    const eq = document.createElement('div'); eq.className = 'ivwear';
+    const wl = document.createElement('small'); wl.textContent = `Takabilecekler · ${FAM_NAMES[famOf(it.c, it.k)]}`; eq.appendChild(wl);
+    for (const to of wearers(it.c, it.k)) {
+      const fit = fitOf(it.c, to, it.k), b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'btn ' + (fit === 1 ? '' : 'ghost');
+      b2.innerHTML = `<img alt="" src="assets/baked/${to}_portrait.png?v=40"><span></span><em>%${Math.round(fit * 100)}</em>`; b2.querySelector('span').textContent = CLASSES[to].name;
+      b2.title = `${CLASSES[to].name}: takılı ${tierName(gearOf(to)[it.k])} · bu eşya orada ${perkTextFit(it.k, it.n, fit)}`;
+      b2.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); delete it.new; equipItem(it, to); persist(); invSel = null; renderInventory(); invBadge(); if (screen === 'select') { renderGear(); renderStats(); } });
+      eq.appendChild(b2);
+    }
     const sp = SELL_PRICE(it.k, it.n), sl = document.createElement('button'); sl.type = 'button'; sl.className = 'btn ghost';
     sl.textContent = sp ? `Sat · +${sp} altın` : 'At (değeri yok)';
     sl.addEventListener('click', () => { SAVE.items.splice(SAVE.items.indexOf(it), 1); if (sp) { SAVE.gold += sp; Sfx.play('coin'); } persist(); invSel = null; renderInventory(); invBadge(); if (screen === 'select') { renderGear(); renderStats(); } });
-    acts.append(eq, sl); box.append(big, b, p, dl, acts); return;
+    acts.append(sl); box.append(big, b, p, dl, eq, acts); return;
   }
   const key = e.t === 'mat' ? e.m : e.t, inf = INV_INFO[key], name = e.t === 'mat' ? MATS[key][0] : inf.name;
   box.style.setProperty('--c', e.t === 'mat' ? MATS[key][1] : inf.color);

@@ -1,4 +1,4 @@
-// Hesaplar ve bulut kaydı: /api/register, /api/login, /api/logout, /api/me, /api/save
+// Hesaplar ve bulut kaydı: /api/register, /api/login, /api/logout, /api/me, /api/save, /api/gift (hediye), /api/mail (gelen hediyeler)
 // Şifreler scrypt ile tuzlanıp saklanır; oturum anahtarı (token) yalnızca SHA-256 özeti olarak tutulur.
 const crypto = require('crypto');
 
@@ -31,15 +31,15 @@ const scrypt = (pass, salt) => new Promise((res, rej) => crypto.scrypt(pass, sal
 const int = (v, lo, hi, d) => { v = Math.floor(Number(v)); return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : d; };
 
 // gelen kaydı bilinen alanlarla ve sınırlarla yeniden kurar
-// beceri puanı (oyundaki spOf / spUsed / xpLevel ile aynı): sınıf başına [yetenek 1-4 seviyesi 1-15, 5 değer puanı 0-15]
+// beceri puanı (oyundaki spOf / spUsed / xpLevel ile aynı): sınıf başına [yetenek 1-4 seviyesi 1-15, 7 değer puanı 0-15]
 const xpLevel = x => { let l = 1, need = 100; x = x || 0; while (x >= need && l < 99) { x -= need; l++; need = 100 + 50 * (l - 1); } return l; };
 const spOf = lvl => { let p = 0; for (let l = 2; l <= Math.min(99, lvl); l++) p += l % 5 ? 1 : 3; return p; };
 const spUsed = sp => sp.slice(0, 4).reduce((s, v) => s + v - 1, 0) + sp.slice(4).reduce((s, v) => s + v, 0);
 function cleanSp(sp, xp) {
   const out = {}, max = spOf(xpLevel(xp));
   for (const [cls, v] of Object.entries(sp && typeof sp === 'object' ? sp : {}).slice(0, 30)) {
-    if (!/^[a-z]{2,16}$/.test(cls) || !Array.isArray(v) || v.length !== 9) continue;
-    const arr = v.map((n, i) => int(n, i < 4 ? 1 : 0, 15, i < 4 ? 1 : 0));
+    if (!/^[a-z]{2,16}$/.test(cls) || !Array.isArray(v) || (v.length !== 9 && v.length !== 11)) continue;
+    const arr = (v.length === 9 ? [...v, 0, 0] : v).map((n, i) => int(n, i < 4 ? 1 : 0, 15, i < 4 ? 1 : 0));
     if (spUsed(arr) <= max) out[cls] = arr;
   }
   return out;
@@ -65,6 +65,13 @@ function cleanSave(s) {
     invSeen: Object.fromEntries(['pelt', 'silk', 'ess', 'relic'].map(m => [m, int((s.invSeen || {})[m], 0, 1e6, 0)])),
   };
   out.sp = cleanSp(s.sp, out.xp);
+  // ortak ekipman: takılı eşyanın asıl sahibi { sınıf: { yuva: sahibi } }
+  out.gearSrc = {};
+  for (const [cls, m] of Object.entries(s.gearSrc && typeof s.gearSrc === 'object' ? s.gearSrc : {}).slice(0, 30)) {
+    if (!/^[a-z]{2,16}$/.test(cls) || !m || typeof m !== 'object') continue;
+    const o = {}; for (const k of ITEMS) if (/^[a-z]{2,16}$/.test(m[k] || '')) o[k] = m[k];
+    if (Object.keys(o).length) out.gearSrc[cls] = o;
+  }
   if (out.stats) for (const k of ['wins', 'battles', 'duelWins', 'teamWins']) if (k in out.stats) out.stats[k] = int(out.stats[k], 0, 1e7, 0);
   return JSON.stringify(out).length > 32 * 1024 ? null : out;
 }
@@ -91,6 +98,9 @@ function spent(a, b) {
   return sum;
 }
 
+// hediye sınırları (UTC günü): gönderen 5000 altın / 3 çekiç, alan 10000 altın / 5 çekiç; altından %10 vergi; gönderen en az 5. seviye
+const GIFT = { sendG: 5000, sendH: 3, recvG: 10000, recvH: 5, fee: .1, minLvl: 5 };
+const giftDay = x => { const d = new Date().toISOString().slice(0, 10); return x && x.day === d ? x : { day: d, sg: 0, sh: 0, rg: 0, rh: 0 }; };
 function makeApi(store) {
   const hits = new Map(); // ip -> [zamanlar]: giriş/kayıt denemesi sınırı
   const limited = ip => { const now = Date.now(), a = (hits.get(ip) || []).filter(t => now - t < 60000); a.push(now); hits.set(ip, a); return a.length > 10; };
@@ -166,6 +176,34 @@ function makeApi(store) {
       if (p === '/api/me') return send(200, view(u));
       if (p === '/api/logout' && req.method === 'POST') {
         const h = sha((req.headers.authorization || '').slice(7)); u.tokens = u.tokens.filter(x => x.hash !== h); await store.put(u); return send(200, { ok: true });
+      }
+      if (p === '/api/gift' && req.method === 'GET') {
+        const L = giftDay(u.gift);
+        return send(200, { left: { gold: GIFT.sendG - L.sg, hammers: GIFT.sendH - L.sh }, fee: GIFT.fee, minLvl: GIFT.minLvl, lvl: xpLevel((u.save || {}).xp) });
+      }
+      if (p === '/api/gift' && req.method === 'POST') {
+        const gold = int(body.gold, 0, GIFT.sendG, 0), ham = int(body.hammers, 0, GIFT.sendH, 0);
+        if (!gold && !ham) return send(400, { error: 'Bir miktar seç.' });
+        if (!u.save) return send(400, { error: 'Önce oyunun kaydedilmeli.' });
+        if (xpLevel(u.save.xp) < GIFT.minLvl) return send(403, { error: `Hediye göndermek için en az ${GIFT.minLvl}. seviye olmalısın.` });
+        const r = await store.get(nameKey(String(body.to || '').trim()));
+        if (!r || !r.save) return send(404, { error: 'Bu oyuncunun hesabı yok.' });
+        if (r._id === u._id) return send(400, { error: 'Kendine hediye gönderemezsin.' });
+        const L = giftDay(u.gift), R = giftDay(r.gift), net = Math.floor(gold * (1 - GIFT.fee));
+        if (L.sg + gold > GIFT.sendG || L.sh + ham > GIFT.sendH) return send(429, { error: 'Bugünkü gönderme hakkın yetmiyor.' });
+        if (R.rg + net > GIFT.recvG || R.rh + ham > GIFT.recvH) return send(429, { error: 'Bu oyuncu bugün bu kadar hediye alamaz.' });
+        if ((u.save.gold || 0) < gold || (u.save.hammers || 0) < ham) return send(400, { error: 'Yeterli altının ya da çekicin yok.' });
+        u.save.gold -= gold; u.save.hammers -= ham; L.sg += gold; L.sh += ham; u.gift = L;
+        R.rg += net; R.rh += ham; r.gift = R; r.mail = [...(r.mail || []), { from: u.name, gold: net, hammers: ham, t: Date.now() }].slice(-30);
+        await store.put(u); await store.put(r);
+        return send(200, { ok: true, net, left: { gold: GIFT.sendG - L.sg, hammers: GIFT.sendH - L.sh } });
+      }
+      if (p === '/api/mail' && req.method === 'GET') return send(200, { mail: u.mail || [] });
+      if (p === '/api/mail/claim' && req.method === 'POST') { // gelen hediyeler kayda eklenir
+        const m = u.mail || []; if (!m.length || !u.save) return send(200, { gold: 0, hammers: 0, mail: [] });
+        const g = m.reduce((s, x) => s + (x.gold || 0), 0), hh = m.reduce((s, x) => s + (x.hammers || 0), 0);
+        u.save.gold = (u.save.gold || 0) + g; u.save.hammers = (u.save.hammers || 0) + hh; u.mail = []; await store.put(u);
+        return send(200, { gold: g, hammers: hh, mail: m });
       }
       if (p === '/api/save' && req.method === 'PUT') {
         const next = cleanSave(body.save);
